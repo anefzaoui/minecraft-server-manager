@@ -1,6 +1,6 @@
 ---
-title: 'Reducir un mundo'
-description: 'Con el tiempo, un mundo se expande: cada lugar por el que un jugador ha caminado, volado o'
+title: 'Reducir el tamaño de un mundo'
+description: 'Reduce el tamaño de un mundo de Minecraft eliminando fragmentos (chunks) poco visitados para recuperar espacio en disco y acelerar las copias de seguridad.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

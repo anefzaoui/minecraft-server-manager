@@ -1,12 +1,12 @@
 ---
 title: 'Entegrasyonlar'
-description: 'Her sunucu, Ayarlar grubu altında entegrasyonlarını taşır: Discord, herkese açık bir Durum Sayfası, tek tıkla Davetler ve isteğe bağlı Sohbet Botu sekmesi.'
+description: 'Her sunucu, Ayarlar grubu altında entegrasyonlarını barındırır: Discord, herkese açık bir Durum Sayfası, tek tıklamayla Davetler ve isteğe bağlı Sohbet Botu sekmesi (yalnızca yöneticiler için).'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/integrations.md'
 ---
 
-[← Geri belgeler dizinine](/docs/)
+[← Geri dön](/docs/)
 
-Her sunucu, **Ayarlar** grubu altında entegrasyonlarını barındırır: **Discord**, herkese açık bir **Durum Sayfası**, tek tıklamayla **Davetler** ve isteğe bağlı **Sohbet Botu** sekmesi. Bu sayfa Discord'u kapsar (diğerlerinin kendi belgeleri ve paneldeki kurulum yardımcıları vardır).
+Her sunucu, **Ayarlar** grubu altında kendi entegrasyonlarını taşır: **Discord**, genel bir **Durum Sayfası**, tek tıklamayla **Davetler** ve isteğe bağlı **Sohbet Botu** sekmesi (yalnızca yöneticiler için). Bu sayfa Discord'u kapsar; [davetler ve durum sayfası](/docs/invites-and-status-page/) bu ikisini kapsar ve [sohbet botunun](/docs/chatbot/) kendi sayfası vardır.
 
 ## Discord bildirimleri
 
@@ -24,7 +24,7 @@ Saklanan bir URL'yi değiştirmek için yeni bir URL yapıştırıp kaydedin; me
 
 ### Neler gönderilir
 
-Bildirimler, kapatılabilir kategorilere ayrılmıştır. Hepsi varsayılan olarak açıktır.
+Bildirimler, kapatılabilir kategorilere ayrılır. Hepsi varsayılan olarak açıktır.
 
 | Kategori                | Olaylar                                                                 |
 | ----------------------- | ----------------------------------------------------------------------- |
@@ -37,20 +37,20 @@ Bildirimler, kapatılabilir kategorilere ayrılmıştır. Hepsi varsayılan olar
 
 ### Uyarılar kategorisi
 
-`Uyarılar`, "bir şeyin insan müdahalesi gerektirdiği" kanalıdır; eskiden yalnızca panelde görünen koşullar için kullanılır:
+`Uyarılar`, "bir şeyin insan müdahalesi gerektirdiği" kanalıdır; eskiden yalnızca panelde görünen koşullar için:
 
-| Olay                    | Anlam                                                                                                                                    |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `oom`                   | Bellek yetersizliği nedeniyle kapsayıcı durduruldu.                                                                                      |
-| `unhealthy`             | İşlem çalışıyor ancak `mc-health` denetimi başarısız oluyor: canlı ama ölü bir sunucu.                                                   |
-| `startup-stalled`       | Günlüklerde "Tamamlandı" olmadan yaklaşık 10 dakika boyunca hala başlatılıyor (düzeltilmesi gereken bir sorun teşhisi ile, biliniyorsa). |
-| `stop-failed`           | Nazik bir durdurma işlemi etkili olmadı ve kapsayıcı hala çalışıyor.                                                                     |
-| `schedule-failed`       | Zamanlanmış bir yeniden başlatma / yedekleme / komut başarısız oldu.                                                                     |
-| `quota-exceeded`        | Katı mod disk kotası aşıldı ve sunucu durduruldu.                                                                                        |
-| `offline-after-restart` | Panel yeniden başlatılmadan önce sunucu çalışıyordu, şimdi çalışmıyor ve otomatik olarak başlatılmayacak.                                |
-| `crash-report`          | Yeni bir çökme raporu yakalandı ve ayrıştırıldı.                                                                                         |
-| `update-failed`         | Korumalı bir yükseltme sağlıklı gelmedi.                                                                                                 |
+| Olay                    | Anlam                                                                                                                       |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `oom`                   | Bellek yetersizliği nedeniyle kapsayıcı durduruldu.                                                                         |
+| `unhealthy`             | İşlem çalışıyor ancak `mc-health` denetimi başarısız oluyor: canlı ama ölü bir sunucu.                                      |
+| `startup-stalled`       | Kayıtlarda "Tamamlandı" olmadan yaklaşık 10 dakika sonra hala başlatılıyor (ne düzeltileceğine dair teşhisle, biliniyorsa). |
+| `stop-failed`           | Nazikçe durdurma işlemi etkili olmadı ve kapsayıcı hala çalışıyor.                                                          |
+| `schedule-failed`       | Zamanlanmış bir yeniden başlatma / yedekleme / komut başarısız oldu.                                                        |
+| `quota-exceeded`        | Katı mod disk kotası aşıldı ve sunucu durduruldu.                                                                           |
+| `offline-after-restart` | Panel yeniden başlatılmadan önce sunucu çalışıyordu, şimdi çalışmıyor ve otomatik olarak başlatılmayacak.                   |
+| `port-change-failed`    | Port değişikliği başarısız oldu ve sunucu eski portuna geri konulamadı, bu yüzden kapalı.                                   |
+| `auto-restart-gave-up`  | Çöken bir sunucu yeniden başlatılmadı çünkü başka bir işlem onu çok uzun süre meşgul etti.                                  |
 
 ### Teslimat nasıl çalışır
 
-Arka planda çalışan bir köprü, [olay günlüğünü](/docs/activity/) her 15 saniyede bir yoklar ve eşlenen satırları iletir. Bir webhook POST işlemi geçici olarak başarısız olursa, o satır düşmek yerine sonraki yoklamalarda tekrar denenir; kalıcı olarak ulaşılamayan bir webhook, birkaç denemeden sonra sessize alınır (saatte bir günlük satırı). Köprü, panel başlamadan önceki olayları asla yeniden oynatmaz.
+Arka planda çalışan bir köprü, [etkinlik günlüğünü](/docs/activity/) her 15 saniyede bir yoklar ve eşlenen satırları iletir. Bir webhook POST işlemi geçici olarak başarısız olursa, o satır sonraki yoklamalarda yeniden denenir, düşmez; birkaç başarısız denemeden sonra satır atlanır ve teslimat hataları sunucu başına saatte en fazla bir kez kaydedilir. Panel yeniden başlatıldıktan sonra köprü, henüz teslim etmediği olayları gönderir, ancak asla iki saatten fazla geriye gitmez; ilk çalıştırmasında en yeni olaydan başlar.

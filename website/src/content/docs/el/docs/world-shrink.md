@@ -1,6 +1,6 @@
 ---
 title: 'Σμίκρυνση ενός κόσμου'
-description: 'Με τον καιρό ένας κόσμος απλώνεται: κάθε μέρος που ένας παίκτης έχει περπατήσει, πετάξει ή'
+description: 'Σμικρύνετε έναν κόσμο Minecraft διαγράφοντας σπάνια επισκεφθέντα κομμάτια (chunks), για να ανακτήσετε χώρο στο δίσκο και να επιταχύνετε τα αντίγραφα ασφαλείας.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

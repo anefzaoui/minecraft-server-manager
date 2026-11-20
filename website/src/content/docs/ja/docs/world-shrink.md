@@ -1,6 +1,6 @@
 ---
 title: 'ワールドの縮小'
-description: '時間の経過とともにワールドは広がり続けます。プレイヤーが歩いたり、飛んだりした場所すべてが'
+description: 'あまり訪問されないチャンクを削除してMinecraftワールドを縮小し、ディスク容量を回復してバックアップを高速化します。'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

@@ -9,15 +9,15 @@
   },
   "backups": {
     "title": "Sao lưu",
-    "description": "Trang Sao lưu hiển thị mọi ảnh chụp nhanh trên toàn bộ hệ thống của bạn, kèm theo kích thước, lý do và thời gian."
+    "description": "Trang Sao lưu hiển thị mọi bản chụp nhanh trên toàn bộ hệ thống của bạn, kèm theo kích thước, lý do và thời gian, có thể lọc theo máy chủ và theo lý do."
   },
   "blueprints": {
     "title": "Bản thiết kế",
-    "description": "Một bản thiết kế ghi lại toàn bộ cấu hình của máy chủ (loại, phiên bản, tài nguyên, môi trường, ghim gói và tùy chọn cấu hình và thế giới của nó) thành một tệp duy nhất"
+    "description": "Bản thiết kế lưu toàn bộ cấu hình của máy chủ Minecraft như một công thức có thể tái sử dụng để tạo máy chủ mới. Bí mật sẽ không bao giờ được bao gồm."
   },
   "chatbot": {
     "title": "Chatbot Minecraft cho từng máy chủ",
-    "description": "Phiên bản fork này bổ sung một chatbot được cấu hình bởi quản trị viên cho mỗi máy chủ Minecraft được quản lý."
+    "description": "Bảng điều khiển cung cấp một chatbot được quản trị viên cấu hình cho mỗi máy chủ Minecraft được quản lý, được thiết lập trên tab Cài đặt → Chatbot của máy chủ."
   },
   "console-and-chat": {
     "title": "Bảng điều khiển & lệnh trò chuyện",
@@ -29,7 +29,7 @@
   },
   "getting-started": {
     "title": "Bắt đầu",
-    "description": "Lần đầu tiên bạn mở bảng điều khiển, nó sẽ yêu cầu bạn tạo một tài khoản quản trị viên."
+    "description": "Cài đặt Minecraft Server Manager và hoàn tất thiết lập lần đầu: kiểm tra hệ thống, múi giờ của bạn và tài khoản quản trị viên."
   },
   "index": {
     "title": "Tài liệu",
@@ -37,27 +37,27 @@
   },
   "integrations": {
     "title": "Tích hợp",
-    "description": "Mỗi máy chủ đều có các tích hợp của riêng mình trong nhóm Cài đặt: Discord, Trang trạng thái công khai, Lời mời một cú nhấp chuột và tab Chatbot tùy chọn."
+    "description": "Mỗi máy chủ đều có các tích hợp của riêng mình trong nhóm Cài đặt: Discord, Trang trạng thái công khai, Lời mời một cú nhấp chuột và tab Chatbot tùy chọn (chỉ dành cho quản trị viên)."
   },
   "modpacks": {
     "title": "Gói Mod",
-    "description": "Trang Gói Mod (và tab Từ gói mod trong trình hướng dẫn tạo) cài đặt một gói mod làm máy chủ, luôn được ghim vào một phiên bản gói chính xác để có thể khởi động lại"
+    "description": "Cài đặt các gói mod CurseForge, Modrinth, FTB và GT New Horizons dưới dạng máy chủ, luôn được ghim vào một phiên bản gói chính xác."
   },
   "public-api": {
     "title": "API Công khai",
-    "description": "Một API HTTP nhỏ, chỉ đọc để lấy trạng thái máy chủ từ bên ngoài bảng điều khiển: a"
+    "description": "Một API HTTP nhỏ, chỉ đọc để lấy trạng thái máy chủ từ bên ngoài bảng điều khiển: bảng điều khiển trạng thái, trình theo dõi thời gian hoạt động, bot Discord, quy tắc tự động hóa gia đình."
   },
   "schedules": {
     "title": "Lịch trình",
-    "description": "Trang Lịch trình tự động hóa các tác vụ định kỳ bằng biểu thức cron."
+    "description": "Trang Lịch trình tự động hóa các tác vụ định kỳ bằng biểu thức cron. Không cần cron bên ngoài, không cần script."
   },
   "servers": {
     "title": "Tạo & quản lý máy chủ",
-    "description": "Nhấp vào Tạo máy chủ (thanh trên cùng) hoặc thẻ Tạo máy chủ để mở trình hướng dẫn."
+    "description": "Tạo, khởi động, dừng, xây dựng lại và cấu hình máy chủ Minecraft trong bảng điều khiển: trình hướng dẫn tạo, cài đặt, bộ nhớ và cổng trò chơi."
   },
   "storage": {
     "title": "Lưu trữ",
-    "description": "Trang Lưu trữ hiển thị dung lượng ổ đĩa của bạn đang được sử dụng như thế nào: mức sử dụng theo từng máy chủ và xu hướng của nó theo thời gian."
+    "description": "Xem dung lượng ổ đĩa được sử dụng ở đâu, đặt giới hạn dung lượng cho từng thư mục máy chủ và dọn dẹp những gì bạn không còn cần nữa."
   },
   "two-factor-authentication": {
     "title": "Xác thực hai yếu tố",
@@ -65,18 +65,46 @@
   },
   "updates": {
     "title": "Cập nhật",
-    "description": "Trang Cập nhật theo dõi những gì đã lỗi thời trên toàn bộ hệ thống của bạn ở một nơi:"
+    "description": "Theo dõi và áp dụng các bản cập nhật cho phiên bản Minecraft, modpack, mod và plugin trên mọi máy chủ, với chính sách cho từng máy chủ."
   },
   "users-and-roles": {
     "title": "Người dùng & vai trò",
-    "description": "Bảng điều khiển hỗ trợ đa người dùng."
+    "description": "Tài khoản, các vai trò quản trị viên, người vận hành và người xem, cùng với quyền hạn cho từng máy chủ trong Minecraft Server Manager."
   },
   "world-shrink": {
     "title": "Thu nhỏ thế giới",
-    "description": "Theo thời gian, một thế giới sẽ lan rộng ra: mọi nơi người chơi từng đi bộ, bay hoặc"
+    "description": "Thu nhỏ thế giới Minecraft bằng cách xóa các chunk ít được truy cập, để lấy lại dung lượng đĩa và tăng tốc sao lưu."
   },
   "worlds-and-files": {
     "title": "Thế giới & tệp",
-    "description": "Trang Thế giới quản lý dữ liệu thế giới trên các máy chủ của bạn: hoán đổi thế giới đang hoạt động, tải lên hoặc tải xuống một thế giới."
+    "description": "Thư viện thế giới, tải lên và hoán đổi thế giới, tab mod và plugin, cùng trình quản lý tệp trong trình duyệt."
+  },
+  "guide-backups": {
+    "title": "Sao lưu máy chủ Minecraft có thể khôi phục thực sự",
+    "description": "Cách tạo bản sao lưu máy chủ Minecraft có thể khôi phục thực sự: bản sao nhất quán, lưu trữ ở nơi khác và được kiểm tra ít nhất một lần."
+  },
+  "guide-choosing-a-loader": {
+    "title": "Vanilla, Paper, Fabric, Forge, NeoForge, Quilt: chọn loại nào?",
+    "description": "Vanilla, Paper, Fabric, Forge, NeoForge hay Quilt: loại máy chủ Minecraft nào để chạy, tùy thuộc vào những gì người chơi của bạn cài đặt."
+  },
+  "guide-moving-a-server": {
+    "title": "Di chuyển máy chủ Minecraft sang máy chủ khác",
+    "description": "Di chuyển thế giới (world) thì dễ. Di chuyển một máy chủ mà người chơi vẫn có thể đăng nhập, với vật phẩm, nhà cửa và quyền hạn của họ còn nguyên vẹn, đó mới là phần dễ gặp sự cố."
+  },
+  "guide-server-memory": {
+    "title": "Máy chủ Minecraft cần bao nhiêu RAM?",
+    "description": "Máy chủ Minecraft cần bao nhiêu RAM cho phiên bản vanilla, Paper, mod nhẹ và modpack lớn, và bao nhiêu RAM cần để lại cho máy."
+  },
+  "guide-server-wont-start": {
+    "title": "Máy chủ Minecraft của bạn sẽ không khởi động",
+    "description": "Khắc phục sự cố máy chủ Minecraft không khởi động, theo thứ tự khả năng xảy ra: nhật ký, phiên bản Java, bộ nhớ, EULA và cổng, và mod."
+  },
+  "invites-and-status-page": {
+    "title": "Lời mời & trang trạng thái",
+    "description": "Mời bạn bè đến một máy chủ với địa chỉ, phiên bản và gói mod client, đồng thời chia sẻ một trang trạng thái công khai hiển thị những gì bạn chọn."
+  },
+  "live-map": {
+    "title": "Bản đồ trực tiếp",
+    "description": "Bật bản đồ 3D trực tiếp BlueMap của thế giới máy chủ chỉ bằng một cú nhấp chuột, được phục vụ riêng qua đăng nhập của bảng điều khiển."
   }
 }

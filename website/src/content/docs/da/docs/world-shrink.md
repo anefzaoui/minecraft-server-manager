@@ -1,6 +1,6 @@
 ---
-title: 'Formindskning af en verden'
-description: 'Over tid spreder en verden sig: ethvert sted, en spiller nogensinde har gået, fløjet eller'
+title: 'Formindsk en verden'
+description: 'Formindsk en Minecraft-verden ved at slette sjældent besøgte bidder for at frigøre diskplads og fremskynde sikkerhedskopieringer.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

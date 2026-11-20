@@ -1,6 +1,6 @@
 ---
-title: 'दुनिया को सिकोड़ना'
-description: 'समय के साथ एक दुनिया फैलती जाती है: हर वह जगह जहाँ कोई खिलाड़ी कभी चला, उड़ा, या'
+title: 'दुनिया का आकार कम करना'
+description: 'दुर्लभ रूप से देखे गए चंक्स को हटाकर Minecraft दुनिया का आकार कम करें, ताकि डिस्क स्थान बचाया जा सके और बैकअप को तेज़ किया जा सके।'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

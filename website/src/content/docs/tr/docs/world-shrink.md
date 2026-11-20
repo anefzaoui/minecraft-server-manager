@@ -1,6 +1,6 @@
 ---
 title: 'Bir dünyayı küçültme'
-description: 'Zamanla bir dünya yayılır: bir oyuncunun yürüdüğü, uçtuğu veya'
+description: 'Nadiren ziyaret edilen parçaları silerek bir Minecraft dünyasını küçültün, disk alanını geri kazanın ve yedeklemeleri hızlandırın.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

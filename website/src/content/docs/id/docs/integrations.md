@@ -1,12 +1,12 @@
 ---
 title: 'Integrasi'
-description: 'Setiap server memiliki integrasinya di bawah grup Pengaturan: Discord, Halaman Status publik, Undangan sekali klik, dan tab Chatbot opsional.'
+description: 'Setiap server memiliki integrasinya di bawah grup Pengaturan: Discord, Halaman Status publik, Undangan sekali klik, dan tab Chatbot opsional (hanya admin).'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/integrations.md'
 ---
 
 [← Kembali ke indeks docs](/docs/)
 
-Setiap server memiliki integrasinya di bawah grup **Pengaturan**: **Discord**, **Halaman Status** publik, **Undangan** sekali klik, dan tab **Chatbot** opsional. Halaman ini mencakup Discord (yang lain memiliki dokumentasi dan alat bantu pengaturan sendiri di panel).
+Setiap server memiliki integrasinya di bawah grup **Pengaturan**: **Discord**, **Halaman Status** publik, **Undangan** sekali klik, dan tab **Chatbot** opsional (hanya admin). Halaman ini mencakup Discord; [undangan & halaman status](/docs/invites-and-status-page/) mencakup kedua hal tersebut, dan [chatbot](/docs/chatbot/) memiliki halaman tersendiri.
 
 ## Notifikasi Discord
 
@@ -15,25 +15,25 @@ Panel meneruskan peristiwa server ke saluran Discord melalui webhook. Tanpa bot,
 ### Pengaturan
 
 1. Di Discord: **Pengaturan Server → Integrasi → Webhook → Webhook Baru**. Pilih saluran dan salin URL webhook.
-2. Di panel, buka tab **Pengaturan → Discord** server, tempel URL ke **URL Webhook**, aktifkan kartu, dan **Simpan**. URL disimpan terenkripsi (di penyimpanan saat diam yang sama dengan kunci API Anda).
-3. Gunakan **Kirim tes** untuk mengonfirmasi bahwa itu berfungsi.
+2. Di panel, buka tab **Pengaturan → Discord** server, tempelkan URL ke **URL Webhook**, aktifkan kartu, dan **Simpan**. URL disimpan terenkripsi (di penyimpanan saat diam yang sama dengan kunci API Anda).
+3. Gunakan **Kirim Tes** untuk mengonfirmasi bahwa ini berfungsi.
 
 ![Integrasi Discord](/docs/images/integrations-discord.png)
 
-Untuk mengganti URL yang tersimpan, tempelkan yang baru dan simpan; biarkan bidang kosong untuk mempertahankan yang saat ini. URL yang tersimpan ditampilkan tersamarkan (token disembunyikan).
+Untuk mengganti URL yang tersimpan, tempelkan URL baru dan simpan; biarkan bidang kosong untuk mempertahankan yang ada. URL yang tersimpan ditampilkan tersamar (token disembunyikan).
 
 ### Apa yang dikirim
 
-Notifikasi dikelompokkan ke dalam kategori yang dapat dialihkan. Semuanya aktif secara default.
+Notifikasi dikelompokkan ke dalam kategori yang dapat dialihkan. Semua aktif secara default.
 
-| Kategori             | Peristiwa                                                     |
-| -------------------- | ------------------------------------------------------------- |
-| **Mulai / berhenti** | Server dimulai, server berhenti                               |
-| **Kerusakan**        | Kerusakan, loop kerusakan terdeteksi, laporan kerusakan baru  |
-| **Cadangan**         | Cadangan dibuat, cadangan dipulihkan                          |
-| **Pembaruan**        | Pembaruan diterapkan, pembaruan dikembalikan, pembaruan gagal |
-| **Tendang / larang** | Pemain ditendang, pemain dilarang                             |
-| **Peringatan**       | Hal-hal yang diam-diam membuat server rusak (lihat di bawah)  |
+| Kategori             | Peristiwa                                                    |
+| -------------------- | ------------------------------------------------------------ |
+| **Mulai / berhenti** | Server dimulai, server berhenti                              |
+| **Crash**            | Crash, loop crash terdeteksi, laporan crash baru             |
+| **Cadangan**         | Cadangan dibuat, cadangan dipulihkan                         |
+| **Pembaruan**        | Pembaruan diterapkan, pembaruan dibatalkan, pembaruan gagal  |
+| **Tendang / larang** | Pemain ditendang, pemain dilarang                            |
+| **Peringatan**       | Hal-hal yang diam-diam membuat server rusak (lihat di bawah) |
 
 ### Kategori Peringatan
 
@@ -47,10 +47,10 @@ Notifikasi dikelompokkan ke dalam kategori yang dapat dialihkan. Semuanya aktif 
 | `stop-failed`           | Penghentian yang baik tidak berlaku dan kontainer masih berjalan.                                                    |
 | `schedule-failed`       | Restart / cadangan / perintah terjadwal gagal.                                                                       |
 | `quota-exceeded`        | Kuota disk mode ketat terlampaui dan server dihentikan.                                                              |
-| `offline-after-restart` | Server aktif sebelum panel dimulai ulang, sekarang tidak aktif, dan tidak akan dimulai ulang secara otomatis.        |
-| `crash-report`          | Laporan kerusakan baru ditangkap dan diurai.                                                                         |
-| `update-failed`         | Peningkatan yang dijaga tidak sehat.                                                                                 |
+| `offline-after-restart` | Server aktif sebelum panel dimulai ulang, sekarang tidak, dan tidak akan dimulai ulang secara otomatis.              |
+| `port-change-failed`    | Perubahan port gagal dan server tidak dapat dikembalikan ke port lamanya, sehingga server mati.                      |
+| `auto-restart-gave-up`  | Server yang crash tidak dimulai ulang karena tindakan lain membuatnya sibuk terlalu lama.                            |
 
 ### Cara pengiriman bekerja
 
-Jembatan latar belakang memeriksa [log aktivitas](/docs/activity/) setiap 15 detik dan meneruskan baris yang dipetakan. Jika POST webhook gagal sementara, baris tersebut dicoba lagi pada pemeriksaan berikutnya daripada dijatuhkan; webhook yang tidak dapat dijangkau secara permanen akan dibisukan (satu baris log per jam) setelah beberapa upaya. Jembatan tidak pernah memutar ulang peristiwa dari sebelum panel dimulai.
+Jembatan latar belakang memeriksa [log aktivitas](/docs/activity/) setiap 15 detik dan meneruskan baris yang dipetakan. Jika POST webhook gagal sementara, baris tersebut dicoba lagi pada pemeriksaan berikutnya daripada diabaikan; setelah beberapa kali percobaan gagal, baris tersebut dilewati, dan kegagalan pengiriman dicatat paling banyak sekali per jam per server. Setelah panel dimulai ulang, jembatan mengirimkan peristiwa yang belum dikirimkannya, tetapi tidak pernah lebih dari dua jam ke belakang; pada saat pertama kali berjalan, ia mulai dari peristiwa terbaru.

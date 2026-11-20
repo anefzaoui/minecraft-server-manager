@@ -12,13 +12,13 @@ Funciona com qualquer autenticador TOTP padrão (Google Authenticator, Authy, 1P
 
 ## Ativando a 2FA
 
-Abra o menu da conta (sua inicial, no canto superior direito) e escolha **Autenticação de dois fatores**.
+Abra o menu da conta (sua inicial ou foto de perfil, no canto superior direito) e escolha **2FA**.
 
 ![Menu da conta](/docs/images/2fa-user-menu.png)
 
-Você verá uma caixa de diálogo de registro:
+Você verá uma janela de inscrição:
 
-![Registro](/docs/images/2fa-enroll.png)
+![Inscrição](/docs/images/2fa-enroll.png)
 
 1. **Escaneie o código QR** com seu aplicativo autenticador, ou toque em **Copiar** e insira a chave manual.
 2. Digite o **código de 6 dígitos** que seu aplicativo exibe agora.
@@ -39,24 +39,24 @@ A partir daí, o login terá uma segunda etapa. Após seu nome de usuário e sen
 
 ![Login com 2FA](/docs/images/2fa-login-challenge.png)
 
-Insira o código atual de 6 dígitos do seu aplicativo (ou um dos seus códigos de backup) e pronto. Até que você complete esta etapa, a sessão **não** está logada: ela não pode acessar nenhuma página ou API.
+Insira o código atual de 6 dígitos do seu aplicativo (ou um dos seus códigos de backup) e pronto. Até que você complete esta etapa, a sessão **não** está logada: não pode acessar nenhuma página ou API.
 
 ## Gerenciando ou desativando a 2FA
 
-Abra a mesma opção **Autenticação de dois fatores** no menu da conta enquanto ela estiver ativada. Após confirmar sua senha, você pode:
+Abra a mesma opção **2FA** no menu da conta enquanto ela estiver ativada. Após confirmar sua senha, você pode:
 
-- **Gerar novos códigos de backup** - emite um novo conjunto e invalida o antigo.
-- **Desativar 2FA** - remove-a da sua conta.
+- **Gerar Novos Códigos de Backup** emite um novo conjunto e invalida o antigo.
+- **Desativar 2FA** remove-a da sua conta.
 
 Ambas as opções revalidam sua senha atual primeiro.
 
 ## Perdeu seu celular _e_ seus códigos de backup?
 
-Um **administrador** pode redefinir a 2FA de outro usuário em **Configurações → Usuários** (o botão **Redefinir** na coluna 2FA). Isso limpa a 2FA da conta para que o usuário possa fazer login apenas com sua senha e configurá-la novamente. Administradores não podem redefinir sua _própria_ 2FA sem senha. Eles passam pelo processo normal de desativação com senha, para que uma sessão de administrador comprometida não possa remover seu próprio segundo fator.
+Um **administrador** pode redefinir a 2FA de outro usuário em **Configurações → Usuários** (**Redefinir 2FA** no menu de ações desse usuário). Isso limpa a 2FA da conta para que o usuário possa fazer login apenas com a senha e configurá-la novamente. Administradores não podem redefinir sua _própria_ 2FA sem senha. Eles passam pelo processo normal de desativação com senha, para que uma sessão de administrador comprometida não possa remover seu próprio segundo fator.
 
 ## Bom saber
 
-- Os códigos são baseados em tempo e rotacionam a cada 30 segundos; o painel aceita uma pequena variação no relógio e se recupera silenciosamente se o relógio do servidor for corrigido posteriormente.
-- Um código não pode ser reutilizado - uma vez usado para fazer login, o mesmo código não funcionará novamente dentro de sua janela de validade.
+- Os códigos são baseados em tempo e mudam a cada 30 segundos; o painel aceita uma pequena variação no relógio e se recupera silenciosamente se o relógio do servidor for corrigido posteriormente.
+- Um código não pode ser reutilizado: uma vez usado para fazer login, o mesmo código não funcionará novamente dentro de sua janela de validade.
 - Códigos incorretos estão sujeitos a limitação de taxa. O limitador é **compartilhado** com a etapa de senha (um bloqueio por conta mais um limitador por IP `RATE_LIMIT_AUTH_PER_15MIN`), então inserir uma senha correta não pode redefinir o contador pouco antes de adivinhar o código de 6 dígitos.
-- Alterações na 2FA (ativação, desativação, redefinição, uso de código de backup) são todas registradas no [Log de atividades](/docs/activity/).
+- Alterações na 2FA (ativação, desativação, redefinição, uso de código de backup) são todas registradas no [Log de Atividades](/docs/activity/).

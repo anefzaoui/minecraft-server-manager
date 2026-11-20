@@ -9,15 +9,15 @@
   },
   "backups": {
     "title": "Zálohy",
-    "description": "Stránka Zálohy zobrazuje všechny snímky napříč vaší flotilou, s velikostí, důvodem a stářím."
+    "description": "Stránka Zálohy zobrazuje všechny snímky napříč vaší flotilou, s velikostí, důvodem a stářím, filtrovatelné podle serveru a podle důvodu."
   },
   "blueprints": {
     "title": "Šablony",
-    "description": "Šablona zachycuje celou konfiguraci serveru (typ, verze, zdroje, prostředí, připnutí balíčku a volitelně jeho konfiguraci a svět) do jediného souboru."
+    "description": "Šablony ukládají celou konfiguraci serveru Minecraft jako znovupoužitelný recept pro vytváření nových serverů. Tajné klíče nikdy nejsou zahrnuty."
   },
   "chatbot": {
     "title": "Chatbot pro Minecraft pro každý server",
-    "description": "Tato verze přidává nakonfigurovaného chatbota pro každý spravovaný server Minecraft."
+    "description": "Panel nabízí nakonfigurovaného chatbota pro každý spravovaný server Minecraft, nastaveného na kartě Nastavení → Chatbot serveru."
   },
   "console-and-chat": {
     "title": "Konzole a příkazy chatu",
@@ -29,7 +29,7 @@
   },
   "getting-started": {
     "title": "Začínáme",
-    "description": "Při prvním otevření panelu vás vyzve k vytvoření účtu správce."
+    "description": "Nainstalujte Minecraft Server Manager a dokončete prvotní nastavení: kontrolu systému, vaši časovou zónu a účet správce."
   },
   "index": {
     "title": "Dokumentace",
@@ -37,27 +37,27 @@
   },
   "integrations": {
     "title": "Integrace",
-    "description": "Každý server má své integrace ve skupině Nastavení: Discord, veřejná stránka Stav, pozvánky na jedno kliknutí a volitelná záložka Chatbot."
+    "description": "Každý server má své integrace ve skupině Nastavení: Discord, veřejná stránka Stav, pozvánky na jedno kliknutí a volitelná záložka Chatbot (pouze pro správce)."
   },
   "modpacks": {
     "title": "Modpacky",
-    "description": "Stránka Modpacky (a karta Z modpacku v průvodci vytvořením) nainstaluje modpack jako server, vždy připnutý k přesné verzi balíčku, takže restart může"
+    "description": "Nainstalujte modpacky CurseForge, Modrinth, FTB a GT New Horizons jako servery, vždy připnuté na přesnou verzi balíčku."
   },
   "public-api": {
     "title": "Veřejné API",
-    "description": "Malé HTTP API pouze pro čtení pro získávání stavu serveru zvenčí panelu: a"
+    "description": "Malé HTTP API pouze pro čtení pro získávání stavu serveru zvenčí panelu: dashboard stavu, monitor dostupnosti, Discord bot, pravidlo pro automatizaci domácnosti."
   },
   "schedules": {
     "title": "Plánované úlohy",
-    "description": "Stránka Plánované úlohy automatizuje opakující se úkoly pomocí cron výrazů."
+    "description": "Stránka Plánované úlohy automatizuje opakující se úkoly pomocí cron výrazů. Žádný externí cron, žádné skripty."
   },
   "servers": {
     "title": "Vytváření a správa serverů",
-    "description": "Klikněte na Vytvořit server (horní lišta) nebo na kartu Vytvořit server a otevřete průvodce."
+    "description": "Vytvářejte, spouštějte, zastavujte, přestavujte a konfigurujte Minecraft servery v panelu: průvodce vytvořením, nastavení, paměť a herní port."
   },
   "storage": {
     "title": "Úložiště",
-    "description": "Stránka Úložiště ukazuje, kam se vaše místo na disku ztrácí: využití na server a jeho vývoj v čase."
+    "description": "Zjistěte, kam mizí místo na disku, omezte každou složku serveru kvótou na disku a vyčistěte to, co již nepotřebujete."
   },
   "two-factor-authentication": {
     "title": "Dvoufaktorové ověřování",
@@ -65,18 +65,46 @@
   },
   "updates": {
     "title": "Aktualizace",
-    "description": "Stránka Aktualizace sleduje, co je ve vaší flotile zastaralé, na jednom místě:"
+    "description": "Sledujte a aplikujte aktualizace verzí Minecraftu, modpacků, modů a pluginů na všech serverech s politikou pro každý server."
   },
   "users-and-roles": {
     "title": "Uživatelé a role",
-    "description": "Panel je víceuživatelský."
+    "description": "Účty, role administrátora, operátora a prohlížeče a oprávnění pro jednotlivé servery v Minecraft Server Manager."
   },
   "world-shrink": {
     "title": "Zmenšení světa",
-    "description": "Časem se svět rozrůstá: každé místo, kde hráč kdy chodil, létal nebo"
+    "description": "Zmenšete svět Minecraftu odstraněním zřídka navštěvovaných chunků, abyste získali zpět místo na disku a zrychlili zálohování."
   },
   "worlds-and-files": {
     "title": "Světové složky a soubory",
-    "description": "Stránka Světové složky spravuje data světů napříč vašimi servery: přepínejte aktivní svět, nahrajte svět nebo si jej stáhněte."
+    "description": "Knihovna světů, nahrávání a výměna světů, karta modů a pluginů a správce souborů v prohlížeči."
+  },
+  "guide-backups": {
+    "title": "Zálohy Minecraft serveru, které lze skutečně obnovit",
+    "description": "Jak vytvořit zálohy Minecraft serveru, které lze skutečně obnovit: konzistentní kopie, uložené jinde a alespoň jednou otestované."
+  },
+  "guide-choosing-a-loader": {
+    "title": "Vanilla, Paper, Fabric, Forge, NeoForge, Quilt: který z nich?",
+    "description": "Vanilla, Paper, Fabric, Forge, NeoForge nebo Quilt: jaký typ serveru pro Minecraft spustit, podle toho, co nainstalují vaši hráči."
+  },
+  "guide-moving-a-server": {
+    "title": "Přesun Minecraft serveru na jiný hosting",
+    "description": "Přesun světa je snadný. Přesun serveru, do kterého se hráči stále mohou přihlásit, s jejich inventáři, domovy a oprávněními beze změny, je ta část, která se obvykle pokazí."
+  },
+  "guide-server-memory": {
+    "title": "Kolik RAM potřebuje server pro Minecraft?",
+    "description": "Kolik RAM potřebuje server pro Minecraft pro vanilla, Paper, lehké mody a velké modpacky a kolik nechat pro stroj."
+  },
+  "guide-server-wont-start": {
+    "title": "Váš Minecraft server se nespustí",
+    "description": "Minecraft server, který se nespustí, opraveno v pořadí pravděpodobnosti: log, verze Javy, paměť, EULA a port, a mody."
+  },
+  "invites-and-status-page": {
+    "title": "Pozvánky a stránka stavu",
+    "description": "Pozvěte přátele na server pomocí adresy, verze a klientského modpacku a sdílejte veřejnou stránku stavu, která zobrazuje pouze to, co si vyberete."
+  },
+  "live-map": {
+    "title": "Živá mapa",
+    "description": "Zapněte živou 3D mapu světa serveru pomocí BlueMap jedním kliknutím, která je dostupná pouze přes přihlášení do panelu."
   }
 }

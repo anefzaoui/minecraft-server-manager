@@ -1,22 +1,22 @@
 ---
 title: 'API Publik'
-description: 'API HTTP kecil yang hanya bisa dibaca untuk mengambil status server dari luar panel: a'
+description: 'API HTTP kecil yang hanya bisa dibaca untuk mengambil status server dari luar panel: dasbor status, monitor waktu aktif, bot Discord, aturan otomatisasi rumah.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/public-api.md'
 ---
 
-[← Kembali ke indeks dokumentasi](/docs/)
+[← Kembali ke indeks docs](/docs/)
 
-API HTTP kecil yang hanya bisa dibaca untuk mengambil status server dari luar panel: dasbor status, pemantau waktu aktif, bot Discord, aturan otomatisasi rumah. API ini disajikan oleh panel itu sendiri dan mengembalikan data langsung yang sama dengan yang ditampilkan halaman panel (dari cache dalam memori), sehingga memantaunya tidak pernah menyentuh Docker.
+API HTTP kecil yang hanya bisa dibaca untuk mengambil status server dari luar panel: dasbor status, monitor waktu aktif, bot Discord, aturan otomatisasi rumah. Ini disajikan oleh panel itu sendiri dan mengembalikan data langsung yang sama yang ditampilkan oleh halaman panel itu sendiri (dari cache dalam memori), jadi memantaunya tidak pernah menyentuh Docker.
 
-API ini **mati sampai diaktifkan oleh admin** dan **dibatasi untuk admin**. Tidak ada yang terekspos sampai token ada.
+Ini **mati sampai admin menggunakannya** dan **dibatasi admin**. Tidak ada yang diekspos sampai token ada.
 
 ## Mengaktifkannya
 
-**Pengaturan → API Publik → Kunci Baru**. Beri nama, pilih apa yang bisa dilihatnya (semua server, atau subset tertentu), dan opsional tanggal kedaluwarsa. Kunci lengkap (token Bearer) ditampilkan **sekali**, dalam dialog; salin sekarang, karena hanya awalan pendek yang disimpan setelahnya, untuk identifikasi dalam daftar.
+**Pengaturan → API Publik → Kunci Baru**. Beri nama, pilih apa yang bisa dilihatnya (semua server, atau subset tertentu), dan secara opsional tanggal kedaluwarsa. Kunci lengkap (token Bearer) ditampilkan **sekali**, dalam dialog; salin sekarang, karena hanya awalan pendek yang disimpan setelahnya, untuk identifikasi dalam daftar.
 
 ![Pengaturan API Publik](/docs/images/settings-public-api.png)
 
-Membuat kunci pertama akan mengaktifkan API secara otomatis (sakelar **Biarkan aplikasi luar membaca status** adalah kontrol jeda: matikan untuk berhenti menyajikan tanpa membatalkan kunci apa pun). Batalkan kunci dari tabel yang sama kapan saja; klien yang menggunakannya akan kehilangan akses segera.
+Membuat kunci pertama akan mengaktifkan API secara otomatis (sakelar **Biarkan aplikasi luar membaca status** adalah kontrol jeda: matikan untuk berhenti menyajikan tanpa membatalkan kunci apa pun). Batalkan kunci dari tabel yang sama kapan saja; klien yang menggunakannya akan segera kehilangan akses.
 
 Token disimpan sebagai hash SHA-256 (tidak pernah dalam teks biasa), bertahan dari restart panel, dan melampaui server yang dibatasinya (server yang dihapus hanya akan hilang dari hasil token tersebut).
 
@@ -34,7 +34,7 @@ Kegagalan mengembalikan `401` dengan `{ "ok": false, "error": "..." }`. Apa pun 
 
 ## Batas tarif
 
-Setiap token mendapatkan anggarannya sendiri, `RATE_LIMIT_PUBLIC_API_PER_MIN` (default `120` permintaan/menit; `0` menonaktifkan pembatas). Melebihi batas mengembalikan `429`. Permintaan yang tidak pernah menyajikan token yang valid (hilang, salah format, dicabut, atau kedaluwarsa) dibatasi secara terpisah per IP klien sebanyak lima kali jumlah tersebut, sehingga penjelajahan tidak dapat melewati anggaran dengan memutar token.
+Setiap token mendapatkan anggarannya sendiri, `RATE_LIMIT_PUBLIC_API_PER_MIN` (default `120` permintaan/menit; `0` menonaktifkan pembatas). Melebihi batas mengembalikan `429`. Setiap permintaan, bahkan sebelum tokennya diperiksa, juga dihitung terhadap batas per IP klien sebanyak lima kali jumlah tersebut, jadi menyelidiki dengan token yang hilang, salah format, dicabut, atau kedaluwarsa tidak dapat melewati anggaran dengan memutarnya.
 
 ## Titik akhir
 
@@ -65,23 +65,23 @@ Setiap server yang dibatasi oleh token.
 
 ### `GET /api/v1/servers/:id`
 
-Satu server, objek yang sama di bawah kunci `server`. Mengembalikan `404` untuk id yang tidak diketahui **dan** untuk server yang tidak dibatasi oleh token (tidak ada oracle keberadaan), dan `400` untuk id yang salah format.
+Satu server, objek yang sama di bawah kunci `server`. Mengembalikan `404` untuk id yang tidak diketahui **dan** untuk server yang tidak dibatasi oleh token (tidak ada peramal keberadaan), dan `400` untuk id yang salah format.
 
 ## Bidang respons
 
-| Bidang          | Arti                                                                                            |
-| --------------- | ----------------------------------------------------------------------------------------------- |
-| `total`         | Berapa banyak server yang terlihat oleh token ini (setelah filter cakupannya).                  |
-| `online`        | Berapa banyak dari server tersebut dalam status: `running`.                                     |
-| `id`            | Id server yang stabil (`srv_...`).                                                              |
-| `name`          | Nama tampilan.                                                                                  |
-| `type`          | Tipe server itzg (`PAPER`, `FABRIC`, `AUTO_CURSEFORGE`, ...).                                   |
-| `state`         | `running`, `starting`, `stopped`, atau `crashed` - ringkasan stabil dari status internal panel. |
-| `cpuPct`        | Persentase CPU terbaru, atau `null` ketika server tidak berjalan.                               |
-| `memoryMb`      | Memori residen dalam MB, atau `null`.                                                           |
-| `memoryLimitMb` | Batas memori kontainer yang dikonfigurasi dalam MB, atau `null`.                                |
-| `uptimeSeconds` | Detik sejak kontainer dimulai, atau `null`.                                                     |
-| `players`       | `{ online, max }`, atau `null` sampai server melaporkan daftar pemain.                          |
+| Bidang          | Arti                                                                                           |
+| --------------- | ---------------------------------------------------------------------------------------------- |
+| `total`         | Berapa banyak server yang terlihat oleh token ini (setelah filter cakupannya).                 |
+| `online`        | Berapa banyak dari itu dalam status: `running`.                                                |
+| `id`            | Id server yang stabil (`srv_...`).                                                             |
+| `name`          | Nama tampilan.                                                                                 |
+| `type`          | Tipe server itzg (`PAPER`, `FABRIC`, `AUTO_CURSEFORGE`, ...).                                  |
+| `state`         | `running`, `starting`, `stopped`, atau `crashed`: ringkasan stabil dari status internal panel. |
+| `cpuPct`        | Persentase CPU terbaru, atau `null` ketika server tidak berjalan.                              |
+| `memoryMb`      | Memori residen dalam MB, atau `null`.                                                          |
+| `memoryLimitMb` | Batas memori kontainer yang dikonfigurasi dalam MB, atau `null`.                               |
+| `uptimeSeconds` | Detik sejak kontainer dimulai, atau `null`.                                                    |
+| `players`       | `{ online, max }`, atau `null` sampai server melaporkan daftar pemain.                         |
 
 ## Contoh
 

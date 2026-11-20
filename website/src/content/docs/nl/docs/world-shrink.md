@@ -1,6 +1,6 @@
 ---
 title: 'Een wereld verkleinen'
-description: 'Na verloop van tijd breidt een wereld zich uit: elke plek waar een speler ooit heeft gelopen, gevlogen of'
+description: 'Verklein een Minecraft-wereld door zelden bezochte chunks te verwijderen, om schijfruimte terug te winnen en back-ups te versnellen.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

@@ -1,6 +1,6 @@
 ---
-title: 'Encolhendo um mundo'
-description: 'Com o tempo, um mundo se expande: todo lugar que um jogador já andou, voou ou'
+title: 'Reduzindo o tamanho de um mundo'
+description: 'Reduza o tamanho de um mundo Minecraft excluindo chunks raramente visitados, para recuperar espaço em disco e acelerar backups.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

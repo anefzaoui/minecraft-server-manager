@@ -1,6 +1,6 @@
 ---
 title: 'ย่อขนาดโลก'
-description: 'เมื่อเวลาผ่านไป โลกจะขยายออกไปเรื่อยๆ: ทุกที่ที่ผู้เล่นเคยเดิน บิน หรือ'
+description: 'ย่อขนาดโลก Minecraft โดยการลบส่วนที่ไม่ค่อยได้เข้าชม เพื่อเรียกคืนพื้นที่ดิสก์และเพิ่มความเร็วในการสำรองข้อมูล'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

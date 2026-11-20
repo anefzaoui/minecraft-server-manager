@@ -1,6 +1,6 @@
 ---
 title: 'Mengecilkan dunia'
-description: 'Seiring waktu sebuah dunia akan meluas: setiap tempat yang pernah dijelajahi pemain, baik berjalan kaki, terbang, atau'
+description: 'Mengecilkan dunia Minecraft dengan menghapus chunk yang jarang dikunjungi, untuk menghemat ruang disk dan mempercepat pencadangan.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

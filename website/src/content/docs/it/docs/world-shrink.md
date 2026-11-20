@@ -1,6 +1,6 @@
 ---
 title: 'Rimpicciolire un mondo'
-description: 'Col tempo un mondo si espande: ogni luogo in cui un giocatore ha mai camminato, volato o'
+description: 'Rimpicciolisci un mondo di Minecraft eliminando i chunk visitati raramente, per recuperare spazio su disco e velocizzare i backup.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

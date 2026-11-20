@@ -1,6 +1,6 @@
 ---
 title: 'כיווץ עולם'
-description: 'עם הזמן עולם מתפשט: כל מקום ששחקן אי פעם הלך, עף, או'
+description: 'כווץ עולם Minecraft על ידי מחיקת חלקים (chunks) שבהם מבקרים לעיתים רחוקות, כדי לפנות מקום בדיסק ולהאיץ גיבויים.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

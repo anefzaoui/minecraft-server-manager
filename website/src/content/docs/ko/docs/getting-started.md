@@ -1,6 +1,6 @@
 ---
 title: '시작하기'
-description: '패널을 처음 열면 관리자 계정을 만들라는 메시지가 표시됩니다.'
+description: 'Minecraft Server Manager를 설치하고 첫 실행 설정(시스템 확인, 시간대, 관리자 계정)을 완료하세요.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/getting-started.md'
 ---
 
@@ -8,11 +8,17 @@ editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/g
 
 ## 첫 실행 설정
 
-패널을 처음 열면 관리자 계정을 생성하라는 메시지가 표시됩니다. 이것은 추가 계정을 생성하기 전까지 유일하게 존재하는 계정이며, 모든 권한을 가집니다.
+패널을 처음 열면 짧은 설정 마법사가 안내합니다:
 
-사용자 이름과 최소 8자 이상의 비밀번호를 선택하세요. 그러면 로그인되어 대시보드로 바로 이동합니다.
+1.  **시스템 확인**: Docker에 연결 가능한지, Node.js 버전이 충분히 최신인지, 데이터 폴더에 쓰기 권한이 있는지 확인합니다. Docker가 아직 실행 중이 아니더라도 계속 진행할 수 있습니다. 서버 생성 및 시작은 Docker가 실행될 때까지 기다립니다.
+2.  **관리자 계정 생성**: 이 계정은 추가 계정이 생성되기 전까지 유일하며 모든 권한을 가집니다. 사용자 이름(2~32자)과 최소 8자 이상의 비밀번호를 선택하세요. 계정 생성 즉시 로그인됩니다.
+3.  **패널 설정** (선택 사항): 플레이어에게 표시될 공개 도메인 주소, CurseForge API 키, 시간대. 이 모든 것은 나중에 **설정**에서 변경할 수 있습니다.
 
-> **외부 노출된 설치는 PIN으로 보호됩니다.** 패널을 루프백 주소(`127.0.0.1`이 아닌 `PANEL_HOST`)가 아닌 다른 주소에 바인딩하여 시작하는 경우, 설정 페이지에서 **6자리 PIN**을 입력하라는 메시지도 표시됩니다. 패널은 시작 시 콘솔에 PIN을 출력합니다. 사용자 이름 및 비밀번호와 함께 입력하세요. 이렇게 하면 포트에 먼저 접속한 낯선 사람이 관리자 계정을 차지하는 것을 방지할 수 있습니다. 관리자 계정이 생성되면 PIN은 사라집니다.
+마지막 단계에서는 **서버 생성** 또는 **대시보드로 이동**을 선택할 수 있습니다.
+
+![첫 실행 설정의 시스템 확인 단계](/docs/images/setup-system-check.png)
+
+> **외부 노출 설치는 PIN으로 보호됩니다.** 패널을 루프백 주소(`127.0.0.1`이 아닌 `PANEL_HOST`)에 바인딩하여 시작하는 경우, 설정 페이지에서 **6자리 PIN**을 입력하라는 메시지가 표시됩니다. 패널은 시작 시 콘솔에 PIN을 출력합니다. 사용자 이름 및 비밀번호와 함께 입력하세요. 이렇게 하면 포트에 먼저 도달한 낯선 사람이 관리자 계정을 탈취하는 것을 방지할 수 있습니다. 관리자 계정이 생성되면 PIN은 사라집니다.
 
 ## 로그인
 
@@ -20,36 +26,40 @@ editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/g
 
 ![로그인](/docs/images/login.png)
 
-계정에 [2단계 인증](/docs/two-factor-authentication/)이 활성화되어 있다면, 비밀번호 입력 직후 인증 앱에서 생성된 6자리 코드를 입력하라는 메시지가 표시됩니다.
+계정에 [2단계 인증](/docs/two-factor-authentication/)이 활성화된 경우, 비밀번호 입력 직후 인증 앱에서 받은 6자리 코드를 입력하라는 메시지가 표시됩니다.
 
 ## 둘러보기
 
 모든 기능은 왼쪽 사이드바에 있습니다:
 
-- **대시보드** - 모든 서버를 한눈에 ([자세히 보기](/docs/dashboard/)).
-- **서버**, **모드팩**, **월드**, **청사진** - 서버 및 해당 콘텐츠를 생성하고 관리합니다.
-- **업데이트**, **백업**, **예약 작업**, **저장 공간**, **활동** - 운영 관련: 무엇이 최신 상태가 아닌지, 스냅샷, 자동화, 디스크 사용량 및 감사 로그.
-- **설정** (하단): 사용자, API 키 및 패널 구성.
+- **대시보드**: 모든 서버를 한눈에 볼 수 있습니다 ([자세히 보기](/docs/dashboard/)).
+- **서버**, **모드팩**, **월드**, **청사진**: 서버와 해당 콘텐츠를 생성하고 관리합니다.
+- **업데이트**, **백업**, **스케줄**, **스토리지**, **활동**: 운영 관련 기능: 무엇이 최신이 아닌지, 스냅샷, 자동화, 디스크 사용량, 감사 로그.
+- **권한** (하단, 관리자 전용): 각 사용자가 각 서버에서 수행할 수 있는 작업 ([자세히 보기](/docs/users-and-roles/#per-server-permissions)).
+- **설정** (하단, 관리자 전용): API 키, 패널 설정, 새 서버 기본값, [백업 보존](/docs/backups/#retention), 사용자, 로그인 보안, 공개 API.
 
-상단 바에는 **서버 생성** 버튼, **테마 전환** (어두움/밝음) 및 **계정 메뉴**가 있으며, 여기서 [2단계 인증](/docs/two-factor-authentication/)을 관리하거나 로그아웃할 수 있습니다.
+그 아래에는 사이드바에 서버 목록이 표시됩니다. 서버를 열면 자체 탭이 표시됩니다: **개요**, **콘솔**, **플레이어**, **모드**, **월드**, **백업**, **모니터링**, **설정**. 대부분 관련 하위 탭이 있습니다 (예: **설정 → 구성**에는 서버 설정과 게임 포트가 있습니다). [단일 서버](/docs/servers/#a-single-server)를 참조하세요.
+
+상단 바에는 **서버 생성** 버튼, **테마 전환** (어둡게/밝게), 그리고 **계정 메뉴**가 있습니다. 여기서 프로필 사진 변경, [2단계 인증](/docs/two-factor-authentication/) 관리 또는 로그아웃을 할 수 있습니다.
 
 ## 휴대폰 또는 태블릿에서
 
-모든 페이지는 좁은 화면에 맞춰 먼저 레이아웃이 잡히고, 그 다음 넓어집니다: 사이드바는 메뉴 버튼 뒤로 숨겨지고, 데이터 테이블은 카드 형태로 쌓이며, 툴바는 줄바꿈되고, 월드 제어 레일은 필요할 때 열 수 있는 카드로 축소됩니다. 버튼과 칩은 실제 터치 영역 크기를 가집니다. 데스크톱 전용 기능은 없습니다.
+모든 페이지는 좁은 화면에 맞춰 먼저 레이아웃이 잡히고 넓어집니다. 사이드바는 메뉴 버튼 뒤로 숨겨지고, 데이터 테이블은 카드 형태로 쌓이며, 툴바는 줄바꿈되고, 월드 컨트롤 레일은 필요할 때 열 수 있는 카드로 축소됩니다. 버튼과 칩은 실제 터치 대상 크기를 가집니다. 데스크톱 전용 기능은 없습니다.
 
 <p align="center">
-  <img src="/docs/images/mobile/dashboard.png" alt="휴대폰에서의 대시보드" width="180">
-  <img src="/docs/images/mobile/server-overview.png" alt="휴대폰에서의 서버 개요" width="180">
-  <img src="/docs/images/mobile/server-console.png" alt="휴대폰에서의 콘솔" width="180">
-  <img src="/docs/images/mobile/mods.png" alt="휴대폰에서의 모드 탭" width="180">
-  <img src="/docs/images/mobile/settings.png" alt="휴대폰에서의 설정" width="180">
+  <img src="/docs/images/mobile/dashboard.png" alt="휴대폰의 대시보드" width="180">
+  <img src="/docs/images/mobile/server-overview.png" alt="휴대폰의 서버 개요" width="180">
+  <img src="/docs/images/mobile/server-console.png" alt="휴대폰의 콘솔" width="180">
+  <img src="/docs/images/mobile/mods.png" alt="휴대폰의 모드 탭" width="180">
+  <img src="/docs/images/mobile/server-versions.png" alt="휴대폰의 버전 호환성" width="180">
+  <img src="/docs/images/mobile/settings.png" alt="휴대폰의 설정" width="180">
 </p>
 
 ## 필요한 것
 
-패널은 서버 실행을 위해 Docker와 통신하므로 Docker 데몬(Docker Desktop 또는 Docker Engine 소켓)에 접근할 수 있어야 합니다. Docker에 연결되면 대시보드의 Docker 타일에 **연결됨** 및 해당 버전이 표시됩니다. 연결되지 않아도 패널은 계속 실행됩니다. 데몬이 실행될 때까지 서버를 시작할 수 없습니다.
+패널은 서버 실행을 위해 Docker와 통신하므로 Docker 데몬(Docker Desktop 또는 Docker Engine 소켓)에 접근할 수 있어야 합니다. Docker에 연결 가능한 경우, 대시보드의 Docker 타일에 **연결됨**과 해당 버전이 표시됩니다. 연결되지 않은 경우에도 패널은 계속 실행됩니다. 데몬이 실행될 때까지 서버를 시작할 수 없습니다.
 
 ## 다음 단계
 
-- [첫 서버 생성 →](/docs/servers/)
-- [2FA로 계정 보안 →](/docs/two-factor-authentication/)
+- [첫 서버 생성하기 →](/docs/servers/)
+- [2FA로 계정 보안 강화하기 →](/docs/two-factor-authentication/)

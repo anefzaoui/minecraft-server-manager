@@ -1,6 +1,6 @@
 ---
 title: 'Offentlig API'
-description: 'En lille, skrivebeskyttet HTTP API til at hente serverstatus udefra panelet: a'
+description: 'En lille, skrivebeskyttet HTTP API til at hente serverstatus udefra panelet: et statusdashboard, en oppetidsovervågning, en Discord-bot, en hjemmeautomatiseringsregel.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/public-api.md'
 ---
 
@@ -9,27 +9,27 @@ editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/p
 En lille, skrivebeskyttet HTTP API til at hente serverstatus udefra panelet: et
 statusdashboard, en oppetidsmonitor, en Discord-bot, en hjemmeautomatiseringsregel. Den
 betjenes af panelet selv og returnerer de samme live-data, som panelets egne sider
-viser (fra cachen i hukommelsen), så forespørgsler til den aldrig rører Docker.
+viser (fra cachen i hukommelsen), så forespørgsler til den rører aldrig Docker.
 
-Den er **slået fra, indtil en administrator bruger den** og **administrator-beskyttet**. Intet eksponeres,
+Den er **slået fra, indtil en administrator bruger den** og er **administratorbeskyttet**. Intet eksponeres,
 før en token eksisterer.
 
 ## Aktivering
 
-**Indstillinger → Offentlig API → Ny nøgle**. Giv den et navn, vælg hvad den kan se (alle
-servere eller et specifikt undersæt), og valgfrit en udløbsdato. Den fulde nøgle (en
-Bearer-token) vises **én gang** i en dialog; kopier den nu, for kun et kort præfiks
-beholdes derefter til identifikation i listen.
+**Indstillinger → Offentlig API → Ny nøgle**. Giv den et navn, vælg, hvad den kan se (alle
+servere eller en specifik undergruppe), og valgfrit en udløbsdato. Den fulde nøgle (en
+Bearer-token) vises **én gang** i en dialog; kopier den nu, da kun en kort præfiks
+beholdes bagefter til identifikation på listen.
 
 ![Offentlig API-indstillinger](/docs/images/settings-public-api.png)
 
-Oprettelse af den første nøgle aktiverer API'en automatisk (kontakten **Lad eksterne apps
-læse status** er en pausekontrol: slå den fra for at stoppe betjening uden at annullere nogen nøgler). Annuller en nøgle fra den samme tabel til enhver tid; klienter, der bruger den, mister
+Oprettelse af den første nøgle tænder automatisk for API'en (**Lad eksterne apps
+læse status**-kontakten er en pausefunktion: slå den fra for at stoppe betjening uden at annullere nogen nøgler). Annuller en nøgle fra samme tabel når som helst; klienter, der bruger den, mister
 adgangen øjeblikkeligt.
 
-Tokens gemmes som en SHA-256 hash (aldrig i klartekst), overlever en panelgenstart
-og lever længere end de servere, de er omfattet af (en slettet server falder simpelthen
-ud af den tokens resultater).
+Tokens gemmes som en SHA-256 hash (aldrig i klartekst), overlever en genstart af panelet
+og lever længere end de servere, de er omfattet af (en slettet server
+fjernes simpelthen fra den tokens resultater).
 
 ## Godkendelse
 
@@ -50,10 +50,7 @@ Fejl returnerer `401` med `{ "ok": false, "error": "..." }`. Alt andet end `GET`
 ## Rate limit
 
 Hver token får sit eget budget, `RATE_LIMIT_PUBLIC_API_PER_MIN` (standard `120`
-forespørgsler/minut; `0` deaktiverer begrænseren). Over grænsen returnerer `429`. Forespørgsler, der
-aldrig præsenterer en gyldig token (mangler, forkert format, tilbagekaldt eller udløbet), begrænses separat
-pr. klient-IP til fem gange det antal, så probing ikke kan omgå budgettet ved at rotere
-tokens.
+forespørgsler/minut; `0` deaktiverer begrænseren). Overskridelse af grænsen returnerer `429`. Hver forespørgsel, før dens token overhovedet er kontrolleret, tæller også mod en begrænsning pr. klient-IP på fem gange det tal, så undersøgelse med manglende, forkert formaterede, tilbagekaldte eller udløbne tokens kan ikke omgå budgettet ved at rotere dem.
 
 ## Endpoints
 
@@ -85,24 +82,24 @@ Hver server, som tokenen er omfattet af.
 ### `GET /api/v1/servers/:id`
 
 Én server, samme objekt under en `server`-nøgle. Returnerer `404` for et ukendt id
-**og** for en server, som tokenen ikke er omfattet af (ingen eksistens-orakel), og `400`
+**og** for en server, som tokenen ikke er omfattet af (ingen eksistensorakel), og `400`
 for et forkert formateret id.
 
-## Svarfelter
+## Responsfelter
 
-| Felt            | Betydning                                                                                           |
-| --------------- | --------------------------------------------------------------------------------------------------- |
-| `total`         | Hvor mange servere der er synlige for denne token (efter dens omfang-filter).                       |
-| `online`        | Hvor mange af disse der er i tilstanden: `running`.                                                 |
-| `id`            | Stabil server-id (`srv_...`).                                                                       |
-| `name`          | Visningsnavn.                                                                                       |
-| `type`          | itzg servertype (`PAPER`, `FABRIC`, `AUTO_CURSEFORGE`, ...).                                        |
-| `state`         | `running`, `starting`, `stopped` eller `crashed` - en stabil oversigt over panelets interne status. |
-| `cpuPct`        | Nuværende CPU %, eller `null`, når serveren ikke kører.                                             |
-| `memoryMb`      | Resident hukommelse i MB, eller `null`.                                                             |
-| `memoryLimitMb` | Konfigureret containerhukommelsesgrænse i MB, eller `null`.                                         |
-| `uptimeSeconds` | Sekunder siden containeren startede, eller `null`.                                                  |
-| `players`       | `{ online, max }`, eller `null`, indtil serveren rapporterer en spilliste.                          |
+| Felt            | Betydning                                                                                          |
+| --------------- | -------------------------------------------------------------------------------------------------- |
+| `total`         | Antal servere, der er synlige for denne token (efter dens omfangfilter).                           |
+| `online`        | Antal af disse, der er i tilstanden: `running`.                                                    |
+| `id`            | Stabil server-id (`srv_...`).                                                                      |
+| `name`          | Visningsnavn.                                                                                      |
+| `type`          | itzg servertype (`PAPER`, `FABRIC`, `AUTO_CURSEFORGE`, ...).                                       |
+| `state`         | `running`, `starting`, `stopped` eller `crashed`: en stabil oversigt over panelets interne status. |
+| `cpuPct`        | Nuværende CPU %, eller `null`, når serveren ikke kører.                                            |
+| `memoryMb`      | Resident hukommelse i MB, eller `null`.                                                            |
+| `memoryLimitMb` | Konfigureret containerhukommelsesgrænse i MB, eller `null`.                                        |
+| `uptimeSeconds` | Sekunder siden containeren startede, eller `null`.                                                 |
+| `players`       | `{ online, max }`, eller `null`, indtil serveren rapporterer en spilliste.                         |
 
 ## Eksempel
 

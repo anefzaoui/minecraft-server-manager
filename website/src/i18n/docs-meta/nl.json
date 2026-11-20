@@ -9,15 +9,15 @@
   },
   "backups": {
     "title": "Back-ups",
-    "description": "De Back-ups pagina toont elke snapshot van uw vloot, met grootte, reden en leeftijd."
+    "description": "De Back-ups pagina toont elke snapshot van uw vloot, met grootte, reden en leeftijd, filterbaar per server en per reden."
   },
   "blueprints": {
     "title": "Blueprints",
-    "description": "Een blueprint legt de volledige configuratie van een server vast (type, versie, resources, omgeving, pack pin, en optioneel de configuratie en wereld) in één bestand."
+    "description": "Blueprints slaan de volledige configuratie van een Minecraft-server op als een herbruikbaar recept voor het maken van nieuwe servers. Geheimen worden nooit opgenomen."
   },
   "chatbot": {
     "title": "Minecraft-chatbot per server",
-    "description": "Deze fork voegt een door beheerders geconfigureerde chatbot toe aan elke beheerde Minecraft-server."
+    "description": "Het paneel biedt een door de beheerder geconfigureerde chatbot voor elke beheerde Minecraft-server, ingesteld via het tabblad Instellingen → Chatbot van de server."
   },
   "console-and-chat": {
     "title": "Console & chat-opdrachten",
@@ -29,7 +29,7 @@
   },
   "getting-started": {
     "title": "Aan de slag",
-    "description": "De eerste keer dat je het paneel opent, wordt je gevraagd om een beheerdersaccount aan te maken."
+    "description": "Installeer Minecraft Server Manager en voltooi de eerste installatie: de systeemcontrole, uw tijdzone en het beheerdersaccount."
   },
   "index": {
     "title": "Documentatie",
@@ -37,27 +37,27 @@
   },
   "integrations": {
     "title": "Integraties",
-    "description": "Elke server heeft zijn integraties onder de groep Instellingen: Discord, een openbare Statuspagina, Eén-klik Uitnodigingen en het optionele Chatbot-tabblad."
+    "description": "Elke server heeft zijn integraties onder de groep Instellingen: Discord, een openbare Statuspagina, uitnodigingen met één klik en het optionele Chatbot-tabblad (alleen voor beheerders)."
   },
   "modpacks": {
     "title": "Modpacks",
-    "description": "De Modpacks-pagina (en het tabblad 'Van modpack' in de wizard) installeert een modpack als server, altijd vastgezet op een exacte packversie zodat een herstart kan"
+    "description": "Installeer CurseForge, Modrinth, FTB en GT New Horizons modpacks als servers, altijd vastgezet op een exacte packversie."
   },
   "public-api": {
     "title": "Openbare API",
-    "description": "Een kleine, alleen-lezen HTTP API voor het ophalen van serverstatus van buiten het paneel: a"
+    "description": "Een kleine, alleen-lezen HTTP API voor het ophalen van serverstatus van buiten het paneel: een statusdashboard, een uptime-monitor, een Discord-bot, een domotica-regel."
   },
   "schedules": {
     "title": "Schema's",
-    "description": "De pagina Schema's automatiseert terugkerende taken met cron-expressies."
+    "description": "De pagina Schema's automatiseert terugkerende taken met cron-expressies. Geen externe cron, geen scripts."
   },
   "servers": {
     "title": "Servers maken en beheren",
-    "description": "Klik op \"Create a Server\" (bovenbalk) of de kaart \"Create a server\" om de wizard te openen."
+    "description": "Maak, start, stop, herbouw en configureer Minecraft servers in het paneel: de aanmaak-wizard, instellingen, geheugen en de gamepoort."
   },
   "storage": {
     "title": "Opslag",
-    "description": "De Opslag-pagina toont waar je schijfruimte naartoe gaat: gebruik per server en hoe dit zich in de loop van de tijd ontwikkelt."
+    "description": "Bekijk waar schijfruimte naartoe gaat, stel een schijfquotum in voor elke servermap, en ruim op wat u niet langer nodig heeft."
   },
   "two-factor-authentication": {
     "title": "Twee-factorauthenticatie",
@@ -65,18 +65,46 @@
   },
   "updates": {
     "title": "Updates",
-    "description": "De pagina Updates toont in één oogopslag wat er verouderd is binnen uw vloot:"
+    "description": "Volg en pas updates toe voor Minecraft-versies, modpacks, mods en plugins op elke server, met een beleid per server."
   },
   "users-and-roles": {
     "title": "Gebruikers & rollen",
-    "description": "Het paneel is multi-user."
+    "description": "Accounts, de rollen admin, operator en viewer, en server-specifieke permissies in Minecraft Server Manager."
   },
   "world-shrink": {
     "title": "Een wereld verkleinen",
-    "description": "Na verloop van tijd breidt een wereld zich uit: elke plek waar een speler ooit heeft gelopen, gevlogen of"
+    "description": "Verklein een Minecraft-wereld door zelden bezochte chunks te verwijderen, om schijfruimte terug te winnen en back-ups te versnellen."
   },
   "worlds-and-files": {
     "title": "Werelden & bestanden",
-    "description": "De pagina Werelden beheert de wereldgegevens van uw servers: wissel de actieve wereld, upload een wereld of download er een."
+    "description": "De wereldbibliotheek, werelduploads en -wisselingen, het tabblad mods en plugins, en de bestandsbeheerder in de browser."
+  },
+  "guide-backups": {
+    "title": "Minecraft serverback-ups die daadwerkelijk herstellen",
+    "description": "Hoe je Minecraft serverback-ups maakt die daadwerkelijk herstellen: consistente kopieën, ergens anders bewaard, en minstens één keer getest."
+  },
+  "guide-choosing-a-loader": {
+    "title": "Vanilla, Paper, Fabric, Forge, NeoForge, Quilt: welke?",
+    "description": "Vanilla, Paper, Fabric, Forge, NeoForge of Quilt: welk type Minecraft-server te draaien, gekozen op basis van wat je spelers installeren."
+  },
+  "guide-moving-a-server": {
+    "title": "Een Minecraft-server verplaatsen naar een andere host",
+    "description": "Een wereld verplaatsen is eenvoudig. Een server verplaatsen waar spelers nog steeds op kunnen inloggen, met hun inventarissen, huizen en permissies intact, is het deel dat misgaat."
+  },
+  "guide-server-memory": {
+    "title": "Hoeveel RAM heeft een Minecraft-server nodig?",
+    "description": "Hoeveel RAM een Minecraft-server nodig heeft voor vanilla, Paper, lichte mods en grote modpacks, en hoeveel er over moet blijven voor de machine."
+  },
+  "guide-server-wont-start": {
+    "title": "Je Minecraft-server start niet",
+    "description": "Een Minecraft-server die niet start, opgelost in volgorde van waarschijnlijkheid: het logboek, de Java-versie, geheugen, de EULA en poort, en mods."
+  },
+  "invites-and-status-page": {
+    "title": "Uitnodigingen & statuspagina",
+    "description": "Nodig vrienden uit voor een server met het adres, de versie en een client modpack, en deel een openbare statuspagina die alleen toont wat jij kiest."
+  },
+  "live-map": {
+    "title": "Live map",
+    "description": "Schakel met één klik een live 3D-kaart van de wereld van een server in met BlueMap, die uitsluitend via de aanmelding van het paneel wordt aangeboden."
   }
 }

@@ -9,15 +9,15 @@
   },
   "backups": {
     "title": "Säkerhetskopior",
-    "description": "Sidan Säkerhetskopior visar varje ögonblicksbild i hela din flotta, med storlek, orsak och ålder."
+    "description": "Sidan Säkerhetskopior visar varje ögonblicksbild i din flotta, med storlek, orsak och ålder, filtrerbar per server och per orsak."
   },
   "blueprints": {
     "title": "Ritningar",
-    "description": "En ritning fångar en servers hela konfiguration (typ, version, resurser, miljö, pack-pin och valfritt dess konfiguration och värld) till en enda po"
+    "description": "Ritningar sparar en Minecraft-servers hela konfiguration som ett återanvändbart recept för att skapa nya servrar. Hemligheter inkluderas aldrig."
   },
   "chatbot": {
-    "title": "Minecraft-chattbot per server",
-    "description": "Denna fork lägger till en administratörskonfigurerad chattbot till varje hanterad Minecraft-server."
+    "title": "Chatbot per Minecraft-server",
+    "description": "Panelen erbjuder en administratörskonfigurerad chatbot för varje hanterad Minecraft-server, inställd under serverns flik Inställningar → Chatbot."
   },
   "console-and-chat": {
     "title": "Konsol & chattkommandon",
@@ -29,7 +29,7 @@
   },
   "getting-started": {
     "title": "Kom igång",
-    "description": "Första gången du öppnar panelen uppmanas du att skapa ett administratörskonto."
+    "description": "Installera Minecraft Server Manager och slutför den första konfigurationen: systemkontrollen, din tidszon och administratörskontot."
   },
   "index": {
     "title": "Dokumentation",
@@ -37,27 +37,27 @@
   },
   "integrations": {
     "title": "Integrationer",
-    "description": "Varje server har sina integrationer under gruppen Inställningar: Discord, en publik Status Sida, en-klicks Inbjudningar och den valfria Chattbot-fliken."
+    "description": "Varje server har sina integrationer under gruppen Inställningar: Discord, en publik Status Sida, engångs-inbjudningar och den valfria Chattbot-fliken (endast administratörer)."
   },
   "modpacks": {
     "title": "Modpacks",
-    "description": "Modpacks-sidan (och fliken Från modpack i guiden för skapande) installerar ett modpack som en server, alltid låst till en exakt packversion så att en omstart kan"
+    "description": "Installera CurseForge, Modrinth, FTB och GT New Horizons modpacks som servrar, alltid låsta till en exakt packversion."
   },
   "public-api": {
-    "title": "Publik API",
-    "description": "En liten, endast läsbar HTTP API för att hämta serverstatus utifrån panelen: a"
+    "title": "Publikt API",
+    "description": "Ett litet, endast läsbart HTTP API för att hämta serverstatus utifrån panelen: en status-dashboard, en upptid-monitor, en Discord-bot, en hem-automationsregel."
   },
   "schedules": {
     "title": "Scheman",
-    "description": "Sidan Scheman automatiserar återkommande uppgifter med cron-uttryck."
+    "description": "Sidan Scheman automatiserar återkommande uppgifter med cron-uttryck. Ingen extern cron, inga skript."
   },
   "servers": {
     "title": "Skapa och hantera servrar",
-    "description": "Klicka på Skapa en server (överst i fältet) eller på kortet Skapa en server för att öppna guiden."
+    "description": "Skapa, starta, stoppa, bygg om och konfigurera Minecraft-servrar i panelen: guiden för skapande, inställningar, minne och spelport."
   },
   "storage": {
     "title": "Lagring",
-    "description": "Lagringssidan visar vart ditt diskutrymme tar vägen: användning per server och hur den utvecklas över tid."
+    "description": "Se var diskutrymmet tar vägen, begränsa varje servermapp med en diskutrymmeskvot och rensa bort det du inte längre behöver."
   },
   "two-factor-authentication": {
     "title": "Tvåfaktorsautentisering",
@@ -65,18 +65,46 @@
   },
   "updates": {
     "title": "Uppdateringar",
-    "description": "Sidan Uppdateringar spårar vad som är föråldrat i hela din flotta på ett ställe:"
+    "description": "Spåra och installera uppdateringar för Minecraft-versioner, modpacks, mods och plugins på varje server, med en policy per server."
   },
   "users-and-roles": {
-    "title": "Användare och roller",
-    "description": "Panelen är fleranvändarvänlig."
+    "title": "Användare & roller",
+    "description": "Konton, rollerna administratör, operatör och betraktare, samt server-specifika behörigheter i Minecraft Server Manager."
   },
   "world-shrink": {
     "title": "Krympa en värld",
-    "description": "Med tiden sprider sig en värld ut: varje plats en spelare någonsin har gått, flugit eller"
+    "description": "Krymp en Minecraft-värld genom att radera sällan besökta delar för att frigöra diskutrymme och snabba upp säkerhetskopieringar."
   },
   "worlds-and-files": {
     "title": "Världar & filer",
-    "description": "Sidan Världar hanterar världsinformationen på dina servrar: byt aktiv värld, ladda upp en värld eller ladda ner en."
+    "description": "Världsbiblioteket, uppladdning och byte av världar, fliken för mods och plugins, samt filhanteraren i webbläsaren."
+  },
+  "guide-backups": {
+    "title": "Minecraft-server-säkerhetskopior som faktiskt går att återställa",
+    "description": "Hur du skapar Minecraft-server-säkerhetskopior som faktiskt går att återställa: konsekventa kopior, lagrade någon annanstans och testade minst en gång."
+  },
+  "guide-choosing-a-loader": {
+    "title": "Vanilla, Paper, Fabric, Forge, NeoForge, Quilt: vilken?",
+    "description": "Vanilla, Paper, Fabric, Forge, NeoForge eller Quilt: vilken typ av Minecraft-server ska köras, vald baserat på vad dina spelare installerar."
+  },
+  "guide-moving-a-server": {
+    "title": "Flytta en Minecraft-server till en annan värd",
+    "description": "Att flytta en värld är enkelt. Att flytta en server som spelare fortfarande kan logga in på, med deras inventarier, hem och behörigheter intakta, är den del som går fel."
+  },
+  "guide-server-memory": {
+    "title": "Hur mycket RAM behöver en Minecraft-server?",
+    "description": "Hur mycket RAM en Minecraft-server behöver för vanilla, Paper, lätta mods och stora modpacks, samt hur mycket som ska lämnas över till maskinen."
+  },
+  "guide-server-wont-start": {
+    "title": "Din Minecraft-server startar inte",
+    "description": "En Minecraft-server som inte startar, åtgärdad i sannolikhetsordning: loggen, Java-versionen, minnet, EULA och port, samt mods."
+  },
+  "invites-and-status-page": {
+    "title": "Inbjudningar & status-sida",
+    "description": "Bjud in vänner till en server med adressen, versionen och en klientmodpack, och dela en offentlig status-sida som visar endast det du väljer."
+  },
+  "live-map": {
+    "title": "Livskarta",
+    "description": "Aktivera en BlueMap live 3D-karta över en servers värld med ett klick, serverad endast via panelens inloggning."
   }
 }

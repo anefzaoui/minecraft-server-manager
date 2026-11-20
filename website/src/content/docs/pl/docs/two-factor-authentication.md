@@ -6,13 +6,13 @@ editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/t
 
 [← Powrót do spisu dokumentacji](/docs/)
 
-Uwierzytelnianie dwuskładnikowe (2FA) dodaje drugi krok do logowania: po podaniu hasła wprowadzasz krótki kod z aplikacji uwierzytelniającej na swoim telefonie. Nawet jeśli ktoś pozna Twoje hasło, nie będzie mógł się zalogować bez Twojego urządzenia.
+Dwuskładnikowe uwierzytelnianie (2FA) dodaje drugi krok do logowania: po podaniu hasła wprowadzasz krótki kod z aplikacji uwierzytelniającej na swoim telefonie. Nawet jeśli ktoś pozna Twoje hasło, nie będzie mógł się zalogować bez Twojego urządzenia.
 
-Działa z każdym standardowym uwierzytelniaczem TOTP (Google Authenticator, Authy, 1Password, Microsoft Authenticator i innymi) i jest dostępne dla **każdego** konta, nie tylko administratorów. Ochrona własnego logowania nie jest czynnością związaną z zarządzaniem serwerem, więc widzowie i operatorzy również mogą ją włączyć.
+Działa z każdym standardowym uwierzytelniającym TOTP (Google Authenticator, Authy, 1Password, Microsoft Authenticator i inne) i jest dostępne dla **każdego** konta, nie tylko administratorów. Ochrona własnego logowania nie jest czynnością związaną z zarządzaniem serwerem, więc widzowie i operatorzy również mogą ją włączyć.
 
 ## Włączanie 2FA
 
-Otwórz menu konta (Twoje inicjały, w prawym górnym rogu) i wybierz **Uwierzytelnianie dwuskładnikowe**.
+Otwórz menu konta (Twoje inicjały lub zdjęcie profilowe, w prawym górnym rogu) i wybierz **2FA**.
 
 ![Menu konta](/docs/images/2fa-user-menu.png)
 
@@ -27,11 +27,11 @@ Pojawi się okno rejestracji:
 
 ### Zapisz swoje kody zapasowe
 
-W momencie włączenia 2FA panel wyświetli zestaw jednorazowych **kodów zapasowych**.
+W momencie włączenia 2FA panel wyświetla zestaw jednorazowych **kodów zapasowych**.
 
 ![Kody zapasowe](/docs/images/2fa-backup-codes.png)
 
-Każdy kod działa **raz**, aby umożliwić zalogowanie, jeśli kiedykolwiek stracisz dostęp do swojej aplikacji uwierzytelniającej. Zapisz je w bezpiecznym miejscu (menedżer haseł jest idealny), ponieważ nie zostaną one ponownie wyświetlone. Możesz wygenerować nowy zestaw w dowolnym momencie (co unieważni stare kody).
+Każdy kod działa **raz**, umożliwiając zalogowanie się, jeśli kiedykolwiek stracisz dostęp do swojej aplikacji uwierzytelniającej. Zapisz je w bezpiecznym miejscu (menedżer haseł jest idealny), ponieważ nie zostaną one ponownie wyświetlone. Możesz wygenerować nowy zestaw w dowolnym momencie (co unieważni stare kody).
 
 ## Logowanie z 2FA
 
@@ -43,20 +43,20 @@ Wprowadź aktualny 6-cyfrowy kod z aplikacji (lub jeden z kodów zapasowych) i j
 
 ## Zarządzanie lub wyłączanie 2FA
 
-Otwórz tę samą opcję **Uwierzytelnianie dwuskładnikowe** w menu konta, gdy jest ona włączona. Po potwierdzeniu hasła możesz:
+Otwórz tę samą opcję **2FA** w menu konta, gdy jest włączona. Po potwierdzeniu hasła możesz:
 
-- **Wygenerować ponownie kody zapasowe** - wydaje nowy zestaw i unieważnia stary.
-- **Wyłączyć 2FA** - usuwa je z Twojego konta.
+- **Wygeneruj ponownie kody zapasowe** – wydaje nowy zestaw i unieważnia stary.
+- **Wyłącz 2FA** – usuwa je z Twojego konta.
 
-Obie operacje najpierw ponownie sprawdzają Twoje aktualne hasło.
+Obie opcje najpierw ponownie sprawdzają Twoje aktualne hasło.
 
 ## Zgubiono telefon _i_ kody zapasowe?
 
-**Administrator** może zresetować 2FA innego użytkownika z poziomu **Ustawienia → Użytkownicy** (przycisk **Resetuj** w kolumnie 2FA). To usuwa 2FA dla konta, dzięki czemu użytkownik może zalogować się tylko za pomocą hasła i skonfigurować je ponownie. Administratorzy nie mogą zresetować _własnego_ 2FA bez hasła. Przechodzą przez normalny proces wyłączania z potwierdzeniem hasła, więc przejęta sesja administratora nie może usunąć własnego drugiego składnika.
+**Administrator** może zresetować 2FA innego użytkownika z poziomu **Ustawienia → Użytkownicy** (**Resetuj 2FA** w menu akcji tego użytkownika). To czyści 2FA dla konta, dzięki czemu użytkownik może zalogować się tylko za pomocą hasła i skonfigurować je od nowa. Administratorzy nie mogą resetować _własnego_ 2FA bez hasła. Przechodzą przez normalny proces wyłączania z potwierdzeniem hasła, więc przejęta sesja administratora nie może usunąć własnego drugiego składnika.
 
 ## Warto wiedzieć
 
-- Kody są oparte na czasie i zmieniają się co 30 sekund; panel akceptuje niewielkie przesunięcie zegara i cicho odzyskuje synchronizację, jeśli zegar serwera zostanie później poprawiony.
-- Kod nie może zostać użyty ponownie - po użyciu do zalogowania, ten sam kod nie zadziała ponownie w swoim oknie czasowym.
-- Błędne kody są ograniczane czasowo. Ograniczenie jest **współdzielone** z etapem hasła (blokada na konto plus ograniczenie `RATE_LIMIT_AUTH_PER_15MIN` na adres IP), więc wprowadzenie poprawnego hasła nie może zresetować licznika tuż przed odgadnięciem 6-cyfrowego kodu.
+- Kody są oparte na czasie i zmieniają się co 30 sekund; panel akceptuje niewielkie przesunięcie zegara i cicho się odzyskuje, jeśli zegar serwera zostanie później poprawiony.
+- Kod nie może zostać powtórzony: po użyciu do zalogowania ten sam kod nie zadziała ponownie w swoim oknie czasowym.
+- Błędne kody podlegają limitom. Limit jest **współdzielony** z etapem hasła (blokada na konto plus limit `RATE_LIMIT_AUTH_PER_15MIN` na adres IP), więc wprowadzenie poprawnego hasła nie może zresetować licznika tuż przed odgadnięciem 6-cyfrowego kodu.
 - Zmiany 2FA (włączenie, wyłączenie, resetowanie, użycie kodu zapasowego) są rejestrowane w [Dzienniku aktywności](/docs/activity/).

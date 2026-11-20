@@ -1,6 +1,6 @@
 ---
 title: 'Micșorarea unei lumi'
-description: 'În timp, o lume se extinde: fiecare loc în care un jucător a mers, a zburat sau'
+description: 'Micșorați o lume Minecraft prin ștergerea fragmentelor rar vizitate, pentru a recupera spațiu pe disc și a accelera backup-urile.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

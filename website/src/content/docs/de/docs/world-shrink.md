@@ -1,6 +1,6 @@
 ---
 title: 'Eine Welt verkleinern'
-description: 'Mit der Zeit breitet sich eine Welt aus: jeder Ort, an dem ein Spieler jemals gelaufen, geflogen oder'
+description: 'Verkleinern Sie eine Minecraft-Welt, indem Sie selten besuchte Chunks löschen, um Speicherplatz zurückzugewinnen und Backups zu beschleunigen.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

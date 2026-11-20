@@ -8,9 +8,12 @@
     "home": "Strona główna",
     "features": "Funkcje",
     "screenshots": "Zrzuty ekranu",
+    "servers": "Serwery",
+    "guides": "Poradniki",
     "install": "Instalacja",
     "docs": "Dokumentacja",
     "faq": "FAQ",
+    "compare": "Porównanie",
     "changelog": "Historia zmian",
     "github": "GitHub",
     "discord": "Discord",
@@ -21,12 +24,13 @@
   },
   "hero": {
     "eyebrow": "Darmowe i otwarte. Działa na Twojej maszynie.",
-    "title": "Zarządzaj swoimi serwerami Minecraft z jednego przyjaznego panelu.",
+    "title": "Zarządzaj swoimi serwerami Minecraft z jednego, przyjaznego panelu.",
     "subtitle": "Minecraft Server Manager zamienia Docker w przytulny dom dla Twoich serwerów: modpacki, które pozostają przypięte, kopie zapasowe jednym kliknięciem, harmonogramy, mapa na żywo, statystyki graczy i konsola, która mówi prostym językiem. Bez rachunków, bez blokad, cały panel w jednym folderze.",
-    "primary": "Rozpocznij w 3 krokach",
+    "primary": "Rozpocznij w kilka minut",
     "secondary": "Poznaj funkcje",
     "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
-    "scroll": "Zobacz samouczek"
+    "scroll": "Zobacz samouczek",
+    "shotCaption": "Prawdziwy panel: jego pulpit z sześcioma przykładowymi serwerami, w ciemnym motywie."
   },
   "pillars": {
     "title": "Stworzone dla tych, którzy zarządzają serwerami, a nie zgłoszeniami",
@@ -60,13 +64,13 @@
         "items": [
           {
             "title": "Kontenery z ograniczonymi zasobami",
-            "body": "Twórz, uruchamiaj, zatrzymuj, restartuj, przebudowuj i usuwaj serwery z eleganckim zatrzymywaniem RCON i automatycznym wykrywaniem awarii.",
+            "body": "Twórz, uruchamiaj, zatrzymuj, restartuj, przebudowuj i usuwaj serwery z eleganckim zatrzymywaniem przez RCON i automatycznym wykrywaniem awarii.",
             "icon": "server",
             "pills": ["docker"]
           },
           {
             "title": "Kreator tworzenia z przewodnikiem",
-            "body": "Tryb prosty lub zaawansowany, z każdym ustawieniem obrazu wyjaśnionym prostym językiem przed jego wybraniem.",
+            "body": "Tryb prosty lub zaawansowany, z każdym ustawieniem obrazu wyjaśnionym prostym językiem przed jego wyborem.",
             "icon": "wand"
           },
           {
@@ -76,7 +80,7 @@
           },
           {
             "title": "Moderacja graczy",
-            "body": "Biała lista, operatorzy, bany, bany IP i teleporty, online przez RCON i offline przez pliki JSON.",
+            "body": "Biała lista, operatorzy, blokady, blokady IP i teleporty, online przez RCON i offline przez pliki JSON.",
             "icon": "users"
           }
         ]
@@ -86,36 +90,41 @@
         "items": [
           {
             "title": "Pięć rejestrów w jednej przeglądarce",
-            "body": "Przeszukaj wszystkie pięć z jednego miejsca. Trzy z nich nie wymagają klucza API.",
+            "body": "Przeszukuj wszystkie pięć z jednego miejsca. Trzy z nich nie wymagają klucza API.",
             "icon": "search",
             "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
           },
           {
             "title": "Dodaj przez link",
-            "body": "Wklej stronę projektu, repozytorium GitHub, slug lub bezpośredni adres URL pliku jar. Panel go zidentyfikuje.",
+            "body": "Wklej stronę projektu, repozytorium GitHub, slug lub bezpośredni adres URL pliku jar. Panel go rozpozna.",
             "icon": "link"
           },
           {
             "title": "Importuj wszystko",
-            "body": "Każdy plik jar zidentyfikowany i sprawdzony pod kątem kompatybilności podczas importu.",
+            "body": "Każdy plik jar jest identyfikowany i sprawdzany pod kątem kompatybilności podczas importu.",
             "icon": "upload",
             "pills": ["mrpack", "cf-export", "zip"]
           },
           {
             "title": "Pobrane pliki zweryfikowane sumą kontrolną",
-            "body": "Zweryfikowane przed dotarciem pliku do serwera, najpierw najsilniejszy skrót. Niezgodność nigdy nie jest wysyłana.",
+            "body": "Weryfikowane przed dostarczeniem pliku do serwera, najpierw najsilniejszy skrót. Niezgodność nigdy nie jest wysyłana.",
             "icon": "shield",
             "pills": ["sha512", "sha256", "sha1", "md5"]
           },
           {
             "title": "Współdzielona biblioteka modów",
-            "body": "Zde-duplikowana przez sha256 i połączona dowiązaniami symbolicznymi z serwerami, dzięki czemu niestandardowe mody przetrwają aktualizacje paczek.",
+            "body": "Deduplikowana przez sha256 i łączona dowiązaniami symbolicznymi do serwerów, dzięki czemu niestandardowe mody przetrwają aktualizacje paczek.",
             "icon": "library"
           },
           {
-            "title": "Rozwiązywanie problemów z wyborem modów",
-            "body": "Wybierz mody, których chcesz, i uzyskaj najnowszą, w pełni kompatybilną wersję loadera i Minecrafta.",
+            "title": "Rozwiązywanie problemów z priorytetem modów",
+            "body": "Wybierz mody, które chcesz, i uzyskaj najnowszą w pełni kompatybilną wersję loadera i Minecrafta.",
             "icon": "sparkles"
+          },
+          {
+            "title": "Dowolna wersja modpacka, dowolna wersja loadera",
+            "body": "Przenieś modpack do dowolnej opublikowanej wersji, nowszej lub starszej, lub zmień wersję loadera modów. Najpierw tworzona jest kopia zapasowa, a nieudane uruchomienie powoduje przywrócenie poprzedniego stanu.",
+            "icon": "refresh"
           }
         ]
       },
@@ -138,14 +147,14 @@
             "icon": "blueprint"
           },
           {
-            "title": "Diagnostyka awarii",
-            "body": "Awarie są wykrywane, analizowane i podejrzani są nazywani, z udostępnianiem jednym kliknięciem i zautomatyzowanymi analizami.",
+            "title": "Analiza awarii",
+            "body": "Awarie są wykrywane, analizowane, a podejrzani nazywani, z udostępnianiem jednym kliknięciem i zautomatyzowanymi spostrzeżeniami.",
             "icon": "flame",
             "pills": ["mclogs"]
           },
           {
             "title": "Śledzenie aktualizacji",
-            "body": "Śledzone są nowe wersje serwera, paczek, obrazów i modów, z kopiami zapasowymi przed aktualizacją i możliwością wycofania zmian jednym kliknięciem.",
+            "body": "Śledzone są nowe wersje serwerów, paczek, obrazów i modów, z kopiami zapasowymi przed aktualizacją i przywracaniem jednym kliknięciem.",
             "icon": "refresh"
           }
         ]
@@ -155,18 +164,18 @@
         "items": [
           {
             "title": "Mapa na żywo",
-            "body": "Jedno kliknięcie do mapy na żywo, serwowanej przez uwierzytelniony proxy panelu.",
+            "body": "Jedno kliknięcie do mapy na żywo, serwowanej przez uwierzytelniony serwer proxy panelu.",
             "icon": "map",
             "pills": ["bluemap"]
           },
           {
-            "title": "Analityka i przechowywanie",
+            "title": "Analityka i przechowywanie danych",
             "body": "Wyniki czasu gry, śmierci i wydobycia, analiza ekwipunku, wykorzystanie dysku na serwer i wymuszone limity.",
             "icon": "chart"
           },
           {
             "title": "Discord i chatbot",
-            "body": "Webhooki z przełącznikami dla poszczególnych zdarzeń, plus opcjonalny chatbot na serwer z ograniczonymi uprawnieniami w grze.",
+            "body": "Webhooki z przełącznikami per zdarzenie, plus opcjonalny chatbot per serwer z ograniczonymi uprawnieniami w grze.",
             "icon": "message",
             "pills": ["discord"]
           },
@@ -174,6 +183,12 @@
             "title": "Publiczna strona statusu i API",
             "body": "Strony statusu opt-in, bloki zaproszeń, wygenerowany klient .mrpack i API tylko do odczytu uwierzytelnione tokenem.",
             "icon": "globe"
+          },
+          {
+            "title": "Zaproś znajomych",
+            "body": "Skopiuj zaproszenie z adresem i wersją. Dla serwera zbudowanego z wybranych modów, podaj znajomym klienta .mrpack, który je zainstaluje i doda serwer do ich listy.",
+            "icon": "users",
+            "pills": ["mrpack"]
           },
           {
             "title": "Użytkownicy, role i 2FA",
@@ -192,33 +207,34 @@
     "items": {
       "dashboard": "Pulpit: wszystkie serwery, liczba graczy i ostatnia aktywność w skrócie.",
       "wizard": "Kreator tworzenia wyjaśnia każde ustawienie, zanim je wybierzesz.",
-      "overview": "Przegląd serwera z miernikami zasobów i szybkimi akcjami.",
+      "overview": "Przegląd serwera z wskaźnikami zasobów i szybkimi akcjami.",
       "console": "Konsola na żywo z paskiem poleceń RCON i filtrami logów.",
       "mods": "Mody z pięciu rejestrów, filtrowane według programu ładującego i wersji serwera.",
+      "modpacks": "Modpacki: wyszukuj na CurseForge i Modrinth, a każdy pack instaluje się z przypięciem do dokładnej wersji.",
       "worlds": "Zamieniaj światy i zarządzaj plikami z przeglądarki.",
       "backups": "Kopie zapasowe z klasami retencji i przywracaniem na miejscu.",
       "schedules": "Harmonogramy cron do restartów, kopii zapasowych i poleceń.",
       "blueprints": "Schematy: przenośne przepisy na serwery.",
-      "storage": "Analityka magazynu i wymuszone limity."
+      "storage": "Analiza przestrzeni dyskowej i wymuszone limity."
     }
   },
   "install": {
     "title": "Instalacja",
-    "intro": "Wybierz opcję pasującą do Twojego hosta. Każda ścieżka daje ten sam panel.",
+    "intro": "Wybierz opcję pasującą do Twojego hosta. Każda ścieżka zapewnia ten sam panel.",
     "requirements": "Wymagania",
     "reqItems": [
       "Docker Engine (Linux) lub Docker Desktop (Windows, macOS).",
-      "Node.js 24 lub nowszy do instalacji ze źródła. Obraz Docker zawiera własną wersję.",
+      "Node.js 24 lub nowszy do instalacji ze źródeł. Obraz Docker zawiera własną wersję.",
       "Kilka gigabajtów miejsca na dysku dla obrazów serwerów i światów."
     ],
     "docker": {
       "title": "Opcja 1: Docker",
-      "body": "Gotowy, wieloarchitektoniczny obraz jest publikowany w GHCR przy każdym wydaniu. Pobierz plik compose, ustaw jedną zmienną i uruchom.",
+      "body": "Wieloplatformowy, gotowy obraz jest publikowany w GHCR przy każdym wydaniu. Pobierz plik compose, ustaw jedną zmienną i uruchom.",
       "after": "Następnie otwórz http://your-host:25564. W Portainer lub Dockge wklej plik compose jako stos i ustaw DATA_DIR_HOST w środowisku stosu.",
-      "warning": "Panel steruje demonem Docker hosta poprzez zamontowane gniazdo, które na hoście ma uprawnienia roota. Traktuj login administratora odpowiednio i nigdy nie wystawiaj panelu bezpośrednio do internetu."
+      "warning": "Panel steruje demonem Docker hosta za pomocą zamontowanego gniazda, które na hoście jest równoważne z uprawnieniami roota. Traktuj logowanie administratora odpowiednio i nigdy nie wystawiaj panelu bezpośrednio do internetu."
     },
     "source": {
-      "title": "Opcja 2: Ze źródła",
+      "title": "Opcja 2: Ze źródeł",
       "body": "Dowolny system operacyjny, w tym Windows i macOS z Docker Desktop.",
       "after": "Otwórz http://localhost:25564. Pierwsze uruchomienie przeprowadzi Cię przez kontrolę systemu, wybór strefy czasowej i utworzenie konta administratora."
     },
@@ -229,13 +245,25 @@
     "windows": "Uwagi dotyczące systemu Windows",
     "windowsItems": [
       "Docker Desktop musi być uruchomiony przed uruchomieniem lub utworzeniem serwerów.",
-      "Udostępnij swój dysk projektowy w Docker Desktop (Ustawienia, Zasoby, Udostępnianie plików), aby montowania wiązań działały.",
-      "Obraz Docker jest przeznaczony dla hostów z systemem Linux; w systemach Windows i macOS uruchom panel ze źródła."
+      "Udostępnij swój dysk projektowy w Docker Desktop (Ustawienia, Zasoby, Udostępnianie plików), aby umożliwić działanie montowań wiążących.",
+      "Obraz Docker jest przeznaczony dla hostów z systemem Linux; w systemach Windows i macOS uruchom panel ze źródeł."
     ],
-    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []],
+    "options": {
+      "title": "Opcje instalatora",
+      "intro": "Instalator dla systemu Linux przyjmuje opcje po bash -s --, dzięki czemu działają one również przez potok. Uruchom go ponownie z tymi samymi opcjami, aby zaktualizować; Twój folder danych, plik .env i edycje compose zostaną zachowane.",
+      "items": {
+        "port": "Uruchom panel na innym porcie.",
+        "proxy": "Nasłuchuj tylko na 127.0.0.1, dla odwrotnego proxy z TLS z przodu.",
+        "tag": "Przypnij wydanie zamiast śledzić najnowsze.",
+        "dir": "Zainstaluj w lokalizacji innej niż /opt/msm.",
+        "uninstall": "Usuń panel i zachowaj jego dane. Przez potok nie ma klawiatury do odpowiedzi na pytanie, więc dodaj --yes; dodaj również --purge, aby usunąć folder danych.",
+        "help": "Każda opcja wraz z wartością domyślną."
+      }
+    }
   },
   "faq": {
-    "title": "Najczęściej zadawane pytania",
+    "title": "Często zadawane pytania",
     "items": [
       {
         "q": "Czy to naprawdę darmowe?",
@@ -272,8 +300,12 @@
         "a": "Tak. Panel posiada role administratora, operatora i widza, a każde konto może włączyć uwierzytelnianie dwuskładnikowe."
       },
       {
-        "q": "Czy musi być dostępny z internetu?",
-        "a": "Nie. Gracze łączą się z portami gry, a nie z panelem. Trzymaj panel w swojej sieci LAN lub za VPN-em lub proxy z uwierzytelnianiem."
+        "q": "Jak znajomi spoza domu mogą dołączyć?",
+        "a": "Przekieruj port gry serwera, od 25565 wzwyż, na swoim routerze do maszyny, która go uruchamia, lub użyj tunelu, jeśli Twój dostawca internetu nie zezwala na przekierowanie portów. Zakładka Zaproszenia serwera pokazuje adres do udostępnienia i tworzy dla Ciebie tekst zaproszenia. Zachowaj własny port panelu zamknięty."
+      },
+      {
+        "q": "Czy musi być wystawiony do internetu?",
+        "a": "Nie. Gracze łączą się z portami gry, a nie z panelem. Zachowaj panel w swojej sieci LAN lub za VPN-em lub serwerem proxy z uwierzytelnianiem."
       },
       {
         "q": "A co z graczami Bedrock?",
@@ -281,15 +313,20 @@
         "pills": ["geyser", "floodgate"]
       },
       {
-        "q": "Gdzie mogę uzyskać pomoc?",
-        "a": "Serwer Discord ma forum pomocy i prawdziwych ludzi. Błędy i prośby o nowe funkcje kieruj na GitHub issues."
+        "q": "Czy jest stworzony przy użyciu AI?",
+        "a": "Częściowo i otwarcie. Większość kodu jest napisana przy użyciu Claude Code, a opiekun projektuje, przegląda i testuje każdą funkcję. Deklaracja AI w repozytorium opisuje jak."
+      },
+      {
+        "q": "Gdzie szukać pomocy?",
+        "a": "Serwer Discord ma forum wsparcia i prawdziwych ludzi. Błędy i prośby o nowe funkcje trafiają do zgłoszeń na GitHubie."
       }
     ]
   },
   "changelog": {
     "title": "Dziennik zmian",
-    "intro": "Każde wydanie, najnowsze najpierw. Informacje o wydaniach są publikowane w języku angielskim.",
-    "releases": "Wszystkie wydania na GitHub"
+    "intro": "Każde wydanie, najnowsze najpierw. Informacje o wydaniach publikowane są w języku angielskim.",
+    "releases": "Wszystkie wydania na GitHub",
+    "feed": "Kanał wydań (Atom)"
   },
   "community": {
     "title": "Przywitaj się",
@@ -298,40 +335,46 @@
     "github": "Oceń na GitHubie"
   },
   "footer": {
-    "tagline": "Darmowy i otwarty kod źródłowy na licencji MIT.",
+    "tagline": "Darmowy i otwarty kod na licencji MIT.",
     "product": "Produkt",
     "community": "Społeczność",
     "resources": "Zasoby",
-    "issues": "Problemy",
+    "issues": "Zgłoszenia błędów",
     "releases": "Wydania",
     "contributing": "Współpraca",
     "license": "Licencja",
-    "notAffiliated": "Nieoficjalny produkt Minecraft. Nie zatwierdzony ani powiązany z Mojang lub Microsoft."
+    "notAffiliated": "Nieoficjalny produkt Minecraft. Niezatwierdzony przez ani powiązany z Mojang lub Microsoft.",
+    "serverTypes": "Typy serwerów",
+    "guides": "Poradniki",
+    "compare": "Porównanie",
+    "roadmap": "Plan rozwoju",
+    "ai": "Jak wykorzystujemy AI",
+    "conduct": "Kodeks postępowania"
   },
   "meta": {
     "home": {
-      "title": "Darmowy, samodzielnie hostowany panel sterowania serwerem Minecraft",
-      "description": "Uruchamiaj serwery Minecraft, zarówno czyste, jak i modowane, z przeglądarki. Oparty na Dockerze, modpacki przypięte do dokładnych wersji, kopie zapasowe, harmonogramy, mapa na żywo, analiza graczy. Darmowy, open source, gotowy do użycia w trzech krokach."
+      "title": "Darmowy, samodzielnie hostowany panel serwera Minecraft",
+      "description": "Uruchamiaj serwery Minecraft, zarówno czyste, jak i modowane, z przeglądarki dzięki darmowemu, samodzielnie hostowanemu panelowi Docker: przypięte modpacki, kopie zapasowe, harmonogramy i mapa na żywo."
     },
     "features": {
-      "title": "Funkcje",
-      "description": "Każda funkcja Minecraft Server Manager: serwery w kontenerach, pięć rejestrów modów, pobieranie zweryfikowane sumą kontrolną, bezpieczne kopie zapasowe, harmonogramy, szablony, analiza awarii, mapa na żywo, role i uwierzytelnianie dwuskładnikowe."
+      "title": "Funkcje panelu serwera Minecraft",
+      "description": "Wszystkie funkcje Minecraft Server Manager: serwery Docker, pięć rejestrów modów, zweryfikowane pobieranie, kopie zapasowe, harmonogramy, analiza awarii, mapa na żywo i 2FA."
     },
     "screenshots": {
-      "title": "Zrzuty ekranu",
+      "title": "Zrzuty ekranu panelu serwera Minecraft",
       "description": "Zrzuty ekranu panelu Minecraft Server Manager na komputerze i telefonie: pulpit, kreator, konsola, mody, światy, kopie zapasowe, harmonogramy i inne."
     },
     "install": {
-      "title": "Instalacja",
-      "description": "Zainstaluj Minecraft Server Manager z Dockerem w trzech poleceniach lub ze źródła w systemach Windows, macOS i Linux."
+      "title": "Zainstaluj panel serwera Minecraft z Dockerem",
+      "description": "Zainstaluj Minecraft Server Manager z Dockerem za pomocą trzech poleceń lub ze źródła na Windows, macOS i Linux."
     },
     "faq": {
-      "title": "FAQ",
-      "description": "Odpowiedzi na pytania dotyczące kosztów, obsługiwanych typów serwerów, wsparcia dla ARM, migracji, ról i ekspozycji na internet."
+      "title": "Najczęściej zadawane pytania dotyczące panelu serwera Minecraft",
+      "description": "Odpowiedzi na pytania dotyczące kosztów, obsługiwanych typów serwerów, Raspberry Pi i ARM, przenoszenia na nowy komputer, ról, graczy Bedrock i udostępniania panelu w Internecie."
     },
     "changelog": {
-      "title": "Dziennik zmian",
-      "description": "Notatki z wydań dla każdej wersji Minecraft Server Manager."
+      "title": "Dziennik zmian i uwagi do wydania",
+      "description": "Uwagi do wydania dla każdej wersji Minecraft Server Manager, darmowego, samodzielnie hostowanego panelu serwera Minecraft."
     },
     "notFound": {
       "title": "Nie znaleziono strony",
@@ -345,31 +388,85 @@
   },
   "langNotice": "Ta strona jest wyświetlana po angielsku do czasu pojawienia się jej tłumaczenia.",
   "tutorial": {
-    "title": "Uruchomienie w trzech krokach",
-    "intro": "Wybierz sposób uruchomienia panelu. Wypełnij dwa pola, a każde polecenie poniżej automatycznie dostosuje się do Twojej maszyny.",
+    "title": "Gotowe w kilka minut",
+    "intro": "Wybierz swoją maszynę i wklej polecenia. Zaawansowane oferuje wszystkie inne sposoby uruchomienia panelu, z poleceniami przepisanych dla Twojego własnego folderu i adresu.",
+    "modes": {
+      "simple": "Proste",
+      "advanced": "Zaawansowane"
+    },
+    "simple": {
+      "linux": {
+        "label": "Linux",
+        "steps": [
+          {
+            "title": "Uruchom instalator",
+            "body": "Działa na każdej maszynie z systemem Linux i 64-bitowym systemem operacyjnym, od VPS po Raspberry Pi 4 lub 5. Instaluje Docker, jeśli go brakuje, konfiguruje panel w /opt/msm i go uruchamia. Uruchom go ponownie później, aby zaktualizować."
+          },
+          {
+            "title": "Otwórz panel",
+            "body": "Instalator wyświetla adres i jednorazowy kod PIN do konfiguracji. Otwórz adres w przeglądarce, wprowadź kod PIN i utwórz swoje konto administratora."
+          }
+        ]
+      },
+      "windows": {
+        "label": "Windows",
+        "steps": [
+          {
+            "title": "Zainstaluj Docker Desktop, Node.js, Git i pnpm",
+            "body": "Jedna linia na każde polecenie w PowerShell. Uruchom Docker Desktop po zainstalowaniu i pozostaw go działającego."
+          },
+          {
+            "title": "Pobierz panel i go uruchom",
+            "body": "Otwórz nowe okno terminala, aby znalazło narzędzia, które właśnie zainstalowałeś."
+          },
+          {
+            "title": "Otwórz panel",
+            "body": "Pierwsze uruchomienie przeprowadzi Cię przez sprawdzenie systemu, wybór strefy czasowej i utworzenie konta administratora."
+          }
+        ]
+      },
+      "macos": {
+        "label": "macOS",
+        "steps": [
+          {
+            "title": "Zainstaluj Docker Desktop, Node.js, Git i pnpm",
+            "body": "Za pomocą Homebrew. Uruchom Docker Desktop po zainstalowaniu i pozostaw go działającego."
+          },
+          {
+            "title": "Pobierz panel i go uruchom",
+            "body": "Krok instalacji buduje również panel. Nie ma nic do kompilacji."
+          },
+          {
+            "title": "Otwórz panel",
+            "body": "Pierwsze uruchomienie przeprowadzi Cię przez sprawdzenie systemu, wybór strefy czasowej i utworzenie konta administratora."
+          }
+        ]
+      }
+    },
+    "advancedIntro": "Wypełnij dwa pola, a każde polecenie poniżej przepisze się dla Twojej maszyny.",
     "dataDir": "Folder danych na hoście",
-    "dataDirHint": "Ścieżka absolutna. Tutaj znajdują się światy, kopie zapasowe, modyfikacje i baza danych.",
+    "dataDirHint": "Ścieżka absolutna. Światy, kopie zapasowe, mody i baza danych znajdują się tutaj.",
     "host": "Nazwa hosta lub adres IP",
-    "hostHint": "Pod tym adresem otworzysz panel w przeglądarce.",
+    "hostHint": "Skąd otworzysz panel w przeglądarce.",
     "then": "Następnie otwórz panel",
     "copy": "Kopiuj",
     "copied": "Skopiowano!",
-    "firstRun": "Pierwsze uruchomienie przeprowadzi Cię przez kontrolę systemu, wybór strefy czasowej i utworzenie konta administratora.",
+    "firstRun": "Pierwsze uruchomienie przeprowadzi Cię przez sprawdzenie systemu, wybór strefy czasowej i utworzenie konta administratora.",
     "tabs": {
       "compose": {
         "label": "Docker Compose",
         "steps": [
           {
             "title": "Utwórz folder danych",
-            "body": "Jeden folder przechowuje wszystkie dane panelu."
+            "body": "Jeden folder przechowuje wszystko, co należy do panelu."
           },
           {
             "title": "Pobierz plik compose i wskaż ten folder",
-            "body": "DATA_DIR_HOST musi być ścieżką absolutną na hoście, ponieważ Docker montuje go z perspektywy hosta."
+            "body": "DATA_DIR_HOST musi być ścieżką absolutną na hoście, ponieważ Docker montuje go z punktu widzenia hosta."
           },
           {
             "title": "Uruchom panel",
-            "body": "Obraz jest wieloplatformowy (amd64 i arm64) i aktualizuje się przy każdym wydaniu."
+            "body": "Obraz jest wieloarchitektoniczny (amd64 i arm64) i aktualizuje się przy każdym wydaniu."
           }
         ]
       },
@@ -378,15 +475,15 @@
         "steps": [
           {
             "title": "Utwórz folder danych na hoście",
-            "body": "Ta sama zasada co dla folderu: ścieżka absolutna, na maszynie uruchamiającej Dockera."
+            "body": "Ta sama zasada folderu: ścieżka absolutna, na maszynie, która uruchamia Docker."
           },
           {
-            "title": "Dodaj stack z pliku compose",
-            "body": "Wklej zawartość pliku compose do nowego stacka. Surowy plik znajduje się tutaj:"
+            "title": "Dodaj stos z pliku compose",
+            "body": "Wklej zawartość pliku compose do nowego stosu. Surowy plik znajduje się tutaj:"
           },
           {
             "title": "Ustaw zmienną środowiskową i wdróż",
-            "body": "Dodaj ją w sekcji środowiskowej stacka, a następnie wdróż."
+            "body": "Dodaj ją w sekcji środowiskowej stosu, a następnie wdróż."
           }
         ]
       },
@@ -399,11 +496,11 @@
           },
           {
             "title": "Sklonuj i zainstaluj",
-            "body": "Krok instalacji buduje również pliki CSS panelu. Brak natywnych modułów do kompilacji."
+            "body": "Krok instalacji buduje również pliki CSS panelu. Nie ma natywnych modułów do kompilacji."
           },
           {
             "title": "Uruchom panel",
-            "body": "Domyślnie nasłuchuje tylko na localhost. Ustaw PANEL_HOST=0.0.0.0, aby uzyskać dostęp z innych maszyn w Twojej sieci."
+            "body": "Domyślnie nasłuchuje tylko na localhost. Ustaw PANEL_HOST=0.0.0.0, aby uzyskać do niego dostęp z innych maszyn w Twojej sieci."
           }
         ]
       },
@@ -416,11 +513,11 @@
           },
           {
             "title": "Zapisz listę procesów i włącz autostart",
-            "body": "pm2 startup wyświetli jedno polecenie do uruchomienia z sudo; uruchom je raz."
+            "body": "pm2 startup wyświetla jedno polecenie do uruchomienia z sudo; uruchom je raz."
           },
           {
             "title": "Preferujesz systemd?",
-            "body": "Jednostka uruchamiająca node src/server.js z sklonowanego folderu z ustawionym WorkingDirectory działa w ten sam sposób. Panel nie wymaga dodatkowych flag."
+            "body": "Jednostka uruchamiająca node src/server.js z sklonowanego folderu z ustawionym WorkingDirectory działa w ten sam sposób. Panel nie potrzebuje dodatkowych flag."
           }
         ]
       }
@@ -436,5 +533,1650 @@
     "checksums": "Suma kontrolna",
     "integrations": "Integracje",
     "keyless": "bez klucza"
+  },
+  "landing": {
+    "breadcrumb": "Nawigacja",
+    "install": "Zainstaluj Panel",
+    "docs": "Przeczytaj Dokumentację",
+    "related": "Czytaj Dalej",
+    "open": "Otwórz",
+    "docsGuides": "Więcej poradników w dokumentacji",
+    "docsGuidesIntro": "Krótkie, praktyczne odpowiedzi na najczęściej zadawane pytania właścicieli serwerów, dostępne obok dokumentacji."
+  },
+  "serversHub": {
+    "meta": {
+      "title": "Typy serwerów Minecraft: Paper, Fabric, Forge",
+      "description": "Uruchom serwery Paper, Purpur, Fabric, Quilt, Forge, NeoForge, vanilla lub pełny modpack z jednego panelu hostowanego samodzielnie. Wybierz typ serwera i zobacz, co otrzymasz."
+    },
+    "eyebrow": "Każdy typ serwera",
+    "title": "Jeden panel dla każdego rodzaju serwera Minecraft",
+    "intro": "Wtyczki, mody, niezmieniona gra lub cały modpack. Wybierz, co chcesz uruchomić, a panel zajmie się wersją Java, pobieraniem i przypinaniem za Ciebie.",
+    "pills": [
+      "vanilla",
+      "paper",
+      "purpur",
+      "fabric",
+      "quilt",
+      "forge",
+      "neoforge",
+      "packs-curseforge",
+      "packs-modrinth",
+      "ftb",
+      "gtnh"
+    ],
+    "cards": {
+      "serverPaper": "Serwery z wtyczkami Paper i Purpur, z wtyczkami z czterech rejestrów i graczami dołączającymi z niezmienionego klienta.",
+      "serverFabric": "Serwery Fabric i Quilt dla lekkich, szybko aktualizujących się modów, z kontrolą wersji przed każdą aktualizacją Minecraft.",
+      "serverForge": "Forge i NeoForge dla ciężkich modów, od klasyków z lat 1.7.10 po aktualne pakiety, z odpowiednią wersją Java wybraną dla Ciebie.",
+      "serverVanilla": "Niezmieniona gra, od snapshotów po stare bety, z kontrolą świata, kopiami zapasowymi i statystykami graczy wokół niej.",
+      "serverModpacks": "Pakiety CurseForge, Modrinth, FTB i GT New Horizons przypięte do dokładnej wersji, plus własny plik zip lub .mrpack."
+    },
+    "sections": [
+      {
+        "title": "Nie wiesz, który wybrać?",
+        "body": "Wybieraj na podstawie tego, co gracze powinni zainstalować, a nie na podstawie tego, co brzmi najszybciej. Jeśli nikt nie powinien niczego instalować, uruchom vanilla lub Paper. Jeśli instalujesz opublikowany pakiet, pakiet decyduje o loaderze i wersji Minecraft dla Ciebie. Jeśli sam tworzysz zmodyfikowany serwer, Fabric i NeoForge obejmują większość nowoczesnych modów, a Forge obejmuje starsze epoki.",
+        "points": [
+          "Survival z przyjaciółmi, nic niezwykłego: vanilla.",
+          "Publiczny serwer z rangami, zabezpieczeniami i moderacją: Paper.",
+          "Konkretny pakiet z CurseForge lub Modrinth: cokolwiek mówi pakiet.",
+          "Nowoczesny pakiet, który sam składasz: Fabric lub NeoForge.",
+          "Stary pakiet z epoki 1.7 do 1.12: Forge."
+        ]
+      }
+    ],
+    "related": ["guidesHub", "serverModpacks"],
+    "cta": {
+      "title": "Uruchom swój pierwszy serwer",
+      "body": "Zainstaluj panel, otwórz kreatora tworzenia i wybierz typ serwera. Każdy typ jest darmowy i działa na Twojej maszynie."
+    }
+  },
+  "serverPaper": {
+    "meta": {
+      "title": "Panel serwera Paper: wtyczki, self-hosted",
+      "description": "Darmowy, self-hosted panel serwera Paper i Purpur. Przeszukuj Hangar, SpigotMC i Modrinth w poszukiwaniu wtyczek, weryfikuj każde pobranie i aktualizuj je."
+    },
+    "eyebrow": "Paper i Purpur",
+    "title": "Panel serwera Paper z prawdziwą przeglądarką wtyczek, self-hosted",
+    "intro": "Uruchom Paper lub Purpur we własnym kontenerze Docker, znajdź wtyczki z czterech rejestrów bez opuszczania panelu i pozwól graczom dołączać z gry, którą już posiadają.",
+    "pills": ["paper", "purpur", "hangar", "spigotmc", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Dlaczego Paper dla serwera publicznego",
+        "body": "Wtyczki działają tylko na serwerze, więc gracze dołączają ze zwykłym, niezmienionym klientem i nigdy nie muszą niczego instalować. Wszystko, co dotyczy zasad, uprawnień, ekonomii, roszczeń do terenu, minigier lub moderacji, jest wtyczką, i dlatego prawie każdy serwer publiczny działa na Paper. Ma lata pracy nad wydajnością i ustawienie dla prawie każdego zachowania, które kiedykolwiek zirytowało administratora. Purpur to fork Paper z jeszcze większą liczbą przełączników, w tym tych dotyczących rozgrywki. Oba znajdują się w zakładce Vanilla kreatora tworzenia serwera.",
+        "points": [
+          "Gracze łączą się z normalną grą. Bez modów, bez konfiguracji launchera.",
+          "Większość wtyczek z ery Bukkit nadal działa.",
+          "Wybierz Purpur tylko wtedy, gdy chcesz jego dodatkowych przełączników; w przeciwnym razie Paper."
+        ]
+      },
+      {
+        "title": "Cztery rejestry wtyczek w jednym wyszukiwaniu",
+        "body": "Zakładka Mods serwera wtyczek przeszukuje Hangar (własny rejestr wtyczek PaperMC), SpigotMC, Modrinth i CurseForge, filtrowane według wersji Minecraft serwera. Tylko CurseForge wymaga klucza API. Możesz również wkleić stronę projektu, repozytorium lub wydanie GitHub, lub bezpośredni link do pliku jar, a panel znajdzie odpowiednią kompilację. Każde pobranie z rejestru jest sprawdzane pod kątem najsilniejszego sumy kontrolnej publikowanej przez rejestr, zanim trafi do serwera, więc uszkodzony lub zmodyfikowany plik nigdy nie zostanie zainstalowany.",
+        "pills": ["hangar", "spigotmc", "modrinth", "curseforge", "github-releases", "sha512", "sha256"],
+        "points": [
+          "Wyniki już obecne na serwerze pokazują odznakę Zainstalowano.",
+          "Jeśli zasób SpigotMC jest hostowany gdzie indziej, panel informuje o tym z góry i oferuje otwarcie strony oraz przyjęcie pliku jar jako przesłanego zamiast tego.",
+          "Przesłane pliki jar są identyfikowane, dzięki czemu zachowują swoją prawdziwą nazwę i pozostają możliwe do aktualizacji."
+        ],
+        "shot": "mods"
+      },
+      {
+        "title": "Aktualizacje wtyczek bez zgadywania",
+        "body": "Każda dodana wtyczka jest sprawdzana pod kątem jej źródła w harmonogramie dziennym i na żądanie. Zaktualizuj jedną wtyczkę, zignoruj wersję, której nie chcesz, lub naciśnij Aktualizuj wszystko, aby zastosować wszystko za pomocą jednego restartu. Jeśli aktualizacja okaże się nieudana, przywróć poprzednią kompilację ze współdzielonej biblioteki. Włącz powiadomienie w polityce aktualizacji serwera, a oczekujące aktualizacje pojawią się jako odznaka i na stronie Aktualizacje.",
+        "points": [
+          "Codzienne sprawdzanie Hangar, SpigotMC, Modrinth, CurseForge i GitHub Releases.",
+          "Przywrócenie umieszcza poprzednią kompilację z powrotem z biblioteki.",
+          "Jeśli przypniesz kompilację Paper, strona Aktualizacje informuje, kiedy pojawi się nowsza wersja."
+        ]
+      },
+      {
+        "title": "Uruchom jak serwer społecznościowy",
+        "body": "Serwery Paper otrzymują te same narzędzia co każdy inny serwer w panelu: konsolę na żywo z paskiem poleceń RCON, białą listę, operatorów, bany i bany IP, teleporty oraz niestandardowe polecenia czatu z czasami odnowienia. Daj swoim pracownikom konta z uprawnieniami na serwer, aby moderator mógł zarządzać konsolą bez dotykania kopii zapasowych lub plików. Jedno kliknięcie dodaje mapę na żywo BlueMap, serwowaną tylko przez własne logowanie panelu, a alerty Discord informują, gdy coś wymaga Twojej uwagi.",
+        "pills": ["bluemap", "discord"],
+        "shot": "console"
+      }
+    ],
+    "steps": {
+      "title": "Uruchom serwer Paper w trzech krokach",
+      "items": [
+        {
+          "title": "Wybierz Paper w kreatorze",
+          "body": "Otwórz Utwórz serwer, pozostań w zakładce Vanilla, wybierz Paper lub Purpur i wybierz wersję Minecraft. Darmowy port gry i rozsądna ilość pamięci są wypełnione automatycznie."
+        },
+        {
+          "title": "Dodaj swoje wtyczki",
+          "body": "W zakładce Mods serwera wyszukaj w Hangar, SpigotMC, Modrinth lub CurseForge, lub wklej link. Instalacje są weryfikowane podczas pobierania."
+        },
+        {
+          "title": "Udostępnij adres",
+          "body": "Zakładka Przegląd pokazuje adres do podania graczom. Dołączają oni z grą, którą już posiadają."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pytania dotyczące serwera Paper",
+      "items": [
+        {
+          "q": "Czy mogę dodać mody do serwera Paper?",
+          "a": "Nie. Paper ładuje wtyczki, które działają tylko na serwerze. Mody modyfikują samą grę i wymagają mod loadera, takiego jak Fabric lub NeoForge, zarówno na serwerze, jak i na każdym kliencie. Jeśli chcesz obu, uruchom serwer z modami i serwer wtyczek obok siebie, zamiast jednego hybrydowego."
+        },
+        {
+          "q": "Czy potrzebuję konta SpigotMC lub klucza API do instalacji wtyczek?",
+          "a": "Nie. SpigotMC, Hangar i Modrinth działają bez klucza. Tylko CurseForge prosi o klucz API, który dodajesz raz w Ustawieniach, Klucze API."
+        },
+        {
+          "q": "Farma redstone z filmu nie działa na moim serwerze. Dlaczego?",
+          "a": "Paper domyślnie zmienia niektóre zachowania vanilla w celu poprawy wydajności. To zazwyczaj jest powodem, i zazwyczaj jest to ustawienie w konfiguracji Paper, którą możesz edytować w menedżerze plików serwera."
+        },
+        {
+          "q": "Czy moje stare wtyczki Bukkit i Spigot nadal będą działać?",
+          "a": "Większość z nich, tak. Paper jest forkiem Spigot i zachowuje API wtyczek, więc wtyczki napisane dla Bukkit i Spigot w większości działają bez zmian. Sprawdź stronę każdej wtyczki pod kątem wersji Minecraft, które obsługuje."
+        }
+      ]
+    },
+    "related": ["serverFabric", "serverVanilla", "guideMulti"],
+    "cta": {
+      "title": "Uruchom swój serwer Paper w domu",
+      "body": "Zainstaluj panel na dowolnej maszynie z Dockerem, a następnie utwórz serwer Paper z kreatora. Darmowy, open source i Twój."
+    }
+  },
+  "serverFabric": {
+    "meta": {
+      "title": "Samodzielny serwer Fabric z przeglądarką modów",
+      "description": "Zorganizuj samodzielnie serwer Minecraft Fabric lub Quilt. Przeszukuj Modrinth i CurseForge, przypinaj wersje loadera i sprawdzaj każdy mod przed aktualizacją."
+    },
+    "eyebrow": "Fabric i Quilt",
+    "title": "Samodzielny serwer Fabric, który wie, co obsługują Twoje mody",
+    "intro": "Stwórz serwer Fabric lub Quilt z wybranych modów, zachowaj wersję loadera tam, gdzie ją ustawiłeś, i przechodź na nowszą wersję Minecraft dopiero wtedy, gdy wszystkie mody będą mogły jej towarzyszyć.",
+    "pills": ["fabric", "quilt", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Dlaczego Fabric",
+        "body": "Fabric jest lekki, śledzi nowe wersje Minecraft w ciągu kilku dni i zawiera większość nowoczesnych modów poprawiających wydajność. Jeśli Twoim celem jest szybki serwer z kilkoma modami ułatwiającymi życie, wybierz ten loader. Prawie każdy mod Fabric wymaga również Fabric API, który jest osobnym plikiem do pobrania, dodawanym jak każdy inny mod. Quilt to fork Fabric, który uruchamia większość modów Fabric; wybierz go, jeśli masz konkretny powód, w przeciwnym razie wybierz Fabric.",
+        "points": [
+          "Szybko dostosowuje się do nowych wydań Minecraft.",
+          "Dom większości nowoczesnych modów poprawiających wydajność.",
+          "Serwery Quilt automatycznie widzą wersje Fabric, ponieważ Quilt uruchamia mody Fabric."
+        ]
+      },
+      {
+        "title": "Zacznij od wybranych modów",
+        "body": "Zakładka „Z modów” kreatora wybiera loader, wersję Minecraft i wersję loadera: najnowszą lub konkretną, którą przypniesz. Możesz też zrobić to odwrotnie. Najpierw wybierz mody, a solver zaproponuje najnowszą wersję loadera i Minecraft, którą wszystkie obsługują, a następnie zainstaluje zestaw po utworzeniu serwera.",
+        "points": [
+          "Przypnij wersję loadera Fabric lub Quilt zamiast śledzić najnowszą.",
+          "Strona Aktualizacje oferuje nowsze wersje dla przypiętego loadera.",
+          "Przeglądarka modów filtruje według loadera, więc plik .jar Forge nie trafi przypadkowo na serwer Fabric."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Sprawdzenie wersji przed każdą aktualizacją",
+        "body": "Zakładka Mody serwera Fabric zawiera podzakładkę Wersje. Sprawdza ona każdy zainstalowany mod w porównaniu z Modrinth i CurseForge i raportuje najwyższą wersję Minecraft, dla której wszystkie mają zbudowaną wersję, a także podsumowanie tego, co każda nowsza wersja by pominęła. Nowsza wersja Minecraft jest oferowana tylko wtedy, gdy to sprawdzenie ją popiera, i nigdy, gdy plik .jar nie może zostać zidentyfikowany.",
+        "pills": ["modrinth", "curseforge"]
+      },
+      {
+        "title": "Mody, którym możesz ufać i które możesz cofnąć",
+        "body": "Każde pobranie z rejestru jest weryfikowane pod kątem najsilniejszego sumy kontrolnej publikowanej przez rejestr, zanim trafi na serwer. Dodane mody znajdują się we współdzielonej bibliotece, deduplikowane przez sha256, więc dziesięć serwerów uruchamiających ten sam mod przechowuje go raz. Zaktualizuj mod, zignoruj wersję lub przywróć poprzednią wersję, gdy aktualizacja się nie powiedzie. Zaimportuj plik .mrpack z Modrinth lub archiwum zip z plikami .jar, a każdy plik .jar zostanie zidentyfikowany i sprawdzony względem serwera, zanim cokolwiek zostanie zainstalowane.",
+        "pills": ["mrpack", "zip", "sha512", "sha256"],
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Uruchom serwer Fabric w trzech krokach",
+      "items": [
+        {
+          "title": "Wybierz Fabric w zakładce Z modów",
+          "body": "Wybierz Fabric lub Quilt, wersję Minecraft i najnowszą wersję loadera lub przypiętą."
+        },
+        {
+          "title": "Wyszukaj i dodaj mody",
+          "body": "Wyszukaj w Modrinth lub CurseForge, dodaj Fabric API i resztę. Każde pobranie jest weryfikowane."
+        },
+        {
+          "title": "Zaproś graczy",
+          "body": "Zakładka Zaproszenia tworzy gotowe do wklejenia zaproszenie i plik .mrpack klienta z dodanymi modami, z Twoim serwerem już na liście serwerów w grze."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pytania dotyczące serwera Fabric",
+      "items": [
+        {
+          "q": "Czy gracze muszą instalować te same mody?",
+          "a": "Tak, w przypadku każdego moda dodającego zawartość. Mody zmieniają samą grę, więc klient musi ładować te same. Zakładka Zaproszenia tworzy plik .mrpack klienta z dodanymi modami, z Twoim serwerem już na liście serwerów w grze, który gracze importują do launchera, takiego jak Prism lub Modrinth App."
+        },
+        {
+          "q": "Czy naprawdę potrzebuję Fabric API?",
+          "a": "Prawie zawsze. Prawie każdy mod Fabric od niego zależy, a jest to osobny plik do pobrania. Dodaj go z przeglądarki modów jak każdy inny mod."
+        },
+        {
+          "q": "Skąd mam wiedzieć, czy moje mody będą działać na następnej wersji Minecraft?",
+          "a": "Otwórz zakładkę Mody serwera, a następnie Wersje. Pokazuje ona najwyższą wersję Minecraft, dla której każdy zainstalowany mod ma zbudowaną wersję, i co pominęłaby nowsza wersja."
+        },
+        {
+          "q": "Aktualizacja moda zepsuła serwer. Czy mogę cofnąć?",
+          "a": "Tak. Przywróć mod z jego wiersza w zakładce Mody, a poprzednia wersja powróci ze współdzielonej biblioteki."
+        }
+      ]
+    },
+    "related": ["serverForge", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Hostuj swój serwer Fabric samodzielnie",
+      "body": "Zainstaluj panel, otwórz zakładkę Z modów i wybierz swoje mody. Bez subskrypcji i limitów liczby uruchamianych serwerów."
+    }
+  },
+  "serverForge": {
+    "meta": {
+      "title": "Panel serwera Forge i NeoForge z modami",
+      "description": "Uruchom samodzielnie serwer Minecraft z modami Forge lub NeoForge. Odpowiednia wersja Java jest wybierana automatycznie, wersje modloaderów można przypinać, a przyczyny awarii są identyfikowane."
+    },
+    "eyebrow": "Forge i NeoForge",
+    "title": "Panel serwera Minecraft z modami Forge, który dobiera odpowiednią wersję Java",
+    "intro": "Od klasyków z wersji 1.7.10 po najnowsze paczki NeoForge, stwórz serwer, dostosuj jego pamięć i znajdź moda odpowiedzialnego za awarię bez konieczności czytania logów linijka po linijce.",
+    "pills": ["forge", "neoforge", "curseforge", "modrinth"],
+    "sections": [
+      {
+        "title": "Forge czy NeoForge?",
+        "body": "NeoForge to miejsce, gdzie stary ekosystem Forge działa obecnie dla najnowszych wersji. Rozdzielił się od Forge podczas wersji 1.20.1, a większość dużych paczek stworzonych dla wersji 1.20.2 i nowszych celuje w niego, więc zacznij nowy, zaawansowany serwer na NeoForge. Forge nadal włada przeszłością: wszystko z epok 1.7.10, 1.12.2 i 1.16.5 to Forge, a to spora część najbardziej lubianych paczek. Mody dla jednego modloadera nie działają na drugim, a paczka NeoForge 1.20.1 nie działa na Forge 1.20.1.",
+        "points": [
+          "Nowy, zaawansowany serwer: NeoForge.",
+          "Epoka 1.7.10, 1.12.2 lub 1.16.5: Forge.",
+          "Opublikowana paczka: dokładnie to, co podaje paczka."
+        ]
+      },
+      {
+        "title": "Odpowiednia wersja Java, za każdym razem",
+        "body": "Wymagania Javy dla Minecrafta zmieniają się wraz z grą, a niewłaściwa wersja zamiast jasnego komunikatu wyświetla niepomocny błąd UnsupportedClassVersionError. Stare paczki naprawdę potrzebują Javy 8, a najnowsze wersje wymagają Javy 21 lub nowszej. Kreator tworzenia odczytuje wybraną wersję Minecrafta i sam dobiera środowisko uruchomieniowe, dzięki czemu niedopasowanie nigdy nie zdarza się przypadkowo. Aktualizacja paczki ponownie rozwiązuje problem Javy, jeśli nowa wersja wymaga innej.",
+        "points": ["1.16.5 i starsze: Java 8.", "1.18 do 1.20.4: Java 17.", "1.20.5 do 1.21: Java 21."]
+      },
+      {
+        "title": "Pamięć dostosowana do modów",
+        "body": "Każdy serwer ma dwie wartości: stertę Javy (heap) i limit pamięci kontenera. Java potrzebuje pamięci poza stertą, około 1,5 do 2 GB w przypadku dużej paczki modów, a kontener bez zapasu zostanie zabity w momencie, gdy Java zacznie jej potrzebować. Kreator ustawia limit o 50% wyższy niż sterta, a panel odrzuca limit kontenera, który nie jest wyższy niż sterta. Paczka typu „kitchen-sink” zawierająca 150-300 modów wymaga sterty o wielkości 6-8 GB.",
+        "points": [
+          "Serwer zatrzymany z powodu braku pamięci jest zapisywany dokładnie w ten sposób w jego historii.",
+          "Ustaw mniejszą początkową stertę, aby pamięć podążała za rzeczywistym użyciem."
+        ]
+      },
+      {
+        "title": "Awarie, które wskazują winowajców",
+        "body": "Raporty o awariach są automatycznie pobierane i analizowane do podsumowania w jednej linii zawierającego wyjątek i mody, które są za nie najbardziej odpowiedzialne. Otwórz wbudowaną przeglądarkę, skopiuj ślad stosu lub, po wyraźnym potwierdzeniu, udostępnij go na mclo.gs i uzyskaj automatyczne analizy: znane problemy z sugerowanymi poprawkami, wyświetlane bezpośrednio w panelu. Automatyczne ponowne uruchamianie po awarii próbuje ponownie z rosnącymi opóźnieniami i pomija awarie, które wymagają najpierw poprawki, takie jak niewłaściwa wersja Javy lub brak pamięci.",
+        "pills": ["mclogs"],
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Uruchom serwer Forge w trzech krokach",
+      "items": [
+        {
+          "title": "Wybierz modloader i wersję",
+          "body": "W kreatorze, na karcie „Z modów”, wybierz Forge lub NeoForge, wersję Minecrafta oraz najnowszą wersję modloadera lub przypiętą."
+        },
+        {
+          "title": "Zapewnij wystarczającą ilość pamięci",
+          "body": "Ustaw stertę Javy odpowiednią do wielkości listy modów. Limit kontenera podąża za nią, będąc o 50% wyższym."
+        },
+        {
+          "title": "Dodaj mody lub zaimportuj archiwum ZIP",
+          "body": "Przeszukaj CurseForge i Modrinth lub zaimportuj eksport CurseForge lub archiwum ZIP z plikami JAR. Każdy plik JAR jest identyfikowany i najpierw sprawdzany z serwerem."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pytania dotyczące serwerów Forge",
+      "items": [
+        {
+          "q": "Czy nadal mogę uruchomić paczkę 1.12.2 lub 1.7.10?",
+          "a": "Tak. Wybierz wersję i Forge w kreatorze, a panel uruchomi ją na Javie 8, której te wersje potrzebują. GT New Horizons, paczka ekspercka 1.7.10, instaluje się ze strony Modpacków z własnym wyborem Javy."
+        },
+        {
+          "q": "Ile pamięci potrzebuje serwer Forge?",
+          "a": "Lekka paczka 40-80 modów działa dobrze na stercie 4 GB w kontenerze 6 GB. Paczka 150-300 modów wymaga 6-8 GB sterty i około 10 GB dla kontenera."
+        },
+        {
+          "q": "Czy mogę przypiąć konkretną wersję Forge?",
+          "a": "Tak. W kreatorze wybór wersji modloadera pozwala wybrać najnowszą lub konkretną wersję, a strona Aktualizacje oferuje nowsze wersje dla przypiętej wersji bez automatycznego ich stosowania."
+        },
+        {
+          "q": "Mój serwer uległ awarii podczas uruchamiania. Gdzie mam szukać?",
+          "a": "Otwórz Monitorowanie, a następnie Historię. Karta raportu o awarii zawiera wyjątek i podejrzane mody, a Analiza uruchamia wgląd mclo.gs w znane problemy i poprawki."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "serverFabric", "guideHome"],
+    "cta": {
+      "title": "Uruchom swój serwer z modami samodzielnie",
+      "body": "Zainstaluj panel na maszynie z wystarczającą ilością pamięci, a następnie utwórz serwer Forge lub NeoForge za pomocą kreatora."
+    }
+  },
+  "serverVanilla": {
+    "meta": {
+      "title": "Panel serwera Vanilla Minecraft, self-hosted",
+      "description": "Hostuj samodzielnie serwer Vanilla Minecraft: dowolna wersja od starych wersji beta po najnowszy snapshot, z kontrolą świata, codziennymi kopiami zapasowymi i statystykami graczy."
+    },
+    "eyebrow": "Niezmieniona gra",
+    "title": "Serwer Vanilla Minecraft ze wszystkim, co potrzebne",
+    "intro": "Zachowaj grę dokładnie tak, jak udostępnia ją Mojang, a kopie zapasowe, narzędzia do zarządzania światem, moderację i statystyki graczy uzyskaj z panelu, zamiast z wtyczek.",
+    "pills": ["vanilla", "docker"],
+    "sections": [
+      {
+        "title": "Dowolna Wersja",
+        "body": "Wybierz najnowszą wersję, snapshot lub konkretną wersję, w tym stare wersje beta i alfa. Panel wybiera środowisko Java potrzebne dla danej wersji, pobiera obraz i uruchamia serwer z tej wersji. Nikt nic nie musi instalować, aby dołączyć: gracze łączą się z grą, którą już posiadają.",
+        "points": [
+          "Najnowsza wersja, snapshoty lub konkretna wersja.",
+          "Stare wersje beta i alfa dla serwera nostalgicznego.",
+          "Właściwa wersja Java wybrana dla każdej wersji."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Kontrola Świata Bez Wpisywania Komend",
+        "body": "Kontrola świata dostępna jest na każdej karcie serwera: zegar w grze, pogoda i najczęściej używane reguły gry jako przełączniki, z każdą inną regułą dostępną jednym kliknięciem. Karta Światy resetuje aktywny świat z nowym, zachowanym lub niestandardowym seedem, oferując najpierw kopię zapasową. Duplikuj świat, zachowaj ukończone światy w bibliotece światów lub prześlij świat, który już posiadasz, jako archiwum .zip lub .tar.",
+        "points": [
+          "Resetuj z nowym seedem, tym samym seedem lub wprowadzonym przez Ciebie.",
+          "Biblioteka światów współdzielona przez każdy serwer.",
+          "Edytuj server.properties w przeglądarce; wartość na dysku ma pierwszeństwo."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Kopie Zapasowe Od Pierwszego Dnia",
+        "body": "Każdy nowy serwer automatycznie otrzymuje harmonogram codziennych kopii zapasowych. Kopie zapasowe są bezpieczne: panel wstrzymuje zapisywanie, opróżnia świat, kompresuje go i sprawdza, czy archiwum się otwiera, zanim je zapisze. Przywracanie przywraca serwer dokładnie do stanu poprzedniego i najpierw tworzy kopię zapasową bieżących danych.",
+        "shot": "backups"
+      },
+      {
+        "title": "Moderacja i Statystyki Bez Wtyczek",
+        "body": "Vanilla nie posiada systemu uprawnień, więc panel zapewnia narzędzia moderacji: białą listę, operatorów na każdym poziomie, bany i bany IP oraz teleporty, działające na żywo podczas działania serwera i bezpośrednio w plikach, gdy jest zatrzymany. Własne statystyki gry są odczytywane w harmonogramie do profili graczy i tablicy wyników: czas gry, zgony, zabójstwa, wydobyte bloki i diamenty oraz przebyta odległość. Oś czasu aktywności pozwala na przeszukiwanie czatu, dołączeń, zgonów i osiągnięć."
+      }
+    ],
+    "faq": {
+      "title": "Pytania dotyczące serwera Vanilla",
+      "items": [
+        {
+          "q": "Czy mogę uruchomić serwer snapshot?",
+          "a": "Tak. Wybierz snapshot jako wersję Minecraft w kreatorze. Zachowaj kopię zapasową przed każdym nowym snapshotem, ponieważ światy snapshotów nie mogą być otwarte w starszej wersji."
+        },
+        {
+          "q": "Czy serwer vanilla może mieć mapę na żywo?",
+          "a": "Nie w wersji vanilla. BlueMap wymaga wtyczki lub modloadera do działania. Serwer Paper otrzymuje ją jednym kliknięciem, a gracze nadal łączą się z niezmodyfikowanym klientem."
+        },
+        {
+          "q": "Czy mogę zresetować świat, ale zachować seed?",
+          "a": "Tak. Zresetuj aktywny świat z karty Światy i wybierz opcję zachowania bieżącego seedu. Panel najpierw oferuje kopię zapasową starego świata."
+        },
+        {
+          "q": "Ilu graczy może obsłużyć serwer vanilla?",
+          "a": "Vanilla jest wolniejsza przy wielu graczach niż Paper. Dla grupy przyjaciół jest w porządku. Dla ruchliwego publicznego serwera, Paper uruchamia tę samą grę z wieloletnią pracą nad wydajnością."
+        }
+      ]
+    },
+    "related": ["serverPaper", "guidePi", "guideHome"],
+    "cta": {
+      "title": "Uruchom Serwer Vanilla",
+      "body": "Zainstaluj panel, wybierz Vanilla w kreatorze i udostępnij adres. Darmowy i otwarty kod źródłowy."
+    }
+  },
+  "serverModpacks": {
+    "meta": {
+      "title": "Serwer z modpackami Minecraft: instalacja jednym kliknięciem",
+      "description": "Uruchom serwer z modpackami Minecraft z CurseForge, Modrinth, FTB lub GT New Horizons. Pakiety pozostają przypięte, a każda aktualizacja zawiera kopię zapasową i możliwość przywrócenia."
+    },
+    "eyebrow": "Serwery z modpackami",
+    "title": "Serwer z modpackami Minecraft, który nigdy nie aktualizuje się za Twoimi plecami",
+    "intro": "Zainstaluj pakiet po nazwie, przypnij go do konkretnej wersji i aktualizuj tylko wtedy, gdy zdecydujesz, najpierw tworząc kopię zapasową i mając możliwość przywrócenia jednym kliknięciem, jeśli nowa wersja się nie uruchomi.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"],
+    "sections": [
+      {
+        "title": "Każde źródło dużych modpacków",
+        "body": "Strona Modpacki oraz zakładka Z modpacku w kreatorze instalują pakiety z CurseForge i Modrinth, wyszukując je po nazwie, pakiety FTB po ich identyfikatorach (pack ID i version ID) oraz GT New Horizons z własnego indeksu wydań. Nieopublikowany pakiet? Prześlij plik .mrpack z Modrinth, eksport modpacku z CurseForge lub dowolny plik zip z modami. Manifest lub większość głosów wśród zidentyfikowanych plików jar określi loader i wersję Minecraft.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export", "zip"],
+        "points": [
+          "CurseForge wymaga klucza API, dodawanego raz w Ustawieniach, Klucze API.",
+          "Mody, których autorzy nie zezwalają na automatyczne pobieranie, są wymienione z linkiem i miejscem na przesłanie zamiast powodować błąd instalacji.",
+          "Dla GT New Horizons wersja Java oraz rozsądne minimalne wymagania pamięci i dysku są ustawiane automatycznie."
+        ]
+      },
+      {
+        "title": "Przypięty do konkretnej wersji",
+        "body": "Gdy wybierzesz pakiet, panel określi dokładną wersję, zapisze ją i zainstaluje. Restart nigdy nie spowoduje cichej aktualizacji pakietu. Ty decydujesz, jak każdy serwer dowie się o nowych wersjach: Tylko ręcznie pozostawia go w spokoju, Powiadom mnie wyświetla odznakę i listę na stronie Aktualizacje, a Automatyczna aktualizacja stosuje aktualizacje pakietu po codziennym sprawdzeniu w tej samej chronionej ścieżce. Aktualizacje, które przeniosłyby świat do innej wersji Minecraft, są zawsze pomijane, ponieważ konwersja świata jest Twoją decyzją.",
+        "points": [
+          "Domyślnie wybrane jest Tylko ręcznie.",
+          "Serwery śledzące stabilne wydania nigdy nie otrzymują wersji beta.",
+          "Automatyczna aktualizacja nigdy nie przekracza wersji Minecraft."
+        ]
+      },
+      {
+        "title": "Aktualizacje z możliwością powrotu",
+        "body": "Aktualizacja pakietu to jedna akcja. Panel tworzy kopię zapasową, grzecznie zatrzymuje serwer, zamienia przypiętą wersję, przebudowuje serwer z odpowiednią wersją Javy dla nowej wersji i obserwuje pierwsze uruchomienie, z hojnym oknem czasowym dla dużych pakietów, które pobierają gigabajty przy pierwszym starcie. Jeśli nowa wersja się nie uruchomi, przywróć ją jednym kliknięciem.",
+        "shot": "backups"
+      },
+      {
+        "title": "Twoje własne mody na wierzchu",
+        "body": "Mody dodane do serwera z modpackiem znajdują się we wspólnej bibliotece i są linkowane do serwera, dzięki czemu przetrwają aktualizacje pakietu. Wyłącz mod z pakietu, którego nie chcesz, dodaj mod optymalizujący, którego brakuje w pakiecie, i zachowaj oba podczas następnej aktualizacji. Gracze instalują ten sam pakiet w tej samej wersji z CurseForge lub Modrinth, a zakładka Zaproszenia zawiera gotowe do wklejenia zaproszenie z adresem i wersją.",
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Uruchom serwer z modpackiem w trzech krokach",
+      "items": [
+        {
+          "title": "Znajdź pakiet",
+          "body": "Wyszukaj CurseForge lub Modrinth na stronie Modpacki, lub prześlij plik .mrpack, eksport z CurseForge lub zip z plikami jar."
+        },
+        {
+          "title": "Wybierz wersję i pamięć",
+          "body": "Wybierz dokładną wersję pakietu. Zapewnij stercie Javy miejsce na liczbę modów; limit kontenera jest przestrzegany."
+        },
+        {
+          "title": "Utwórz i obserwuj uruchamianie",
+          "body": "Panel instaluje pakiet, przypina go i uruchamia serwer. Pierwsze uruchomienie dużego pakietu zajmuje trochę czasu; konsola pokazuje każdą linię."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pytania dotyczące serwerów z modpackami",
+      "items": [
+        {
+          "q": "Czy ponowne uruchomienie serwera zaktualizuje mój modpack?",
+          "a": "Nie. Pakiet jest przypięty do dokładnej wersji, którą zainstalowałeś. Zmienia się tylko wtedy, gdy go zaktualizujesz, lub po codziennym sprawdzeniu, jeśli ustawiłeś serwer na Automatyczną aktualizację."
+        },
+        {
+          "q": "Dlaczego CurseForge potrzebuje klucza API, a Modrinth nie?",
+          "a": "CurseForge odpowiada tylko na żądania zawierające klucz. Możesz go uzyskać z konsoli CurseForge i dodać raz w Ustawieniach, Klucze API. Modrinth działa bez niego."
+        },
+        {
+          "q": "Niektóre mody w moim pakiecie nie mogły zostać pobrane. Co teraz?",
+          "a": "Ich autorzy nie zezwalają na automatyczne pobieranie. Panel wymienia każdy z nich z linkiem do jego strony i miejscem na przesłanie, dzięki czemu pobierasz plik jar w przeglądarce i upuszczasz go."
+        },
+        {
+          "q": "Czy mogę zainstalować pakiet FTB?",
+          "a": "Tak, za pośrednictwem API FTB z numerycznym identyfikatorem pakietu i jawnym identyfikatorem wersji. Panel jeszcze nie sprawdza pakietów FTB pod kątem aktualizacji."
+        }
+      ]
+    },
+    "related": ["guideFriends", "serverForge", "serverFabric"],
+    "cta": {
+      "title": "Uruchom swój serwer z modpackami w domu",
+      "body": "Zainstaluj panel, otwórz stronę Modpacki i wybierz pakiet. Pozostanie on w wybranej wersji, dopóki nie zdecydujesz inaczej."
+    }
+  },
+  "guidesHub": {
+    "meta": {
+      "title": "Poradniki: samodzielne hostowanie serwera Minecraft",
+      "description": "Poradniki dotyczące samodzielnego hostowania serwerów Minecraft: serwer modpack dla znajomych, Raspberry Pi, domowy komputer, rezygnacja z płatnego hostingu i wiele serwerów na jednej maszynie."
+    },
+    "eyebrow": "Poradniki",
+    "title": "Poradniki dotyczące samodzielnego hostowania serwerów Minecraft",
+    "intro": "Praktyczne instrukcje dla konfiguracji, z których ludzie faktycznie korzystają, od Raspberry Pi na półce po maszynę pełną serwerów.",
+    "cards": {
+      "guideFriends": "Hostuj modpack CurseForge lub Modrinth dla znajomych, z odpowiednią ilością pamięci i zaproszeniem, które mogą śledzić.",
+      "guidePi": "Zamień Raspberry Pi 4 lub 5 w serwer Minecraft z panelem internetowym i oszacuj jego zasoby uczciwie.",
+      "guideHome": "Hostuj serwer Minecraft w domu na Windows, macOS lub Linux i pozwól znajomym bezpiecznie dołączyć.",
+      "guideHosting": "Przenieś swój świat, wtyczki i mody z płatnego hostingu, nie tracąc ani jednego przedmiotu z ekwipunku.",
+      "guideMulti": "Uruchom kilka serwerów Minecraft na jednej maszynie, bez przeszkód związanych z portami, pamięcią lub dyskiem."
+    },
+    "related": ["serversHub"],
+    "cta": {
+      "title": "Potrzebujesz czegoś, czego tu nie ma?",
+      "body": "Dokumentacja zagłębia się w każdą funkcję, a na Discordzie znajdziesz prawdziwych ludzi, którzy prowadzą serwery."
+    }
+  },
+  "guideFriends": {
+    "meta": {
+      "title": "Hostuj serwer z modpackiem dla znajomych",
+      "description": "Hostuj serwer z modpackiem z CurseForge lub Modrinth na własnym komputerze dla znajomych: wybierz paczkę, przydziel jej wystarczającą ilość pamięci, zaproś znajomych i twórz kopie zapasowe."
+    },
+    "eyebrow": "Przewodnik po serwerach z modpackami",
+    "title": "Jak hostować serwer z modpackiem dla znajomych",
+    "intro": "Twój własny komputer może hostować paczkę, w którą grasz ze znajomymi. Zainstaluj panel, utwórz serwer z paczki, przydziel mu potrzebną pamięć i wyślij znajomym zaproszenie, które mogą śledzić.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "docker"],
+    "sections": [
+      {
+        "title": "Wybierz paczkę z kreatora",
+        "body": "Strona Modpacki oraz zakładka Z paczki kreatora tworzenia przeszukują CurseForge i Modrinth po nazwie; kreator przyjmuje również paczki FTB po ID lub istniejący już eksport paczki. Wybierz wersję, w którą będą grać znajomi. Panel instaluje dokładnie tę wersję i ją utrzymuje: restart nigdy nie aktualizuje paczki bez Twojej wiedzy. CurseForge wymaga darmowego klucza API, dodawanego raz w Ustawieniach, Klucze API; Modrinth nie wymaga żadnego.",
+        "points": [
+          "Przeszukaj CurseForge i Modrinth, lub prześlij plik .mrpack, eksport CurseForge lub archiwum zip z modami.",
+          "Wersja paczki jest przypięta, więc wszyscy grają w tę samą.",
+          "Java jest wybierana dla wersji Minecrafta w paczce."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "mrpack", "cf-export"],
+        "shot": "modpacks"
+      },
+      {
+        "title": "Przydziel wystarczającą ilość pamięci",
+        "body": "Modpacki wymagają znacznie więcej pamięci niż serwer vanilla, a serwer ma dwie liczby: stertę Javy (heap) i limit kontenera wokół niej, który musi być większy, ponieważ Java używa pamięci poza swoją stertą. Lekka paczka 40-80 modów potrzebuje 4 GB sterty w kontenerze 6 GB; duża paczka typu „kitchen-sink” 6-8 GB sterty w 10 GB. Panel odróżnia serwer zatrzymany z powodu braku pamięci od awarii, dzięki czemu wiesz, które ustawienie zmienić.",
+        "points": [
+          "Ustaw pamięć w kreatorze i zmień ją później w ustawieniach serwera.",
+          "Pozostaw pamięć dla systemu operacyjnego i panelu.",
+          "Zakładka Monitorowanie pokazuje, ile serwer faktycznie zużywa."
+        ]
+      },
+      {
+        "title": "Wyślij znajomym zaproszenie, które mogą śledzić",
+        "body": "Znajomi instalują tę samą paczkę w tej samej wersji w swoim launcherze: CurseForge app, Modrinth App lub Prism Launcher. Zakładka Zaproszenia serwera, w Ustawieniach, kopiuje adres do udostępnienia i tekst zaproszenia z wersją Minecrafta. Znajomi w Twojej sieci używają adresu lokalnego. Dla znajomych spoza sieci przekieruj port gry na swoim routerze lub użyj tunelu, gdy Twój dostawca na to nie pozwala.",
+        "points": [
+          "Zakładka Zaproszenia oferuje adres lokalny, Twój publiczny adres i niestandardowy.",
+          "Jeśli lista dozwolonych jest włączona, najpierw dodaj każdego znajomego w zakładce Gracze.",
+          "Dla serwera zbudowanego z wybranych przez Ciebie modów, zakładka Zaproszenia tworzy również plik .mrpack dla klienta, który je instaluje i dodaje serwer do listy serwerów wieloosobowych."
+        ],
+        "pills": ["mrpack"]
+      },
+      {
+        "title": "Zadbaj o bezpieczeństwo świata",
+        "body": "Każdy nowy serwer otrzymuje harmonogram codziennych kopii zapasowych. Przed aktualizacją paczki panel wykonuje kolejną kopię zapasową, odbudowuje serwer na nowej wersji i obserwuje pierwsze uruchomienie; jeśli się nie uruchomi, przywrócenie go zajmuje jedno kliknięcie. Mody dodane przez Ciebie na paczce pozostają po aktualizacjach.",
+        "points": [
+          "Codzienne kopie zapasowe od pierwszego dnia.",
+          "Aktualizacje i obniżanie wersji paczki z kopią zapasową i możliwością przywrócenia.",
+          "Raporty z awarii wykrywane, wyjaśniane i możliwe do udostępnienia."
+        ],
+        "shot": "backups"
+      }
+    ],
+    "steps": {
+      "title": "Hostuj swój serwer z modpackiem",
+      "items": [
+        {
+          "title": "Zainstaluj panel",
+          "body": "W systemie Linux instalator jednowierszowy konfiguruje Docker i panel. W systemach Windows i macOS uruchom panel z Node.js obok Docker Desktop."
+        },
+        {
+          "title": "Dodaj klucz API CurseForge",
+          "body": "Tylko dla paczek CurseForge: dodaj darmowy klucz w Ustawieniach, Klucze API."
+        },
+        {
+          "title": "Utwórz serwer z paczki",
+          "body": "Otwórz zakładkę Z paczki kreatora, znajdź paczkę, wybierz jej wersję i pamięć, a następnie utwórz serwer."
+        },
+        {
+          "title": "Zaproś znajomych",
+          "body": "Uruchom serwer, otwórz Ustawienia, Zaproszenia i wyślij tekst zaproszenia. Znajomi instalują tę samą wersję paczki w swoim launcherze i dołączają."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pytania dotyczące serwerów z modpackami",
+      "items": [
+        {
+          "q": "Ile pamięci RAM potrzebuje serwer z modpackiem?",
+          "a": "Około 6 GB dla lekkiej paczki 40-80 modów i 10 GB dla dużej paczki 150-300 modów, każda z mniejszą stertą Javy wewnątrz. Zaawansowane paczki, takie jak GregTech New Horizons, wymagają 16 GB. Pozostaw też miejsce dla systemu operacyjnego."
+        },
+        {
+          "q": "Czy moi znajomi potrzebują tej samej wersji modpacku?",
+          "a": "Tak. Serwer działa z jedną przypiętą wersją paczki, a klient z różnymi wersjami modów jest zazwyczaj odrzucany lub ulega awarii. Poinformuj znajomych o wersji wyświetlanej na zakładce Przegląd serwera."
+        },
+        {
+          "q": "Czy znajomi mogą dołączyć bez przekierowania portów?",
+          "a": "Tak, jeśli są w Twojej sieci. Z zewnątrz, albo przekieruj port gry na swoim routerze, albo użyj usługi tunelowania, która działa również wtedy, gdy Twój dostawca blokuje przekierowanie portów."
+        },
+        {
+          "q": "Co się dzieje, gdy paczka otrzymuje aktualizację?",
+          "a": "Przy polityce Powiadom mnie, strona Aktualizacje ją wyświetla. Zastosowanie jej wymaga kopii zapasowej, odbudowy serwera i obserwacji pierwszego uruchomienia, a przywrócenie zajmuje jedno kliknięcie. Twoi znajomi również aktualizują paczkę w swoim launcherze."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "guideHome", "guidePi"],
+    "cta": {
+      "title": "Graj w swoją paczkę na własnym serwerze",
+      "body": "Darmowy, otwarte źródło i bez konta u nikogo. Zainstaluj panel i utwórz serwer z paczki w kreatorze."
+    }
+  },
+  "guidePi": {
+    "meta": {
+      "title": "Serwer Minecraft na Raspberry Pi z panelem webowym",
+      "description": "Skonfiguruj serwer Minecraft na Raspberry Pi z darmowym panelem webowym. Jakiego sprzętu potrzebujesz, jak zainstalować go jednym poleceniem i jak dobrać pamięć."
+    },
+    "eyebrow": "Poradnik Raspberry Pi",
+    "title": "Uruchom serwer Minecraft na Raspberry Pi z prawdziwym panelem webowym",
+    "intro": "Raspberry Pi 4 lub 5 to ciche, energooszczędne rozwiązanie dla małego serwera Minecraft. Oto, co kupić, jak zainstalować panel jednym poleceniem i jak daleko można się posunąć.",
+    "pills": ["arm64", "linux", "docker", "paper", "fabric"],
+    "sections": [
+      {
+        "title": "Co Potrzebujesz",
+        "body": "Panel i jego obraz serwera są publikowane dla arm64, więc 64-bitowe Raspberry Pi uruchomi je jak każdą inną maszynę z Linuksem. Pamięć jest najważniejszym ograniczeniem: serwer vanilla lub Paper dla maksymalnie dziesięciu graczy potrzebuje 2 GB sterty Javy na maszynie 4 GB, a lekki modpack potrzebuje 4 GB sterty na maszynie 6 GB. To stawia Pi 4 GB na dolnej granicy, a Pi 8 GB w komfortowym środku.",
+        "points": [
+          "Raspberry Pi 4 lub 5 z co najmniej 4 GB pamięci. 8 GB, jeśli chcesz modyfikacje.",
+          "System operacyjny 64-bitowy, taki jak 64-bitowy Raspberry Pi OS.",
+          "Dysk SSD przez USB zamiast karty SD. Światy są stale odczytywane i zapisywane, a świat na wolnym nośniku zacina się podczas ładowania chunków.",
+          "Połączenie sieciowe przewodowe, jeśli to możliwe."
+        ]
+      },
+      {
+        "title": "Wybierz Typ Serwera Odpowiedni dla Pi",
+        "body": "Minecraft bardziej dba o szybkość jednego rdzenia niż o ich liczbę, a rdzenie Pi są skromne. Paper uruchamia tę samą grę co vanilla z latami optymalizacji wydajności, a gracze nadal mogą dołączać z niezmienionym klientem. Jeśli chcesz modyfikacje, Fabric z kilkoma modami poprawiającymi wydajność i jakość życia jest lepszym wyborem niż duży pakiet Forge. Pakiet 200 modów typu „kitchen-sink” to nie zadanie dla Pi.",
+        "pills": ["paper", "purpur", "fabric"],
+        "points": [
+          "Mała grupa, niezmieniona gra: Paper.",
+          "Kilka modyfikacji: Fabric.",
+          "Zmniejsz odległość renderowania; obniżenie z 12 do 8 chunków oszczędza dużo pamięci i jest ledwo zauważalne w grze."
+        ]
+      },
+      {
+        "title": "Obserwuj Go",
+        "body": "Zakładka Monitorowanie serwera pokazuje liczbę taktów na sekundę i milisekundy na takt, dzięki czemu możesz zobaczyć, kiedy Pi zaczyna niedomagać. Wskaźnik pamięci pokazuje, ile faktycznie używa kontener. Java domyślnie rezerwuje całą swoją stertę z góry; jeśli wolisz, aby pamięć podążała za rzeczywistym użyciem, ustaw mniejszą początkową stertę w karcie Zasoby serwera. Codzienne kopie zapasowe są włączone od pierwszego dnia.",
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Zainstaluj Panel na Raspberry Pi",
+      "items": [
+        {
+          "title": "Sflashuj system operacyjny 64-bitowy",
+          "body": "Zainstaluj 64-bitowy Raspberry Pi OS (lub inny 64-bitowy Linux), uruchom z dysku SSD, jeśli to możliwe, i zaktualizuj system."
+        },
+        {
+          "title": "Uruchom instalator jednoliniowy",
+          "body": "Instalator na stronie Instalacja instaluje Dockera, jeśli go brakuje, konfiguruje panel w /opt/msm, uruchamia go i czeka, aż odpowie. Sam wykrywa arm64."
+        },
+        {
+          "title": "Zakończ konfigurację w przeglądarce",
+          "body": "Otwórz adres Pi na porcie 25564 z innego komputera. Ponieważ panel jest dostępny z Twojej sieci, konfiguracja prosi o 6-cyfrowy kod PIN, który instalator dla Ciebie wyświetla."
+        },
+        {
+          "title": "Utwórz mały serwer",
+          "body": "W kreatorze wybierz Paper lub Fabric. Domyślna pamięć dostosowuje się do RAM-u Pi; zostaw miejsce dla systemu i innych usług."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pytania dotyczące Raspberry Pi",
+      "items": [
+        {
+          "q": "Czy Raspberry Pi 3 zadziała?",
+          "a": "Nie jest to dobry wybór. Pi 3 ma 1 GB pamięci, podczas gdy nawet mały serwer vanilla lub Paper potrzebuje 2 GB sterty na maszynie 4 GB. Użyj Pi 4 lub 5 z 4 GB lub więcej."
+        },
+        {
+          "q": "Czy potrzebuję systemu operacyjnego 64-bitowego?",
+          "a": "Tak. Obraz panelu i instalator są zbudowane dla arm64 i amd64, a instalator zatrzymuje się na każdej innej architekturze."
+        },
+        {
+          "q": "Czy mogę uruchomić duży modpack na Pi?",
+          "a": "Duże pakiety wymagają 6 do 8 GB sterty Javy i około 10 GB pamięci łącznie, więcej niż ma jakiekolwiek Pi. Trzymaj się Paper lub lekkiej konfiguracji Fabric."
+        },
+        {
+          "q": "Jak gracze spoza mojego domu mogą dołączyć?",
+          "a": "Przekieruj port gry, domyślnie 25565 przez TCP i UDP, z routera do Pi. Nigdy nie przekierowuj portu panelu ani portów RCON; zamiast tego uzyskaj dostęp do panelu przez VPN lub serwer proxy z TLS."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverPaper", "serverFabric"],
+    "cta": {
+      "title": "Zamień swoje Pi w serwer",
+      "body": "Jedno polecenie instaluje wszystko. Panel jest darmowy, open source i działa w całości na Pi."
+    }
+  },
+  "guideHome": {
+    "meta": {
+      "title": "Jak hostować serwer Minecraft w domu, krok po kroku",
+      "description": "Hostuj serwer Minecraft w domu na Windows, macOS lub Linux za pomocą darmowego panelu webowego. Zainstaluj go, zachowaj prywatność panelu i pozwól znajomym bezpiecznie dołączyć."
+    },
+    "eyebrow": "Przewodnik po hostingu domowym",
+    "title": "Hostuj serwer Minecraft w domu na Windows, macOS lub Linux",
+    "intro": "Każdy komputer, na którym działa Docker, może hostować Twoje serwery. Zainstaluj panel, zachowaj jego prywatność, otwórz tylko port gry, a Twoi znajomi będą mogli dołączyć z dowolnego miejsca.",
+    "pills": ["windows", "macos", "linux", "docker", "nodejs"],
+    "sections": [
+      {
+        "title": "Dwa sposoby instalacji",
+        "body": "Na maszynie z systemem Linux instalator jednowierszowy wykonuje wszystkie czynności: instaluje Dockera, jeśli go brakuje, uruchamia panel jako kontener i ponownie go uruchamia po restarcie. Na Windows i macOS uruchom panel bezpośrednio za pomocą Node.js 24 obok Docker Desktop. Panel wyświetli jasny komunikat i zatrzyma się, jeśli Twój Node.js jest zbyt stary, a jeśli Docker jeszcze nie działa, nadal otrzymasz pełny panel; serwery uruchamiają się, gdy tylko Docker będzie gotowy.",
+        "pills": ["linux", "docker", "windows", "macos", "nodejs"],
+        "points": [
+          "Linux: instalator lub plik compose w Portainer lub Dockge.",
+          "Windows: Docker Desktop z backendem WSL2, a następnie panel ze źródła.",
+          "macOS: Docker Desktop, a następnie panel ze źródła.",
+          "Pod PM2 lub systemd panel przetrwa restarty."
+        ]
+      },
+      {
+        "title": "Zachowaj prywatność panelu",
+        "body": "Gracze nigdy nie komunikują się z panelem. Łączą się z portem gry. Świeża instalacja ze źródła odpowiada tylko na maszynie, na której działa, pod adresem localhost:25564. Aby uzyskać do niego dostęp z innego komputera w Twoim domu, ustaw go tak, aby nasłuchiwał w Twojej sieci; konfiguracja poprosi wtedy o jednorazowy kod PIN, dzięki czemu nieznajomy, który pierwszy uzyska dostęp do portu, nie będzie mógł przejąć konta administratora. Nigdy nie przekierowuj portu panelu do internetu. Aby zarządzać serwerami poza domem, użyj VPN, tunelu SSH lub odwrotnego proxy z TLS.",
+        "points": [
+          "Domyślnie tylko localhost.",
+          "Kod PIN konfiguracji, gdy panel jest dostępny z sieci.",
+          "Uwierzytelnianie dwuskładnikowe dla każdego konta."
+        ]
+      },
+      {
+        "title": "Pozwól znajomym dołączyć",
+        "body": "Każdy serwer otrzymuje port gry, zaczynając od 25565 i licząc w górę. Na swoim routerze przekieruj ten port, zarówno przez TCP, jak i UDP, do komputera uruchamiającego serwery. Pozostaw porty konsoli zdalnej, 1000 powyżej każdego portu gry, zamknięte: panel uzyskuje do nich dostęp z wnętrza kontenera i nigdy nie potrzebuje ich otwartych. Podaj graczom nazwę hosta, którą kontrolujesz, zamiast swojego domowego adresu, dzięki czemu zmiana adresu będzie zmianą DNS, a nie wiadomością do każdego gracza.",
+        "points": [
+          "Przekieruj tylko porty gry, TCP i UDP.",
+          "Pozostaw RCON i port panelu zamknięte.",
+          "Zakładka Przegląd pokazuje adres do udostępnienia."
+        ],
+        "shot": "overview"
+      },
+      {
+        "title": "Spraw, by działał jak serwer",
+        "body": "Domowy komputer, który przechodzi w stan uśpienia, zabiera ze sobą serwer, więc wyłącz uśpienie na maszynie, która go hostuje. Zaznacz Start po uruchomieniu panelu w ustawieniach serwera, a wróci on wraz z panelem. Automatyczne ponowne uruchamianie po awarii przywraca uszkodzony serwer z rosnącymi opóźnieniami między próbami. Codzienne kopie zapasowe są planowane dla każdego nowego serwera, a harmonogramy mogą restartować serwery w spokojnych godzinach.",
+        "shot": "schedules"
+      }
+    ],
+    "steps": {
+      "title": "Hostuj swój pierwszy serwer w domu",
+      "items": [
+        {
+          "title": "Zainstaluj Dockera",
+          "body": "Docker Engine w systemie Linux lub Docker Desktop w systemach Windows i macOS. W systemie Windows udostępnij dysk, na którym znajduje się panel, dla Docker Desktop."
+        },
+        {
+          "title": "Zainstaluj i otwórz panel",
+          "body": "Postępuj zgodnie z instrukcjami na stronie Instalacja dla Twojego systemu, a następnie otwórz panel w przeglądarce. Konfiguracja sprawdza Dockera, tworzy Twoje konto administratora i pyta o Twoją strefę czasową."
+        },
+        {
+          "title": "Utwórz serwer",
+          "body": "Kreator sugeruje darmowy port i pamięć, która pasuje do Twojej maszyny. Wybierz typ serwera i naciśnij utwórz."
+        },
+        {
+          "title": "Przekieruj port gry",
+          "body": "Przekieruj port gry serwera na swoim routerze, TCP i UDP, i wyślij znajomym adres z zakładki Przegląd."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pytania dotyczące hostingu domowego",
+      "items": [
+        {
+          "q": "Czy mogę hostować na tym samym komputerze, na którym gram?",
+          "a": "Tak, o ile ma wystarczającą ilość pamięci dla obu. Daj serwerowi jego stertę plus zapas dla Javy i zostaw wystarczająco dużo dla klienta gry. Serwer typu vanilla dla kilku znajomych potrzebuje około 4 GB dla siebie."
+        },
+        {
+          "q": "Dlaczego znajomi w mojej sieci Wi-Fi mogą dołączyć, a znajomi spoza niej nie mogą?",
+          "a": "Port gry nie jest przekierowany na Twoim routerze lub zapora sieciowa go blokuje. Przekieruj port gry serwera przez TCP i UDP do maszyny hostującej i zezwól na niego w zaporze sieciowej maszyny."
+        },
+        {
+          "q": "Czy mogę uruchomić obraz Dockera panelu w systemie Windows lub macOS?",
+          "a": "Instalacja kontenera jest przeznaczona dla hostów z systemem Linux. W systemach Windows i macOS uruchom panel ze źródła za pomocą Node.js 24 obok Docker Desktop, co działa tak samo, gdy już działa."
+        }
+      ]
+    },
+    "related": ["guidePi", "guideMulti", "serverVanilla"],
+    "cta": {
+      "title": "Zacznij hostować w domu",
+      "body": "Darmowy, otwarty kod źródłowy i brak kont u nikogo. Twoje serwery znajdują się w jednym folderze na Twojej własnej maszynie."
+    }
+  },
+  "guideHosting": {
+    "meta": {
+      "title": "Opuść płatny hosting Minecraft: przenieś swój świat",
+      "description": "Przenieś serwer Minecraft z płatnego hostingu: pobierz odpowiednie pliki, przenieś świat i wtyczki do własnego panelu, zachowaj wszystkie ekwipunki i adres."
+    },
+    "eyebrow": "Przewodnik migracji",
+    "title": "Przenieś swój serwer Minecraft z płatnego hostingu",
+    "intro": "Zabierz swój świat, wtyczki i mody do domu, zachowując wszystkie ekwipunki. Najpierw oceń sytuację, skopiuj cały folder serwera, odtwórz go we własnym panelu, a dopiero potem skieruj do niego graczy.",
+    "pills": ["docker", "paper", "fabric", "forge", "packs-curseforge", "packs-modrinth"],
+    "sections": [
+      {
+        "title": "Oceń sytuację przed pobraniem",
+        "body": "Zapisz te informacje, gdy stary serwer jest jeszcze uruchomiony. Każdy z tych punktów doprowadził do nieudanej migracji, gdy został założony zamiast sprawdzony. Tryb online ma największe znaczenie: jeśli stary serwer działał bez niego, a nowy działa z nim, lub odwrotnie, każdy gracz otrzyma inną tożsamość i zupełnie nowy, pusty ekwipunek.",
+        "points": [
+          "Dokładna wersja Minecraft i loader. 1.20.1 NeoForge to nie to samo co 1.20.1 Forge.",
+          "Lista modów lub wtyczek, wraz z wersjami.",
+          "Nazwa levelu z pliku server.properties. Folder świata często nie nazywa się 'world'.",
+          "Tryb online, włączony lub wyłączony.",
+          "Wszystko, co znajduje się poza folderem serwera, na przykład baza danych wtyczki."
+        ]
+      },
+      {
+        "title": "Pobierz cały folder, nie tylko świat",
+        "body": "Użyj menedżera plików lub opcji pobierania hosta i pobierz cały katalog serwera. Pobierz same pliki .jar wtyczek i modów, a nie listę nazw: wersje mają znaczenie, a 'najnowsza' za miesiąc będzie innym plikiem. Pobierz również swoje kopie zapasowe. Kopia zapasowa istniejąca tylko w panelu, który opuszczasz, nie jest kopią zapasową, którą posiadasz. Zakończ prawidłowo działanie serwera przed ostatecznym pobraniem, aby gra zapisała świat na dysku."
+      },
+      {
+        "title": "Odtwórz go we własnym panelu",
+        "body": "Utwórz serwer tego samego typu i dokładnie tej samej wersji. Następnie dodaj poszczególne elementy. Strona Światy przyjmuje twój świat jako archiwum .zip lub .tar, automatycznie znajduje w nim świat i instaluje go na serwerze, tworząc wcześniej kopię zapasową obecnego. Na serwerze z wtyczkami lub modami zaimportuj archiwum .zip z plikami .jar: każdy z nich jest identyfikowany, oceniany w stosunku do serwera i instalowany, jeśli pasuje. Konfiguracje i reszta są dodawane za pomocą menedżera plików, który edytuje i przesyła pliki bezpośrednio w przeglądarce. Jeśli stary serwer uruchamiał opublikowany pakiet, zamiast tego zainstaluj ten sam pakiet w tej samej wersji.",
+        "pills": ["zip", "mrpack", "cf-export"],
+        "points": [
+          "Prześlij świat: funkcja ta odnajduje świat wewnątrz twojego archiwum.",
+          "Importuj Zip: funkcja ta identyfikuje każdy plik .jar i sprawdza go w stosunku do serwera.",
+          "Menedżer plików obsługuje pliki konfiguracyjne, whitelist i pliki ops."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Zachowaj adres, zachowaj graczy",
+        "body": "Jeśli gracze łączą się z surowym adresem IP, każda zmiana wymaga od nich edycji listy serwerów, a niektórzy nigdy tego nie robią. Użyj nazwy hosta, którą kontrolujesz, i skieruj ją na swoją nową maszynę. Migracja staje się wtedy zmianą DNS. Obniż czas życia rekordu (TTL) na dzień przed przełączeniem, aby zmiana szybko się rozprzestrzeniła. Rekord SRV pozwala graczom wpisywać surową domenę, nawet gdy serwer działa na innym porcie, co jest tym samym, co robią hosty, aby udostępnić adres do gry."
+      }
+    ],
+    "steps": {
+      "title": "Przełączenie, w kolejności",
+      "items": [
+        {
+          "title": "Testuj na prywatnym porcie",
+          "body": "Uruchom nowy serwer na porcie, którego gracze nie znają, połącz się z nim sam i sprawdź podstawowe rzeczy, które znasz, swój ekwipunek i to, czy wszystkie wtyczki lub mody zostały załadowane."
+        },
+        {
+          "title": "Ostateczna kopia",
+          "body": "Ogłoś restart, prawidłowo zatrzymaj stary serwer, pobierz świat jeszcze raz i zainstaluj tę kopię, aby najnowsze zmiany zostały uwzględnione."
+        },
+        {
+          "title": "Zmień port i adres",
+          "body": "Przenieś serwer na jego publiczny port za pomocą karty Port gry, a następnie skieruj swoją nazwę hosta na nową maszynę."
+        },
+        {
+          "title": "Zachowaj stary serwer przez jakiś czas",
+          "body": "Anuluj stary plan dopiero po kilku dniach. Utrzymuj go zatrzymanym, aby nikt nie budował na porzuconej kopii."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pytania dotyczące migracji",
+      "items": [
+        {
+          "q": "Czy gracze zachowają swoje ekwipunki?",
+          "a": "Tak, pod warunkiem że tryb online jest taki sam na obu serwerach i przeniosłeś cały folder świata. Dane graczy znajdują się wewnątrz świata, powiązane z tożsamością każdego gracza, a ta tożsamość zmienia się, jeśli zmieni się tryb online."
+        },
+        {
+          "q": "Mój hosting pozwala mi tylko pobrać świat. Czy to wystarczy?",
+          "a": "Dla wersji vanilla, głównie. Dla serwera z wtyczkami lub modami potrzebujesz również plików .jar w ich dokładnych wersjach, ponieważ świat nie załaduje się poprawnie bez modów, które go stworzyły. Poproś swojego hosta o pełny katalog serwera."
+        },
+        {
+          "q": "Co panel zastępuje z panelu sterowania mojego hosta?",
+          "a": "Konsolę, menedżera plików, kopie zapasowe, harmonogramy, zarządzanie graczami, instalacje wtyczek i modów, instalacje modpacków, a także rzeczy, za które hosty często pobierają dodatkowe opłaty, takie jak więcej serwerów lub więcej slotów na kopie zapasowe. Ograniczeniem jest twój własny sprzęt."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverModpacks", "guideMulti"],
+    "cta": {
+      "title": "Zabierz swój serwer do domu",
+      "body": "Zainstaluj panel, utwórz serwer pasujący do twojego starego i prześlij swój świat. Darmowy, open source i twój na zawsze."
+    }
+  },
+  "guideMulti": {
+    "meta": {
+      "title": "Uruchom wiele serwerów Minecraft na jednym komputerze",
+      "description": "Uruchom wiele serwerów Minecraft na jednym komputerze: automatyczne porty, limity pamięci, CPU i dysku dla każdego serwera, współdzielone mody i jeden pulpit dla całej floty."
+    },
+    "eyebrow": "Przewodnik po wielu serwerach",
+    "title": "Uruchom wiele serwerów Minecraft na jednym komputerze, w czysty sposób",
+    "intro": "Świat survivalowy, serwer kreatywny i modpack na weekend, wszystko na tym samym komputerze. Każdy z nich otrzymuje własny kontener, własny port i własne limity, a Ty widzisz je wszystkie na jednym pulpicie.",
+    "pills": ["docker", "paper", "fabric", "forge", "vanilla"],
+    "sections": [
+      {
+        "title": "Porty posortowane dla Ciebie",
+        "body": "Porty gry są przydzielane według zasady „najpierw wolny”, licząc od 25565, z konsolą zdalną 1000 powyżej każdego z nich. Dziesięć serwerów używa portów gry od 25565 do 25574 i utrzymuje RCON we własnym bloku, dzięki czemu możesz otworzyć jeden ciągły zakres portów gry w zaporze sieciowej, nigdy nie wystawiając RCON. Port jest uważany za zajęty, jeśli inny serwer go używa, jakikolwiek kontener Docker na maszynie go publikuje, lub system zgłasza go jako zajęty. Przenieś serwer później za pomocą karty „Port gry”, a panel sprawdzi nowy port przed zapisaniem.",
+        "points": [
+          "Jedna para portów gry i RCON na serwer, przypisana automatycznie.",
+          "„Następny wolny port” wybiera najniższy wolny.",
+          "Otwórz tylko zakres portów gry. RCON pozostaje zamknięty."
+        ]
+      },
+      {
+        "title": "Limity, aby jeden serwer nie zagłodził reszty",
+        "body": "Każdy serwer to własny kontener Docker z limitem CPU, stosem Java i twardym limitem pamięci powyżej niego. Docker nie może ograniczyć użycia dysku przez folder, więc panel to robi: każdy serwer ma limit dysku, a akcja, która przekroczyłaby ten limit, jak instalacja moda lub przesłanie świata, jest blokowana do momentu zwolnienia miejsca. Włącz opcję „Zatrzymaj serwer po przekroczeniu limitu”, a serwer, który przekroczy swój limit o ponad 10 procent, zostanie zatrzymany i odnotowany w jego historii.",
+        "points": [
+          "Limit CPU, stosu Java i pamięci dla każdego serwera.",
+          "Limity dysku egzekwowane przez panel.",
+          "Domyślne ustawienia dla nowych serwerów dostosowują się do pamięci maszyny."
+        ],
+        "shot": "storage"
+      },
+      {
+        "title": "Dziel się tym, co można dzielić",
+        "body": "Dodane mody są przechowywane raz w bibliotece współdzielonej, deduplikowane za pomocą sha256 i linkowane do każdego serwera, który ich używa, dzięki czemu dziesięć serwerów uruchamiających ten sam mod nie przechowuje go dziesięć razy. Światy trafiają do biblioteki światów, z której każdy serwer może zainstalować. Schemat przechwytuje cały przepis serwera jako pojedynczy plik .mcserver.zip, a Klon używa go do stworzenia identycznego serwera ze świeżymi portami.",
+        "shot": "blueprints"
+      },
+      {
+        "title": "Jeden widok floty",
+        "body": "Pulpit pokazuje wszystkie serwery w skrócie: status, pamięć, gracze online, oczekujące aktualizacje i ostatnią aktywność. Tagi organizują listę serwerów. Globalne harmonogramy uruchamiają restarty, kopie zapasowe lub polecenia na serwerach, a strona Aktualizacje zbiera informacje o tym, co jest nieaktualne w całej flocie. Uprawnienia dla poszczególnych serwerów pozwalają znajomemu uruchomić własny serwer w panelu bez widzenia Twoich.",
+        "shot": "dashboard"
+      }
+    ],
+    "steps": {
+      "title": "Zaplanuj maszynę z wieloma serwerami",
+      "items": [
+        {
+          "title": "Zsumuj pamięć",
+          "body": "Zsumuj stos Java każdego serwera i jego przestrzeń buforową, a następnie zostaw miejsce dla systemu. Serwery, które są zatrzymane, nie zużywają pamięci, więc weekendowy pakiet nic nie kosztuje w dni powszednie."
+        },
+        {
+          "title": "Ustaw rozsądne domyślne wartości",
+          "body": "Administrator ustawia stos Java, limit dysku i limit CPU, z którymi zaczyna każdy nowy serwer, w sekcji Ustawienia, Domyślne dla nowych serwerów."
+        },
+        {
+          "title": "Otwórz jeden zakres portów",
+          "body": "Otwórz zakres portów gry odpowiedni dla serwerów, które planujesz uruchomić, przez TCP i UDP. Pozostaw blok RCON zamknięty."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pytania dotyczące wielu serwerów",
+      "items": [
+        {
+          "q": "Ile serwerów może działać na jednym komputerze?",
+          "a": "Decyduje przede wszystkim pamięć. Zsumuj stos każdego działającego serwera i jego przestrzeń buforową: mały serwer vanilla lub Paper potrzebuje około 4 GB łącznie, lekki modpack około 6 GB. Zatrzymane serwery nic nie kosztują."
+        },
+        {
+          "q": "Czy każdy serwer może mieć własnych administratorów?",
+          "a": "Tak. Uprawnienia dla poszczególnych serwerów przyznają oddzielnie podgląd, zasilanie, konsolę, graczy, zawartość, kopie zapasowe, pliki, ustawienia i usuwanie dla każdego serwera, a serwer może być całkowicie ukryty przed użytkownikiem."
+        },
+        {
+          "q": "Czy gracze mogą przełączać się między moimi serwerami w grze?",
+          "a": "Nie za pomocą samego panelu. Każdy serwer ma swój własny adres i port. Łączenie serwerów tak, aby gracze mogli się między nimi przemieszczać w grze, wymaga serwera proxy, który uruchomiłbyś obok nich."
+        }
+      ]
+    },
+    "related": ["guideHome", "serversHub", "guideHosting"],
+    "cta": {
+      "title": "Zarządzaj całą swoją flotą z jednego miejsca",
+      "body": "Zainstaluj panel raz i dodawaj serwery w miarę potrzeb. Brak opłat za serwer i brak limitów instancji."
+    }
+  },
+  "compareHub": {
+    "meta": {
+      "title": "Porównanie paneli serwerów Minecraft: Pterodactyl, AMP, Crafty",
+      "description": "Uczciwe porównanie darmowych i płatnych paneli serwerów Minecraft: Pterodactyl, Crafty Controller, AMP, MCSManager i PufferPanel, obok Minecraft Server Manager."
+    },
+    "eyebrow": "Porównaj panele",
+    "title": "Porównanie paneli serwerów Minecraft",
+    "intro": "Kilka dobrych paneli może zarządzać serwerem Minecraft. Oto, czym Minecraft Server Manager różni się od każdego z nich, wraz z przypadkami, gdy inny panel jest lepszym wyborem.",
+    "cards": {
+      "comparePtero": "Darmowy panel wielogrowy, stworzony dla firm hostingowych, z osobnym demonem na każdej maszynie. Porównaj wysiłek związany z konfiguracją i funkcje Minecraft.",
+      "compareCrafty": "Darmowy panel Minecraft napisany w Pythonie, który uruchamia serwery jako zwykłe procesy. Porównaj izolację serwerów i sposób dodawania modpacków.",
+      "compareAmp": "Komercyjny panel dla setek gier, sprzedawany w różnych poziomach licencji. Porównaj cenę, limity instancji i głębokość funkcji Minecraft.",
+      "compareMcsm": "Darmowy, rozproszony panel dla gier Minecraft i Steam. Porównaj architekturę, wykorzystanie Dockera i obsługę modpacków.",
+      "comparePuffer": "Darmowy, lekki panel dla wielu gier i wielu maszyn, z serwerami jako procesami lub kontenerami. Porównaj izolację, węzły i głębokość funkcji Minecraft."
+    },
+    "sections": [
+      {
+        "title": "Jak napisano te porównania",
+        "body": "Każdy fakt dotyczący innego panelu pochodzi z własnej strony internetowej, dokumentacji lub repozytorium tego projektu, a każda strona podaje datę sprawdzenia. Tam, gdzie nie mogliśmy czegoś potwierdzić, pominęliśmy to zamiast zgadywać. Jeśli fakt się zmienił, poinformuj nas na Discordzie lub GitHubie, a my poprawimy stronę.",
+        "points": [
+          "Każda strona wymienia, co inny panel robi lepiej.",
+          "Ceny i wersje są podane z datą ich sprawdzenia.",
+          "Minecraft Server Manager nie jest powiązany z żadnym z tych projektów. Ich nazwy należą do ich właścicieli."
+        ]
+      },
+      {
+        "title": "Do czego został stworzony Minecraft Server Manager",
+        "body": "Jeden właściciel lub mały zespół, zarządzający serwerami Minecraft Java na własnej maszynie. Każdy serwer to kontener Docker z ograniczonymi zasobami, cały panel znajduje się w jednym folderze, a trudne gdzie indziej części Minecraft są wbudowane: przypięte modpacki z możliwością cofnięcia zmian, pięć rejestrów modów w jednym wyszukiwaniu, analiza awarii, mapa na żywo jednym kliknięciem i przenośne szablony.",
+        "pills": ["paper", "purpur", "fabric", "forge", "neoforge", "quilt", "vanilla"]
+      }
+    ],
+    "faq": {
+      "title": "Pytania dotyczące wyboru panelu",
+      "items": [
+        {
+          "q": "Który panel wybrać dla jednego serwera Minecraft w domu?",
+          "a": "Jeśli zarządzasz tylko serwerem Minecraft Java i chcesz mieć modpacki, kopie zapasowe i mapę na żywo bez samodzielnego ich składania, Minecraft Server Manager jest do tego stworzony. Jeśli hostujesz również inne gry lub zarządzasz wieloma maszynami, lepszy będzie panel wielogrowy, taki jak Pterodactyl, MCSManager lub AMP."
+        },
+        {
+          "q": "Czy Minecraft Server Manager jest naprawdę darmowy?",
+          "a": "Tak. Posiada licencję MIT, nie ma płatnych wersji i nie korzysta z płatnych usług. Pobieranie z CurseForge wymaga klucza API CurseForge, który dodajesz w Ustawieniach."
+        },
+        {
+          "q": "Czy mogę przenieść mój istniejący świat do Minecraft Server Manager?",
+          "a": "Tak. Prześlij świat na stronie Światy i zainstaluj go na nowym serwerze, lub zaimportuj eksport modpacka lub archiwum zip plików modów podczas tworzenia serwera."
+        }
+      ]
+    },
+    "related": ["serversHub", "guideHosting"],
+    "cta": {
+      "title": "Wypróbuj na własnej maszynie",
+      "body": "Zainstaluj panel w trzech krokach i utwórz swój pierwszy serwer za pomocą kreatora. Cały panel pozostaje w jednym folderze, który możesz skopiować w dowolne miejsce."
+    },
+    "table": {
+      "title": "Wszystkie panele w skrócie",
+      "columns": [
+        "",
+        "Minecraft Server Manager",
+        "Pterodactyl",
+        "Crafty Controller",
+        "AMP",
+        "MCSManager",
+        "PufferPanel"
+      ],
+      "rows": [
+        {
+          "label": "Cena",
+          "values": ["Darmowy.", "Darmowy.", "Darmowy.", "Płatne poziomy licencji.", "Darmowy.", "Darmowy."]
+        },
+        {
+          "label": "Licencja",
+          "values": ["MIT.", "MIT.", "GPL-3.0.", "Komercyjna, zamknięte źródło.", "Apache-2.0.", "Apache-2.0."]
+        },
+        {
+          "label": "Gry",
+          "values": [
+            "Minecraft Java Edition.",
+            "Wiele, poprzez \"eggs\".",
+            "Minecraft Java i Bedrock.",
+            "Ponad 200.",
+            "Gry Minecraft i Steam.",
+            "Wiele, poprzez szablony."
+          ]
+        },
+        {
+          "label": "Serwery gier działają jako",
+          "values": [
+            "Kontenery Docker.",
+            "Kontenery Docker.",
+            "Procesy na hoście.",
+            "Procesy lub kontenery Docker (po włączeniu).",
+            "Kontenery lub procesy.",
+            "Procesy lub kontenery."
+          ]
+        },
+        {
+          "label": "Wiele maszyn",
+          "values": [
+            "Nie. Jeden panel na maszynę.",
+            "Tak, z węzłami Wings.",
+            "Brak zdalnych węzłów w dokumentacji.",
+            "Licencja Professional i wyższa.",
+            "Tak, z demonami.",
+            "Tak, z węzłami."
+          ]
+        },
+        {
+          "label": "Systemy hosta",
+          "values": [
+            "Linux, Windows, macOS.",
+            "Linux.",
+            "Linux, Windows, macOS.",
+            "Linux, Windows.",
+            "Linux, Windows, macOS.",
+            "Linux."
+          ]
+        }
+      ],
+      "note": "Fakty sprawdzone w dokumentacji każdego projektu, październik i listopad 2026. Każda strona porównawcza zawiera szczegóły."
+    }
+  },
+  "comparePtero": {
+    "meta": {
+      "title": "Alternatywa dla Pterodactyl dla serwerów Minecraft",
+      "description": "Minecraft Server Manager w porównaniu z Pterodactyl: jeden proces i jeden folder zamiast panelu, demona, bazy danych i Redis, z wbudowanymi funkcjami Minecraft."
+    },
+    "eyebrow": "Alternatywa dla Pterodactyl",
+    "title": "Alternatywa dla Pterodactyl stworzona wyłącznie dla Minecraft",
+    "intro": "Pterodactyl to darmowy, otwarty panel, który obsługuje wiele gier na wielu maszynach. Minecraft Server Manager obsługuje jedną grę na jednej maszynie, więc wymaga znacznie mniej konfiguracji i ma wbudowane narzędzia dla Minecraft.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Porównanie",
+      "columns": ["", "Minecraft Server Manager", "Pterodactyl"],
+      "rows": [
+        {
+          "label": "Cena i licencja",
+          "values": ["Darmowy, MIT.", "Darmowy, MIT."]
+        },
+        {
+          "label": "Co instalujesz",
+          "values": [
+            "Jeden proces Node.js lub jeden kontener Docker.",
+            "Panel PHP (Laravel) z frontendem React, plus demon Wings napisany w Go na każdym węźle."
+          ]
+        },
+        {
+          "label": "Baza danych i pamięć podręczna",
+          "values": [
+            "Wbudowany plik SQLite w folderze danych. Nic więcej do uruchomienia.",
+            "MySQL 5.7.22+ lub MariaDB 10.2+, Redis, serwer WWW i Composer."
+          ]
+        },
+        {
+          "label": "Serwery gier działają jako",
+          "values": ["Kontenery Docker z ograniczonymi zasobami.", "Izolowane kontenery Docker (wymagany Docker)."]
+        },
+        {
+          "label": "Systemy hosta",
+          "values": [
+            "Linux, Windows i macOS. Obraz jest zbudowany dla amd64 i arm64.",
+            "Tylko Linux: wydania Ubuntu, Debian i rodziny RHEL. Wings nie działa na Windows."
+          ]
+        },
+        {
+          "label": "Zarządzane maszyny",
+          "values": [
+            "Jedna. Panel i Docker działają na tym samym hoście.",
+            "Wiele. Jeden panel kontroluje węzły Wings na wielu maszynach."
+          ]
+        },
+        {
+          "label": "Gry",
+          "values": [
+            "Minecraft Java Edition. Gracze Bedrock mogą dołączyć przez Geyser.",
+            "Wiele gier poprzez \"jaja\", w tym Minecraft, Rust, Terraria i ARK."
+          ]
+        }
+      ],
+      "note": "Fakty sprawdzone w październiku 2026 na podstawie dokumentacji każdego projektu."
+    },
+    "sections": [
+      {
+        "title": "Konfiguracja bez stosu do złożenia",
+        "body": "Dokumentacja Pterodactyl określa go jako wysoce złożony system z wieloma zależnościami: PHP, serwer bazy danych, Redis, serwer WWW, pracownik kolejki i Wings na każdym węźle. Taka konstrukcja pozwala mu obsługiwać firmy hostingowe. Minecraft Server Manager to jeden proces, który komunikuje się z gniazdem Docker i przechowuje wszystko, w tym bazę danych, w jednym folderze. W systemie Linux jeden skrypt instalacyjny go konfiguruje i instaluje Docker, jeśli jest brakujący.",
+        "points": [
+          "Brak oddzielnego demona, serwera bazy danych lub pamięci podręcznej do ciągłego działania.",
+          "Skopiuj folder danych, aby przenieść cały panel na nową maszynę.",
+          "Działa natywnie na Windows i macOS obok Docker Desktop."
+        ],
+        "pills": ["docker", "portainer", "dockge", "pm2"]
+      },
+      {
+        "title": "Gdzie Minecraft Server Manager jest lepszy dla Minecraft",
+        "body": "Ponieważ obsługuje tylko Minecraft, panel wie, czym jest modpack, plik moda i raport awarii. Narzędzia, po które sięga właściciel Minecraft, są częścią panelu, a nie czymś, co trzeba znaleźć i podłączyć.",
+        "points": [
+          "Modpacki są przypinane do dokładnej wersji, a aktualizacje najpierw tworzą kopię zapasową i cofają zmiany jednym kliknięciem.",
+          "Jedno wyszukiwanie w pięciu rejestrach, filtrowane według programu ładującego serwera i wersji Minecraft.",
+          "Każde pobieranie jest weryfikowane sumą kontrolną przed dotarciem do serwera.",
+          "Awarie są wykrywane, analizowane i udostępniane na mclo.gs jednym kliknięciem.",
+          "Jednoklikowa mapa na żywo BlueMap, za własnym logowaniem panelu.",
+          "Każde ustawienie obrazu itzg jest wyjaśnione prostym językiem w kreatorze."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Kiedy Pterodactyl jest lepszym wyborem",
+        "body": "Pterodactyl jest dojrzały, aktywnie utrzymywany i wspierany przez firmy hostingowe. Jeśli którekolwiek z poniższych opisuje Ciebie, jest to silniejszy wybór.",
+        "points": [
+          "Uruchamiasz serwery na kilku maszynach i chcesz jednego panelu dla wszystkich.",
+          "Hostujesz gry inne niż Minecraft.",
+          "Sprzedajesz lub udostępniasz hosting wielu oddzielnym klientom i potrzebujesz takiej skali.",
+          "Już używasz Pterodactyl, a jego jaja obejmują to, czego potrzebujesz."
+        ]
+      },
+      {
+        "title": "Uwaga dotycząca Pelican",
+        "body": "Pelican Panel to fork Pterodactyl, licencjonowany na licencji AGPL-3.0 i wciąż w fazie kandydata do wydania w momencie sprawdzania tej strony. Zachowuje projekt panelu plus Wings, dodaje SQLite i PostgreSQL jako opcje bazy danych oraz posiada centrum wtyczek, gdzie wtyczka strony trzeciej przegląda modpacki z CurseForge i Modrinth."
+      }
+    ],
+    "faq": {
+      "title": "Pytania dotyczące Pterodactyl",
+      "items": [
+        {
+          "q": "Czy mogę przenieść serwer z Pterodactyl do Minecraft Server Manager?",
+          "a": "Tak. Pobierz świat serwera z Pterodactyl, utwórz serwer tego samego typu i wersji Minecraft w Minecraft Server Manager, a następnie prześlij świat na stronie Światy i zainstaluj go na tym serwerze. W przypadku serwerów z modami, zaimportuj paczkę lub swój plik zip modów podczas tworzenia."
+        },
+        {
+          "q": "Czy Minecraft Server Manager potrzebuje serwera bazy danych, takiego jak MySQL?",
+          "a": "Nie. Używa silnika SQLite wbudowanego w Node.js 24 i przechowuje plik bazy danych w folderze danych wraz ze wszystkim innym."
+        },
+        {
+          "q": "Czy Minecraft Server Manager może zarządzać kilkoma maszynami, takimi jak węzły Wings?",
+          "a": "Nie. Zarządza demonem Docker na maszynie, na której działa. W przypadku kilku maszyn uruchom jeden panel na każdej lub wybierz panel wielowęzłowy."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareMcsm", "guideMulti"],
+    "cta": {
+      "title": "Uruchom Minecraft bez dodatkowego stosu",
+      "body": "Zainstaluj Minecraft Server Manager w trzech krokach i utwórz swój pierwszy serwer w kreatorze."
+    }
+  },
+  "compareCrafty": {
+    "meta": {
+      "title": "Crafty Controller vs Minecraft Server Manager",
+      "description": "Crafty Controller i Minecraft Server Manager to darmowe panele do zarządzania serwerami Minecraft. Porównaj izolację serwerów, instalację modpacków i zastosowanie każdego z nich."
+    },
+    "eyebrow": "Alternatywa dla Crafty Controller",
+    "title": "Crafty Controller vs Minecraft Server Manager",
+    "intro": "Oba są darmowymi, samo-hostowanymi panelami stworzonymi dla Minecraft. Crafty uruchamia każdy serwer jako proces na hoście, napisany w Pythonie. Minecraft Server Manager uruchamia każdy serwer we własnym kontenerze Docker i integruje w panelu narzędzia do tworzenia modpacków, wyszukiwania modów i analizy błędów.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Porównanie",
+      "columns": ["", "Minecraft Server Manager", "Crafty Controller"],
+      "rows": [
+        {
+          "label": "Cena i licencja",
+          "values": ["Darmowy, MIT.", "Darmowy, GPL-3.0."]
+        },
+        {
+          "label": "Napisany w",
+          "values": ["Node.js 24.", "Python 3.10 do 3.12."]
+        },
+        {
+          "label": "Serwery gier działają jako",
+          "values": [
+            "Kontenery Docker z limitami zasobów.",
+            "Procesy na hoście. Sam panel może również działać w Dockerze."
+          ]
+        },
+        {
+          "label": "Docker",
+          "values": ["Wymagany na hoście.", "Opcjonalny."]
+        },
+        {
+          "label": "Systemy hosta",
+          "values": [
+            "Linux, Windows i macOS. Obraz jest zbudowany dla amd64 i arm64.",
+            "Linux, Windows, macOS i Raspberry Pi OS, plus poradniki dla Docker, UnRAID i CasaOS. Jego obraz obejmuje amd64 i arm64."
+          ]
+        },
+        {
+          "label": "Edycje",
+          "values": [
+            "Java Edition. Gracze Bedrock mogą dołączyć przez Geyser.",
+            "Java Edition od wersji 1.8 do najnowszej oraz Bedrock."
+          ]
+        },
+        {
+          "label": "Modpacki",
+          "values": [
+            "Pakiety CurseForge, Modrinth, FTB i GT New Horizons z kreatora, przypięte do konkretnej wersji.",
+            "Jego FAQ opisuje importowanie paczki jako zip, lub paczek Modrinth przez mrpack-install."
+          ]
+        },
+        {
+          "label": "Kopie zapasowe, harmonogramy, role, 2FA",
+          "values": [
+            "Tak: retencja na serwer, harmonogramy cron, trzy role z uprawnieniami na serwer, TOTP.",
+            "Tak: menedżer kopii zapasowych, harmonogram zadań, role użytkowników oraz TOTP i klucze dostępowe."
+          ]
+        }
+      ],
+      "note": "Fakty sprawdzone w październiku 2026 na podstawie dokumentacji każdego projektu."
+    },
+    "sections": [
+      {
+        "title": "Kontenery zamiast procesów hosta",
+        "body": "W Minecraft Server Manager każdy serwer jest własnym kontenerem Docker na znanym obrazie itzg Minecraft, z własnymi limitami pamięci i CPU oraz kwotą dyskową egzekwowaną przez panel. Jeden serwer nie może wyczerpać pamięci maszyny ani zapełnić jej dysku, a przebudowa serwera nigdy nie dotyka innych. Wadą jest to, że Docker musi być zainstalowany na hoście.",
+        "points": [
+          "Limity pamięci, CPU i dysku na serwer.",
+          "Eleganckie zatrzymanie RCON przed zatrzymaniem kontenera i wykrywanie awarii z wycofywaniem.",
+          "Java jest wybierana na serwer przez obraz, więc mieszane wersje Minecraft po prostu działają."
+        ],
+        "pills": ["docker", "amd64", "arm64"],
+        "shot": "overview"
+      },
+      {
+        "title": "Gdzie Minecraft Server Manager jest lepszy",
+        "body": "Kreator instaluje modpacki i mody za Ciebie i utrzymuje je przypięte, dzięki czemu restart nigdy nie aktualizuje cicho paczki.",
+        "points": [
+          "Instaluj paczki CurseForge, Modrinth, FTB i GT New Horizons z kreatora.",
+          "Importuj Modrinth .mrpack, eksport CurseForge lub własny zip plików jar, z identyfikacją każdego pliku jar.",
+          "Przeszukuj pięć rejestrów jednocześnie, filtrowane według loadera i wersji serwera.",
+          "Aktualizacje najpierw tworzą kopię zapasową i cofają zmiany jednym kliknięciem.",
+          "Jednoklikowe udostępnianie mapy na żywo BlueMap i raportów z błędów mclo.gs.",
+          "Przenośne schematy: wyeksportuj przepis serwera i uzyskaj ten sam serwer w dowolnym miejscu."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"]
+      },
+      {
+        "title": "Kiedy Crafty Controller jest lepszym wyborem",
+        "body": "Crafty jest dojrzały, aktywnie utrzymywany i działa w większej liczbie miejsc bez Dockera.",
+        "points": [
+          "Chcesz uruchamiać serwery bez instalowania Dockera, na przykład bezpośrednio na Windows, macOS lub Raspberry Pi.",
+          "Uruchamiasz Bedrock Dedicated Server, a nie tylko Java z Geyserem.",
+          "Chcesz logowania za pomocą kluczy dostępowych."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Pytania dotyczące Crafty Controller",
+      "items": [
+        {
+          "q": "Czy mogę przenieść mój serwer Crafty do Minecraft Server Manager?",
+          "a": "Tak. Utwórz serwer z tym samym typem i wersją Minecraft, a następnie prześlij świat jako zip na stronie Światy i zainstaluj go na tym serwerze. W przypadku serwera z modami, zaimportuj swój pakiet lub zip plików jar podczas jego tworzenia."
+        },
+        {
+          "q": "Czy Minecraft Server Manager działa na Raspberry Pi?",
+          "a": "Tak, na systemie operacyjnym 64-bitowym z Dockerem. Obraz panelu jest publikowany dla arm64, jak i amd64."
+        },
+        {
+          "q": "Dlaczego Minecraft Server Manager potrzebuje Dockera?",
+          "a": "Każdy serwer działa we własnym kontenerze, co zapewnia mu limity zasobów, czyste przebudowy i odpowiednią wersję Java dla każdej wersji Minecraft."
+        }
+      ]
+    },
+    "related": ["compareHub", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Zobacz na własnym serwerze",
+      "body": "Zainstaluj panel w trzech krokach, a następnie utwórz serwer z modpacka w kreatorze."
+    }
+  },
+  "compareAmp": {
+    "meta": {
+      "title": "Darmowa alternatywa dla AMP dla serwerów Minecraft",
+      "description": "Minecraft Server Manager w porównaniu z AMP firmy CubeCoders: darmowy panel Minecraft na licencji MIT bez limitu instancji, obok komercyjnego panelu do wielu gier."
+    },
+    "eyebrow": "Alternatywa dla AMP",
+    "title": "Darmowa alternatywa dla AMP dla Minecrafta",
+    "intro": "AMP firmy CubeCoders to komercyjny panel do bardzo długiej listy gier, sprzedawany w ramach poziomów licencyjnych. Minecraft Server Manager jest darmowy i open source, obsługuje tylko Minecrafta i nie ma limitu liczby tworzonych serwerów.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Porównanie",
+      "columns": ["", "Minecraft Server Manager", "AMP"],
+      "rows": [
+        {
+          "label": "Cena",
+          "values": [
+            "Darmowy. Bez poziomów.",
+            "Standard 7,50 GBP / 10 USD, Professional 15 GBP / 30 USD, Advanced 30 GBP / 40 USD, Enterprise w ramach zmiennej subskrypcji."
+          ]
+        },
+        {
+          "label": "Licencja i kod źródłowy",
+          "values": [
+            "MIT, kod źródłowy na GitHub.",
+            "Komercyjny i zamknięty kod źródłowy. Jego publiczne repozytorium na GitHub zawiera zgłoszenia błędów i dokumentację."
+          ]
+        },
+        {
+          "label": "Tworzone serwery",
+          "values": [
+            "Bez limitu poza możliwościami sprzętu.",
+            "5 instancji w wersji Standard, 15 w Professional, 50 w Advanced."
+          ]
+        },
+        {
+          "label": "Użytkownicy panelu",
+          "values": [
+            "Nieograniczona liczba, z rolami administratora, operatora i widza.",
+            "3 w wersji Standard, nieograniczona liczba od Professional."
+          ]
+        },
+        {
+          "label": "Użycie komercyjne",
+          "values": ["Dozwolone przez licencję MIT.", "Tylko licencja Enterprise."]
+        },
+        {
+          "label": "Wiele maszyn",
+          "values": ["Jedna maszyna na panel.", "Professional i wyższe."]
+        },
+        {
+          "label": "Systemy hostingu",
+          "values": ["Linux, Windows i macOS. Obraz jest zbudowany dla amd64 i arm64.", "Windows i Linux."]
+        },
+        {
+          "label": "Gry",
+          "values": [
+            "Minecraft Java Edition. Gracze Bedrock mogą dołączyć przez Geyser.",
+            "Ponad 200 gier i aplikacji z listy kompatybilności, w tym Minecraft Java i Bedrock."
+          ]
+        }
+      ],
+      "note": "Fakty sprawdzone w październiku 2026 na podstawie dokumentacji każdego projektu. Ceny AMP pochodzą z arkusza porównania edycji CubeCoders i mogą ulec zmianie."
+    },
+    "sections": [
+      {
+        "title": "Brak licencji, brak limitu instancji",
+        "body": "Poziomy licencyjne AMP określają liczbę instancji i użytkowników panelu, a tylko poziom Enterprise pozwala na użycie komercyjne. Minecraft Server Manager nie ma poziomów: każda funkcja, każdy serwer i każde konto użytkownika jest darmowe na licencji MIT i nie korzysta z płatnych usług. Pobieranie z CurseForge wymaga klucza API CurseForge, który dodajesz w Ustawieniach.",
+        "points": [
+          "Twórz tyle serwerów, ile pomieści Twoja maszyna.",
+          "Zaproś cały swój zespół z uprawnieniami na serwer i dwuskładnikowym logowaniem.",
+          "Kod źródłowy jest publiczny, więc możesz go czytać, forkować i współtworzyć."
+        ]
+      },
+      {
+        "title": "Gdzie Minecraft Server Manager jest lepszy dla Minecrafta",
+        "body": "Panel dla jednej gry może zagłębić się w jej szczegóły. Każde ustawienie obsługiwane przez obraz itzg Minecraft znajduje się w kreatorze z pomocą w prostym języku, a przepływy pracy związane z Minecraftem są wbudowane.",
+        "points": [
+          "Modpacki CurseForge, Modrinth, FTB i GT New Horizons, przypinane z możliwością cofnięcia zmian jednym kliknięciem.",
+          "Jedno wyszukiwanie modów w pięciu rejestrach, z pobieraniem zweryfikowanym przez sumę kontrolną.",
+          "Sprawdzanie zgodności wersji przed oferowaną aktualizacją Minecrafta.",
+          "Analiza awarii z udostępnianiem przez mclo.gs i interaktywna mapa BlueMap jednym kliknięciem.",
+          "Analiza graczy, analiza ekwipunku i analiza przestrzeni dyskowej z limitami."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "bluemap", "mclogs"],
+        "shot": "wizard"
+      },
+      {
+        "title": "Kiedy AMP jest lepszym wyborem",
+        "body": "AMP obejmuje znacznie szerszy zakres niż panel przeznaczony tylko dla Minecrafta i oferuje wsparcie komercyjne.",
+        "points": [
+          "Hostujesz wiele różnych gier z jednego panelu.",
+          "Potrzebujesz pojedynczego logowania przez OIDC, niestandardowego brandingu lub szablonów wdrożeniowych, które zawiera jego poziom Advanced.",
+          "Prowadzisz firmę hostingową i chcesz uzyskać licencję komercyjną ze wsparciem dostawcy.",
+          "Chcesz samodzielnie uruchomić Bedrock Dedicated Server."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Pytania dotyczące AMP",
+      "items": [
+        {
+          "q": "Czy Minecraft Server Manager jest darmowy do użytku komercyjnego?",
+          "a": "Licencja MIT zezwala na użycie komercyjne. Panel jest przeznaczony dla właścicieli i małych zespołów na jednej maszynie, więc sprawdź, czy pasuje do Twojego sposobu hostingu, zanim zaczniesz polegać na nim dla klientów."
+        },
+        {
+          "q": "Czy Minecraft Server Manager obsługuje gry inne niż Minecraft?",
+          "a": "Nie. Obsługuje tylko serwery Minecraft Java Edition, dlatego może zagłębiać się w szczegóły modpacków, modów i raportów z awarii."
+        },
+        {
+          "q": "Czy mogę przenieść instancję Minecraft z AMP?",
+          "a": "Tak. Utwórz serwer z tym samym typem i wersją Minecrafta, a następnie prześlij świat instancji jako plik zip na stronie Światy i zainstaluj go na tym serwerze. Zmodyfikowane serwery można uruchomić z modpacka, eksportu paczki lub archiwum plików jar z modami."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideHosting"],
+    "cta": {
+      "title": "Każda funkcja, za darmo",
+      "body": "Zainstaluj Minecraft Server Manager w trzech krokach. Nie ma nic do kupienia ani nic do odblokowania."
+    }
+  },
+  "compareMcsm": {
+    "meta": {
+      "title": "Alternatywa dla MCSManager dla serwerów Minecraft",
+      "description": "Porównanie MCSManager i Minecraft Server Manager: rozproszony panel dla gier Minecraft i Steam, obok panelu tylko dla Minecraft z wbudowanymi modpackami."
+    },
+    "eyebrow": "Alternatywa dla MCSManager",
+    "title": "Alternatywa dla MCSManager Skoncentrowana na Minecraft",
+    "intro": "MCSManager to darmowy, otwarty panel dla gier Minecraft i Steam, który może zarządzać kilkoma maszynami. Minecraft Server Manager uruchamia tylko Minecraft na jednej maszynie, z każdym serwerem w kontenerze Docker i wbudowanymi narzędziami do Minecraft.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Porównanie",
+      "columns": ["", "Minecraft Server Manager", "MCSManager"],
+      "rows": [
+        {
+          "label": "Cena i licencja",
+          "values": ["Darmowy, MIT.", "Darmowy, Apache-2.0."]
+        },
+        {
+          "label": "Napisany w",
+          "values": ["Node.js 24.", "TypeScript na Node.js."]
+        },
+        {
+          "label": "Co instalujesz",
+          "values": ["Jeden proces lub jeden kontener Docker.", "Dwie usługi: panel webowy i demon."]
+        },
+        {
+          "label": "Baza danych",
+          "values": ["Wbudowany plik SQLite w folderze danych.", "Nie jest wymagana."]
+        },
+        {
+          "label": "Serwery gier działają jako",
+          "values": [
+            "Kontenery Docker z ograniczonymi zasobami.",
+            "Kontenery Docker lub zwykłe procesy, według wyboru."
+          ]
+        },
+        {
+          "label": "Systemy hosta",
+          "values": [
+            "Linux, Windows i macOS. Obraz jest zbudowany dla amd64 i arm64.",
+            "Windows, Linux i macOS, ze skryptem instalacyjnym dla Linux w jednej linii."
+          ]
+        },
+        {
+          "label": "Zarządzane maszyny",
+          "values": ["Jedna. Panel i Docker działają na tym samym hoście.", "Wiele, poprzez rozproszone demony."]
+        },
+        {
+          "label": "Gry",
+          "values": [
+            "Minecraft Java Edition. Gracze Bedrock mogą dołączyć przez Geyser.",
+            "Gry Minecraft i Steam, takie jak Palworld i Terraria, z wbudowanego rynku."
+          ]
+        }
+      ],
+      "note": "Fakty sprawdzone w październiku 2026 na podstawie dokumentacji każdego projektu."
+    },
+    "sections": [
+      {
+        "title": "Gdzie Minecraft Server Manager jest lepszy dla Minecraft",
+        "body": "MCSManager wdraża wiele rodzajów serwerów gier. Minecraft Server Manager skupia się na jednej grze, więc kreator, narzędzia do modów i historia mówią językiem Minecraft.",
+        "points": [
+          "Każde ustawienie obrazu itzg Minecraft, wyjaśnione prostym językiem w kreatorze.",
+          "Modpacki CurseForge, Modrinth, FTB i GT New Horizons, przypięte z możliwością cofnięcia zmian jednym kliknięciem.",
+          "Jedno wyszukiwanie modów w pięciu rejestrach, z pobieraniem zweryfikowanym sumą kontrolną.",
+          "Analiza awarii z nazwanymi podejrzanymi i udostępnianiem mclo.gs jednym kliknięciem.",
+          "Jednoklikowa mapa na żywo BlueMap, analiza graczy i przenośne schematy.",
+          "Cały panel, w tym baza danych, to jeden folder, który można skopiować, aby przeprowadzić migrację."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "console"
+      },
+      {
+        "title": "Domyślnie kontenery",
+        "body": "Każdy serwer w Minecraft Server Manager to kontener Docker z własnymi limitami pamięci i CPU, a także kwotą dyskową egzekwowaną przez panel. Java jest wybierana dla każdego serwera, więc modpack 1.12 i najnowsza wersja Paper działają obok siebie bez żonglowania instalacjami Java. MCSManager pozwala wybrać między kontenerami a zwykłymi procesami, co jest bardziej elastyczne, gdy Docker nie jest opcją.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "title": "Kiedy MCSManager jest lepszym wyborem",
+        "body": "MCSManager jest bardzo aktywnie rozwijany i obejmuje więcej niż tylko Minecraft.",
+        "points": [
+          "Zarządzasz serwerami na kilku maszynach z jednego panelu.",
+          "Hostujesz również gry Steam, takie jak Palworld lub Terraria.",
+          "Chcesz uruchamiać serwery jako zwykłe procesy, bez Dockera.",
+          "Chcesz pulpit nawigacyjny typu przeciągnij i upuść oraz rynek gotowych wdrożeń gier."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Pytania dotyczące MCSManager",
+      "items": [
+        {
+          "q": "Czy mogę przenieść serwer Minecraft z MCSManager?",
+          "a": "Tak. Utwórz serwer z tym samym typem i wersją Minecraft w Minecraft Server Manager, a następnie prześlij świat jako zip na stronie Światy i zainstaluj go na tym serwerze. Zmodyfikowane serwery mogą zacząć od modpacka, eksportu paczki lub zipa plików jar modów."
+        },
+        {
+          "q": "Czy potrzebuję Dockera do Minecraft Server Manager?",
+          "a": "Tak. Docker uruchamia każdy serwer. W systemie Linux skrypt instalacyjny instaluje Dockera za Ciebie, jeśli go brakuje."
+        },
+        {
+          "q": "Czy kilka osób może współdzielić jeden panel Minecraft Server Manager?",
+          "a": "Tak. Istnieją role administratora, operatora i widza, uprawnienia per serwer oraz opcjonalne logowanie dwuskładnikowe dla każdego konta."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideMulti", "comparePuffer"],
+    "cta": {
+      "title": "Minecraft, Zrobiony Dogłębnie",
+      "body": "Zainstaluj panel w trzech krokach i stwórz swój pierwszy serwer z kreatora."
+    }
+  },
+  "comparePuffer": {
+    "meta": {
+      "title": "Alternatywa dla PufferPanel dla serwerów Minecraft",
+      "description": "Minecraft Server Manager w porównaniu z PufferPanel: każdy serwer we własnym kontenerze Docker i wbudowane narzędzia Minecraft, kontra lekki panel wielogrowy, wielowęzłowy."
+    },
+    "eyebrow": "Alternatywa dla PufferPanel",
+    "title": "Alternatywa dla PufferPanel stworzona tylko dla Minecraft",
+    "intro": "PufferPanel to darmowy, otwarty panel dla wielu gier na jednej lub wielu maszynach. Minecraft Server Manager uruchamia tylko Minecraft na jednej maszynie, zawsze w Dockerze, z wbudowanymi narzędziami Minecraft.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Porównanie",
+      "columns": ["", "Minecraft Server Manager", "PufferPanel"],
+      "rows": [
+        {
+          "label": "Cena i licencja",
+          "values": ["Darmowy, MIT.", "Darmowy, Apache-2.0."]
+        },
+        {
+          "label": "Napisany w",
+          "values": ["Node.js 24.", "Go."]
+        },
+        {
+          "label": "Co instalujesz",
+          "values": [
+            "Jeden proces lub jeden kontener Docker.",
+            "Jedna usługa z repozytorium apt lub yum, lub obraz Docker. Węzeł na innej maszynie uruchamia ten sam pakiet."
+          ]
+        },
+        {
+          "label": "Baza danych",
+          "values": [
+            "Wbudowany plik SQLite w folderze danych.",
+            "Brak do konfiguracji dla podstawowej instalacji. Przewodnik obejmuje użycie zewnętrznej bazy danych."
+          ]
+        },
+        {
+          "label": "Serwery gier działają jako",
+          "values": [
+            "Kontenery Docker z ograniczonymi zasobami, zawsze.",
+            "Procesy na hoście (jego dokumentacja mówi, że to środowisko nie ma funkcji bezpieczeństwa) lub kontenery Docker."
+          ]
+        },
+        {
+          "label": "Systemy hosta",
+          "values": [
+            "Linux, Windows i macOS. Obraz jest zbudowany dla amd64 i arm64.",
+            "Linux: pakiety dla Ubuntu 22.04 i 24.04 oraz Debian 10 i 11 na amd64 i arm64, Raspbian na arm64 i repozytorium yum. 32-bit nie jest obsługiwany."
+          ]
+        },
+        {
+          "label": "Zarządzane maszyny",
+          "values": [
+            "Jedna. Panel i Docker działają na tym samym hoście.",
+            "Wiele. Węzły na innych maszynach uruchamiają serwery dla jednego panelu."
+          ]
+        },
+        {
+          "label": "Minecraft",
+          "values": [
+            "Java Edition, każdy typ serwera z obrazu itzg, oraz paczki CurseForge, Modrinth, FTB i GT New Horizons. Gracze Bedrock łączą się przez Geyser.",
+            "Szablony dla serwerów Java i Bedrock, paczki CurseForge i FTB, oraz proxy BungeeCord, Velocity i Waterfall."
+          ]
+        }
+      ],
+      "note": "Fakty sprawdzone w listopadzie 2026 na podstawie dokumentacji PufferPanel, jego repozytorium i repozytorium szablonów."
+    },
+    "sections": [
+      {
+        "title": "Izolacja bez ustawień do zapamiętania",
+        "body": "PufferPanel pozwala wybrać środowisko dla każdego serwera. Standardowe uruchamia serwer jako proces na hoście, jako ten sam użytkownik co panel, a jego własna dokumentacja mówi, że nie ma funkcji bezpieczeństwa; wersja Docker izoluje go. Minecraft Server Manager ma tylko drugi rodzaj. Każdy serwer to własny kontener z limitem pamięci i CPU, kwotą dyskową egzekwowaną przez panel i niczym nieudostępnianym z innymi oprócz biblioteki modów.",
+        "points": [
+          "Jeden kontener na serwer, oznaczony i z limitem.",
+          "Kwoty dyskowe egzekwowane przez panel.",
+          "Wykryty i zarejestrowany serwer, który uległ awarii lub wyczerpał pamięć."
+        ],
+        "pills": ["docker"]
+      },
+      {
+        "title": "Gdzie Minecraft Server Manager zagłębia się w Minecraft",
+        "body": "Szablon uruchamia serwer; praca zaczyna się później. Mody do znalezienia i aktualizacji, paczki, które się rozwijają, awarie do odczytania, światy do zrobienia kopii zapasowej. To jest wbudowane w panel.",
+        "points": [
+          "Paczki modów są przypinane do dokładnej wersji. Aktualizacje i obniżenia wersji najpierw tworzą kopię zapasową i cofają zmiany jednym kliknięciem.",
+          "Jedno wyszukiwanie w pięciu rejestrach, filtrowane według ładowarki serwera i wersji Minecraft.",
+          "Każde pobieranie jest weryfikowane sumą kontrolną przed dotarciem do serwera.",
+          "Sprawdzenie wersji pokazuje, które przyszłe wersje Minecraft obsługują już zainstalowane mody.",
+          "Raporty z awarii są wykrywane, analizowane i udostępniane do mclo.gs jednym kliknięciem.",
+          "Jednoklikowa mapa na żywo BlueMap, za własnym logowaniem panelu."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Kiedy PufferPanel jest lepszym wyborem",
+        "body": "PufferPanel jest lekki, darmowy i istnieje od lat. Jeśli którekolwiek z poniższych opisuje Ciebie, wybierz go.",
+        "points": [
+          "Hostujesz gry inne niż Minecraft.",
+          "Uruchamiasz serwery na kilku maszynach i chcesz jednego panelu dla wszystkich.",
+          "Chcesz natywnego serwera Bedrock lub sieci proxy BungeeCord, Velocity lub Waterfall.",
+          "Wolisz w ogóle nie używać Dockera.",
+          "Chcesz dostępu SFTP do plików serwera."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Pytania dotyczące PufferPanel",
+      "items": [
+        {
+          "q": "Czy mogę przenieść serwer Minecraft z PufferPanel do Minecraft Server Manager?",
+          "a": "Tak. Pobierz folder świata serwera, utwórz serwer tego samego typu i wersji Minecraft, a następnie prześlij świat na stronie Światy i zainstaluj go na tym serwerze. W przypadku serwera z modami, zaimportuj paczkę lub archiwum zip jego plików modów podczas jego tworzenia."
+        },
+        {
+          "q": "Czy Minecraft Server Manager potrzebuje Dockera?",
+          "a": "Tak. Każdy serwer Minecraft działa jako kontener Docker, co pozwala na ograniczenie pamięci, CPU i dysku na serwer. Sam panel może działać w Dockerze lub bezpośrednio z Node.js."
+        },
+        {
+          "q": "Czy może uruchamiać serwery na drugiej maszynie?",
+          "a": "Nie. Zarządza demonem Docker na maszynie, na której działa. W przypadku dwóch maszyn, uruchom panel na każdej lub wybierz panel z węzłami, taki jak PufferPanel."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareCrafty", "compareMcsm"],
+    "cta": {
+      "title": "Każdy serwer we własnym kontenerze",
+      "body": "Zainstaluj panel w trzech krokach i utwórz swój pierwszy serwer w kreatorze."
+    }
   }
 }

@@ -1,14 +1,14 @@
 ---
 title: 'Offentlig API'
-description: 'Et lite, skrivebeskyttet HTTP API for å hente serverstatus utenfra panelet: a'
+description: 'Et lite, kun-lesbart HTTP API for å hente serverstatus utenfra panelet: et statusdashbord, en oppetidsmonitor, en Discord-bot, en hjemmeautomatiseringsregel.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/public-api.md'
 ---
 
 [← Tilbake til dokumentindeks](/docs/)
 
 Et lite, skrivebeskyttet HTTP API for å hente serverstatus utenfra panelet: et
-statusdashbord, en oppetidsmonitor, en Discord-bot, en regel for hjemmeautomatisering. Det
-betjenes av selve panelet og returnerer de samme sanntidsdataene som panelets egne sider
+statusdashbord, en oppetidsmonitor, en Discord-bot, en regel for hjemmeautomatisering. Det betjenes
+av panelet selv og returnerer de samme sanntidsdataene som panelets egne sider
 viser (fra hurtigbufferen i minnet), så polling av det berører aldri Docker.
 
 Det er **avslått til en administrator bruker det** og **administratorstyrt**. Ingenting eksponeres
@@ -28,8 +28,8 @@ lese status** er en pausekontroll: slå den av for å stoppe servering uten å k
 tilgang umiddelbart.
 
 Tokener lagres som en SHA-256 hash (aldri i klartekst), overlever en panel-
-omstart, og lever lenger enn serverne de er omfanget til (en slettet server
-faller rett og slett ut av den tokenens resultater).
+omstart, og overlever serverne de er omfanget til (en slettet server bare
+faller ut av den tokenens resultater).
 
 ## Autentisering
 
@@ -44,16 +44,14 @@ kallere, ikke nettleserapper fra en annen opprinnelse. Hvis panelet er bak en om
 sørg for at proxyen videresender `Authorization`-headeren.
 
 Feil returnerer `401` med `{ "ok": false, "error": "..." }`. Alt annet enn `GET`
-(eller `HEAD`) returnerer `405`. Ukjente stier returnerer `404`. Når API-et er deaktivert, returnerer alle ruter
+(eller `HEAD`) returnerer `405`. Ukjente stier returnerer `404`. Når API-et er deaktivert, returnerer hver rute
 `404`.
 
 ## Rate limit
 
 Hver token får sitt eget budsjett, `RATE_LIMIT_PUBLIC_API_PER_MIN` (standard `120`
-forespørsler/minutt; `0` deaktiverer limiteren). Over grensen returnerer `429`. Forespørsler som
-aldri presenterer en gyldig token (mangler, feilformatert, tilbakekalt eller utløpt) er begrenset separat
-per klient-IP til fem ganger det tallet, så probing kan ikke omgå budsjettet ved å rotere
-tokener.
+forespørsler/minutt; `0` deaktiverer limiteren). Over grensen returnerer `429`. Hver forespørsel, før tokenen dens engang er sjekket, teller også mot et per-klient-IP-tak på fem ganger det tallet, så prøving med manglende, feilformede, tilbakekalte eller utløpte tokener kan ikke omgå budsjettet
+ved å rotere dem.
 
 ## Endepunkter
 
@@ -84,25 +82,25 @@ Hver server tokenen er omfanget til.
 
 ### `GET /api/v1/servers/:id`
 
-Én server, samme objekt under en `server`-nøkkel. Returnerer `404` for et ukjent id
+Én server, samme objekt under en `server`-nøkkel. Returnerer `404` for en ukjent id
 **og** for en server tokenen ikke er omfanget til (ingen eksistensorakel), og `400`
-for en feilformatert id.
+for en feilformet id.
 
 ## Svarfelter
 
-| Felt            | Betydning                                                                                              |
-| --------------- | ------------------------------------------------------------------------------------------------------ |
-| `total`         | Hvor mange servere som er synlige for denne tokenen (etter dens omfangsfilter).                        |
-| `online`        | Hvor mange av disse som er i tilstand: `running`.                                                      |
-| `id`            | Stabil server-id (`srv_...`).                                                                          |
-| `name`          | Vist navn.                                                                                             |
-| `type`          | itzg servertype (`PAPER`, `FABRIC`, `AUTO_CURSEFORGE`, ...).                                           |
-| `state`         | `running`, `starting`, `stopped`, eller `crashed` - en stabil oppsummering av panelets interne status. |
-| `cpuPct`        | Nåværende CPU %, eller `null` når serveren ikke kjører.                                                |
-| `memoryMb`      | Bosatt minne i MB, eller `null`.                                                                       |
-| `memoryLimitMb` | Konfigurert minnegrense for container i MB, eller `null`.                                              |
-| `uptimeSeconds` | Sekunder siden containeren startet, eller `null`.                                                      |
-| `players`       | `{ online, max }`, eller `null` før serveren rapporterer en spilliste.                                 |
+| Felt            | Betydning                                                                                             |
+| --------------- | ----------------------------------------------------------------------------------------------------- |
+| `total`         | Hvor mange servere som er synlige for denne tokenen (etter dens omfangsfilter).                       |
+| `online`        | Hvor mange av disse som er i tilstand: `running`.                                                     |
+| `id`            | Stabil server-id (`srv_...`).                                                                         |
+| `name`          | Vist navn.                                                                                            |
+| `type`          | itzg servertype (`PAPER`, `FABRIC`, `AUTO_CURSEFORGE`, ...).                                          |
+| `state`         | `running`, `starting`, `stopped`, eller `crashed`: en stabil oppsummering av panelets interne status. |
+| `cpuPct`        | Nåværende CPU %, eller `null` når serveren ikke kjører.                                               |
+| `memoryMb`      | Bosatt minne i MB, eller `null`.                                                                      |
+| `memoryLimitMb` | Konfigurert minnegrense for container i MB, eller `null`.                                             |
+| `uptimeSeconds` | Sekunder siden containeren startet, eller `null`.                                                     |
+| `players`       | `{ online, max }`, eller `null` til serveren rapporterer en spilliste.                                |
 
 ## Eksempel
 

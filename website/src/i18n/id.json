@@ -8,9 +8,12 @@
     "home": "Beranda",
     "features": "Fitur",
     "screenshots": "Tangkapan Layar",
+    "servers": "Server",
+    "guides": "Panduan",
     "install": "Instalasi",
     "docs": "Dokumentasi",
     "faq": "Tanya Jawab",
+    "compare": "Bandingkan",
     "changelog": "Catatan Perubahan",
     "github": "GitHub",
     "discord": "Discord",
@@ -22,11 +25,12 @@
   "hero": {
     "eyebrow": "Gratis dan sumber terbuka. Berjalan di mesin Anda sendiri.",
     "title": "Jalankan server Minecraft Anda dari satu panel yang ramah.",
-    "subtitle": "Minecraft Server Manager mengubah Docker menjadi rumah yang nyaman untuk server Anda: modpack yang tetap tersemat, cadangan sekali klik, jadwal, peta langsung, statistik pemain, dan konsol yang berbicara bahasa Inggris biasa. Tanpa tagihan, tanpa penguncian, seluruh panel Anda dalam satu folder.",
-    "primary": "Mulai dalam 3 langkah",
-    "secondary": "Jelajahi fitur-fiturnya",
+    "subtitle": "Minecraft Server Manager mengubah Docker menjadi rumah yang nyaman untuk server Anda: modpack yang tetap tersemat, cadangan sekali klik, jadwal, peta langsung, statistik pemain, dan konsol yang berbicara bahasa Inggris biasa. Tanpa tagihan, tanpa terkunci, seluruh panel Anda dalam satu folder.",
+    "primary": "Mulai dalam hitungan menit",
+    "secondary": "Jelajahi fitur-fitur",
     "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
-    "scroll": "Lihat tutorialnya"
+    "scroll": "Lihat tutorialnya",
+    "shotCaption": "Panel sebenarnya: dasbornya dengan enam contoh server, dalam tema gelap."
   },
   "pillars": {
     "title": "Dibuat untuk orang yang menjalankan server, bukan tiket",
@@ -60,7 +64,7 @@
         "items": [
           {
             "title": "Kontainer dengan batasan sumber daya",
-            "body": "Buat, mulai, hentikan, mulai ulang, bangun ulang, dan hapus server dengan penghentian RCON yang baik dan deteksi kerusakan otomatis.",
+            "body": "Buat, mulai, hentikan, mulai ulang, bangun ulang, dan hapus server dengan penghentian RCON yang baik dan deteksi crash otomatis.",
             "icon": "server",
             "pills": ["docker"]
           },
@@ -76,7 +80,7 @@
           },
           {
             "title": "Moderasi pemain",
-            "body": "Whitelist, ops, larangan, larangan IP, dan teleportasi, online melalui RCON dan offline melalui file JSON.",
+            "body": "Whitelist, ops, ban, ban IP, dan teleportasi, online melalui RCON dan offline melalui file JSON.",
             "icon": "users"
           }
         ]
@@ -86,18 +90,18 @@
         "items": [
           {
             "title": "Lima registri dalam satu peramban",
-            "body": "Cari kelima tempat dari satu lokasi. Tiga di antaranya tidak memerlukan kunci API.",
+            "body": "Cari kelimanya dari satu tempat. Tiga di antaranya tidak memerlukan kunci API.",
             "icon": "search",
             "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
           },
           {
-            "title": "Tambah melalui tautan",
-            "body": "Tempel halaman proyek, repositori GitHub, slug, atau URL jar langsung. Panel akan mengidentifikasinya.",
+            "title": "Tambah berdasarkan tautan",
+            "body": "Tempelkan halaman proyek, repositori GitHub, slug, atau URL jar langsung. Panel akan mengidentifikasinya.",
             "icon": "link"
           },
           {
             "title": "Impor apa saja",
-            "body": "Setiap jar diidentifikasi dan kompatibilitasnya diperiksa saat masuk.",
+            "body": "Setiap jar diidentifikasi dan diperiksa kompatibilitasnya saat diimpor.",
             "icon": "upload",
             "pills": ["mrpack", "cf-export", "zip"]
           },
@@ -109,13 +113,18 @@
           },
           {
             "title": "Pustaka mod bersama",
-            "body": "Dideduplikasi berdasarkan sha256 dan ditautkan ke server, sehingga mod kustom bertahan dari pembaruan paket.",
+            "body": "Dideduplikasi berdasarkan sha256 dan ditautkan secara keras ke server, sehingga mod kustom bertahan dari pembaruan paket.",
             "icon": "library"
           },
           {
             "title": "Pemecah pilih-mod-dulu",
-            "body": "Pilih mod yang Anda inginkan dan dapatkan loader dan versi Minecraft terbaru yang sepenuhnya kompatibel.",
+            "body": "Pilih mod yang Anda inginkan dan dapatkan versi loader dan Minecraft terbaru yang sepenuhnya kompatibel.",
             "icon": "sparkles"
+          },
+          {
+            "title": "Versi paket apa pun, build loader apa pun",
+            "body": "Pindahkan modpack ke versi terbitan mana pun, lebih baru atau lebih lama, atau alihkan build mod loader. Cadangan dilakukan terlebih dahulu, dan kegagalan boot akan mengembalikan.",
+            "icon": "refresh"
           }
         ]
       },
@@ -133,13 +142,13 @@
             "icon": "clock"
           },
           {
-            "title": "Cetakan Biru",
+            "title": "Blueprint",
             "body": "Ekspor server sebagai resep portabel, impor di mana saja, dan dapatkan kembali server yang sama.",
             "icon": "blueprint"
           },
           {
-            "title": "Forensik kerusakan",
-            "body": "Kerusakan terdeteksi, diurai, dan tersangka diberi nama, dengan berbagi sekali klik dan wawasan otomatis.",
+            "title": "Forensik crash",
+            "body": "Crash dideteksi, diurai, dan tersangka diberi nama, dengan berbagi sekali klik dan wawasan otomatis.",
             "icon": "flame",
             "pills": ["mclogs"]
           },
@@ -155,13 +164,13 @@
         "items": [
           {
             "title": "Peta langsung",
-            "body": "Satu klik ke peta langsung, disajikan melalui proksi terautentikasi panel.",
+            "body": "Satu klik ke peta langsung, disajikan melalui proxy terautentikasi panel.",
             "icon": "map",
             "pills": ["bluemap"]
           },
           {
             "title": "Analitik dan penyimpanan",
-            "body": "Papan peringkat waktu bermain, kematian, dan penambangan, forensik inventaris, penggunaan disk per server, dan kuota yang diberlakukan.",
+            "body": "Papan skor waktu bermain, kematian, dan penambangan, forensik inventaris, penggunaan disk per server, dan kuota yang diberlakukan.",
             "icon": "chart"
           },
           {
@@ -172,8 +181,14 @@
           },
           {
             "title": "Halaman status publik dan API",
-            "body": "Halaman status opt-in, blok undangan, file .mrpack klien yang dihasilkan, dan API yang hanya dapat dibaca yang diautentikasi token.",
+            "body": "Halaman status opsional, blok undangan, klien .mrpack yang dihasilkan, dan API yang hanya dapat dibaca dengan otentikasi token.",
             "icon": "globe"
+          },
+          {
+            "title": "Undang teman",
+            "body": "Salin undangan dengan alamat dan versi. Untuk server yang dibuat dari mod pilihan Anda, berikan teman klien .mrpack yang menginstalnya dan menambahkan server ke daftar mereka.",
+            "icon": "users",
+            "pills": ["mrpack"]
           },
           {
             "title": "Pengguna, peran, dan 2FA",
@@ -186,15 +201,16 @@
   },
   "screenshots": {
     "title": "Panel yang menyenangkan untuk digunakan",
-    "intro": "Desktop dan ponsel. Panel ini dirancang agar ramping terlebih dahulu, sehingga setiap halaman berfungsi di ponsel.",
+    "intro": "Desktop dan ponsel. Panel ini dirancang dengan mengutamakan lebar sempit, sehingga setiap halaman berfungsi di ponsel.",
     "desktop": "Desktop",
     "mobile": "Di ponsel",
     "items": {
-      "dashboard": "Dasbor: setiap server, jumlah pemain, dan aktivitas terbaru secara sekilas.",
+      "dashboard": "Dasbor: semua server, jumlah pemain, dan aktivitas terbaru sekilas.",
       "wizard": "Panduan pembuatan menjelaskan setiap pengaturan sebelum Anda memilihnya.",
-      "overview": "Gambaran umum server dengan meteran sumber daya dan tindakan cepat.",
+      "overview": "Tinjauan server dengan meteran sumber daya dan tindakan cepat.",
       "console": "Konsol langsung dengan bilah perintah RCON dan filter log.",
       "mods": "Mod dari lima registri, difilter ke pemuat dan versi server.",
+      "modpacks": "Modpack: cari CurseForge dan Modrinth, dan setiap paket terinstal disematkan ke versi yang tepat.",
       "worlds": "Tukar dunia dan kelola file dari peramban.",
       "backups": "Cadangan dengan kelas retensi dan pemulihan di tempat.",
       "schedules": "Jadwal cron untuk mulai ulang, cadangan, dan perintah.",
@@ -208,14 +224,14 @@
     "requirements": "Persyaratan",
     "reqItems": [
       "Docker Engine (Linux) atau Docker Desktop (Windows, macOS).",
-      "Node.js 24 atau yang lebih baru untuk instalasi dari sumber. Image Docker sudah menyertakan miliknya sendiri.",
-      "Beberapa gigabyte ruang disk untuk image server dan dunia."
+      "Node.js 24 atau lebih baru untuk instalasi dari sumber. Gambar Docker sudah menyertakan miliknya sendiri.",
+      "Beberapa gigabyte ruang disk untuk gambar server dan dunia."
     ],
     "docker": {
       "title": "Opsi 1: Docker",
-      "body": "Image multi-arsitektur yang sudah dibuat dipublikasikan ke GHCR pada setiap rilis. Ambil file compose, atur satu variabel, dan mulai.",
-      "after": "Kemudian buka http://your-host:25564. Di Portainer atau Dockge, tempelkan file compose sebagai stack dan atur DATA_DIR_HOST di lingkungan stack.",
-      "warning": "Panel mengendalikan daemon Docker host melalui soket yang terpasang, yang setara dengan root di host. Perlakukan login admin dengan sesuai dan jangan pernah mengekspos panel langsung ke internet."
+      "body": "Gambar multi-arsitektur yang sudah dibuat dipublikasikan ke GHCR pada setiap rilis. Ambil file compose, atur satu variabel, dan mulai.",
+      "after": "Kemudian buka http://your-host:25564. Di Portainer atau Dockge, tempel file compose sebagai stack dan atur DATA_DIR_HOST di lingkungan stack.",
+      "warning": "Panel mengontrol daemon Docker host melalui soket yang terpasang, yang setara dengan root di host. Perlakukan login admin dengan sesuai dan jangan pernah mengekspos panel mentah ke internet."
     },
     "source": {
       "title": "Opsi 2: Dari sumber",
@@ -229,21 +245,33 @@
     "windows": "Catatan Windows",
     "windowsItems": [
       "Docker Desktop harus berjalan sebelum Anda memulai atau membuat server.",
-      "Bagikan drive proyek Anda dengan Docker Desktop (Settings, Resources, File sharing) agar bind mount berfungsi.",
-      "Image Docker menargetkan host Linux; di Windows dan macOS jalankan panel dari sumber."
+      "Bagikan drive proyek Anda dengan Docker Desktop (Pengaturan, Sumber Daya, Berbagi File) agar bind mount berfungsi.",
+      "Gambar Docker menargetkan host Linux; di Windows dan macOS jalankan panel dari sumber."
     ],
-    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []],
+    "options": {
+      "title": "Opsi Penginstal",
+      "intro": "Penginstal Linux mengambil opsinya setelah bash -s --, sehingga berfungsi melalui pipe juga. Jalankan lagi dengan opsi yang sama untuk meningkatkan; folder data Anda, .env dan pengeditan compose akan dipertahankan.",
+      "items": {
+        "port": "Sajikan panel pada port lain.",
+        "proxy": "Dengarkan hanya pada 127.0.0.1, untuk reverse proxy dengan TLS di depan.",
+        "tag": "Sematkan rilis alih-alih mengikuti yang terbaru.",
+        "dir": "Instal di tempat lain selain /opt/msm.",
+        "uninstall": "Hapus panel dan simpan datanya. Melalui pipe tidak ada keyboard untuk menjawab pertanyaan, jadi tambahkan --yes; tambahkan juga --purge untuk menghapus folder data.",
+        "help": "Setiap opsi, dengan defaultnya."
+      }
+    }
   },
   "faq": {
-    "title": "Pertanyaan yang sering diajukan",
+    "title": "Pertanyaan yang Sering Diajukan",
     "items": [
       {
-        "q": "Apakah ini benar-benar gratis?",
+        "q": "Apakah benar-benar gratis?",
         "a": "Ya. Panel ini berlisensi MIT dan tidak menggunakan layanan berbayar. Semuanya berjalan di mesin Anda."
       },
       {
-        "q": "Apakah ini berfungsi di Raspberry Pi atau mesin ARM lainnya?",
-        "a": "Ya. Gambar Docker dipublikasikan untuk kedua arsitektur, dan instalasi dari sumber berjalan di mana saja Node.js 24 dan Docker bisa.",
+        "q": "Apakah berfungsi di Raspberry Pi atau mesin ARM lainnya?",
+        "a": "Ya. Gambar Docker dipublikasikan untuk kedua arsitektur, dan instalasi dari sumber berjalan di mana saja Node.js 24 dan Docker dapat berjalan.",
         "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
       },
       {
@@ -272,13 +300,21 @@
         "a": "Ya. Panel ini memiliki peran admin, operator, dan penampil, dan setiap akun dapat mengaktifkan otentikasi dua faktor."
       },
       {
-        "q": "Apakah perlu diakses dari internet?",
-        "a": "Tidak. Pemain terhubung ke port game, bukan panel. Jaga panel tetap di LAN Anda atau di belakang VPN atau reverse proxy dengan otentikasi."
+        "q": "Bagaimana teman di luar rumah saya bisa bergabung?",
+        "a": "Teruskan port game server, mulai dari 25565 ke atas, di router Anda ke mesin yang menjalankannya, atau gunakan tunnel jika penyedia internet Anda tidak mengizinkan penerusan port. Tab Undangan server menampilkan alamat yang dapat dibagikan dan menulis teks undangan untuk Anda. Jaga agar port panel itu sendiri tetap tertutup."
+      },
+      {
+        "q": "Apakah perlu diekspos ke internet?",
+        "a": "Tidak. Pemain terhubung ke port game, bukan panel. Jaga agar panel tetap berada di LAN Anda atau di belakang VPN atau reverse proxy dengan otentikasi."
       },
       {
         "q": "Bagaimana dengan pemain Bedrock?",
         "a": "Keduanya dapat diinstal seperti plugin atau mod lainnya, dan panel mengekspos pengaturan yang mereka butuhkan.",
         "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "Apakah ini dibuat dengan AI?",
+        "a": "Sebagian, dan secara terbuka. Sebagian besar kode ditulis dengan Claude Code, dan pemelihara merancang, meninjau, dan menguji setiap fitur. Deklarasi AI di repositori menjelaskan caranya."
       },
       {
         "q": "Di mana saya bisa mendapatkan bantuan?",
@@ -288,8 +324,9 @@
   },
   "changelog": {
     "title": "Catatan Perubahan",
-    "intro": "Setiap rilis, terbaru didahulukan. Catatan rilis diterbitkan dalam bahasa Inggris.",
-    "releases": "Semua rilis di GitHub"
+    "intro": "Setiap rilis, yang terbaru lebih dulu. Catatan rilis diterbitkan dalam bahasa Inggris.",
+    "releases": "Semua rilis di GitHub",
+    "feed": "Umpan Rilis (Atom)"
   },
   "community": {
     "title": "Ayo sapa kami",
@@ -306,32 +343,38 @@
     "releases": "Rilis",
     "contributing": "Berkontribusi",
     "license": "Lisensi",
-    "notAffiliated": "Bukan produk resmi Minecraft. Tidak disetujui oleh atau terkait dengan Mojang atau Microsoft."
+    "notAffiliated": "Bukan produk resmi Minecraft. Tidak disetujui oleh atau terkait dengan Mojang atau Microsoft.",
+    "serverTypes": "Tipe Server",
+    "guides": "Panduan",
+    "compare": "Bandingkan",
+    "roadmap": "Peta Jalan",
+    "ai": "Bagaimana AI Digunakan",
+    "conduct": "Kode Etik"
   },
   "meta": {
     "home": {
-      "title": "Panel kontrol server Minecraft gratis self-hosted",
-      "description": "Jalankan server Minecraft vanilla dan modded dari browser Anda. Berbasis Docker, modpack disematkan ke versi yang tepat, pencadangan, jadwal, peta langsung, analitik pemain. Gratis, sumber terbuka, siap digunakan dalam tiga langkah."
+      "title": "Panel gratis untuk server Minecraft yang di-host sendiri",
+      "description": "Jalankan server Minecraft vanilla dan modded dari browser Anda dengan panel Docker gratis yang di-host sendiri: modpack tersemat, cadangan, jadwal, dan peta langsung."
     },
     "features": {
-      "title": "Fitur",
-      "description": "Setiap fitur Minecraft Server Manager: server terkontainerisasi, lima registri mod, unduhan terverifikasi checksum, pencadangan aman, jadwal, cetak biru, forensik crash, peta langsung, peran, dan otentikasi dua faktor."
+      "title": "Fitur panel server Minecraft",
+      "description": "Setiap fitur Minecraft Server Manager: server Docker, lima registri mod, unduhan terverifikasi, cadangan, jadwal, analisis kerusakan, peta langsung, dan 2FA."
     },
     "screenshots": {
-      "title": "Tangkapan Layar",
-      "description": "Tangkapan layar panel Minecraft Server Manager di desktop dan ponsel: dasbor, wizard, konsol, mod, dunia, pencadangan, jadwal, dan lainnya."
+      "title": "Tangkapan layar panel server Minecraft",
+      "description": "Tangkapan layar panel Minecraft Server Manager di desktop dan ponsel: dasbor, wizard, konsol, mod, dunia, cadangan, jadwal, dan lainnya."
     },
     "install": {
-      "title": "Instalasi",
+      "title": "Instal panel server Minecraft dengan Docker",
       "description": "Instal Minecraft Server Manager dengan Docker dalam tiga perintah, atau dari sumber di Windows, macOS, dan Linux."
     },
     "faq": {
-      "title": "FAQ",
-      "description": "Jawaban tentang biaya, jenis server yang didukung, dukungan ARM, migrasi, peran, dan paparan ke internet."
+      "title": "FAQ panel server Minecraft",
+      "description": "Jawaban tentang biaya, jenis server yang didukung, Raspberry Pi dan ARM, pindah ke mesin baru, peran, pemain Bedrock, dan mengekspos panel ke internet."
     },
     "changelog": {
-      "title": "Catatan Perubahan",
-      "description": "Catatan rilis untuk setiap versi Minecraft Server Manager."
+      "title": "Catatan perubahan dan rilis",
+      "description": "Catatan rilis untuk setiap versi Minecraft Server Manager, panel server Minecraft gratis yang di-host sendiri."
     },
     "notFound": {
       "title": "Halaman tidak ditemukan",
@@ -345,12 +388,66 @@
   },
   "langNotice": "Halaman ini ditampilkan dalam bahasa Inggris sampai terjemahannya tersedia.",
   "tutorial": {
-    "title": "Siap dalam tiga langkah",
-    "intro": "Pilih cara Anda ingin menjalankan panel. Isi dua kolom isian dan setiap perintah di bawah akan menulis ulang dirinya sendiri untuk mesin Anda.",
+    "title": "Siap jalan dalam hitungan menit",
+    "intro": "Pilih mesin Anda dan tempelkan perintahnya. Mode Lanjutan memiliki cara lain untuk menjalankan panel, dengan perintah yang ditulis ulang untuk folder dan alamat Anda sendiri.",
+    "modes": {
+      "simple": "Sederhana",
+      "advanced": "Lanjutan"
+    },
+    "simple": {
+      "linux": {
+        "label": "Linux",
+        "steps": [
+          {
+            "title": "Jalankan penginstal",
+            "body": "Berfungsi di mesin Linux apa pun dengan OS 64-bit, dari VPS hingga Raspberry Pi 4 atau 5. Ini akan menginstal Docker jika belum ada, menyiapkan panel di /opt/msm, dan memulainya. Jalankan lagi nanti untuk memperbarui."
+          },
+          {
+            "title": "Buka panel",
+            "body": "Penginstal akan menampilkan alamat dan PIN penyiapan sekali pakai. Buka alamat tersebut di peramban, masukkan PIN, dan buat akun admin Anda."
+          }
+        ]
+      },
+      "windows": {
+        "label": "Windows",
+        "steps": [
+          {
+            "title": "Instal Docker Desktop, Node.js, Git, dan pnpm",
+            "body": "Satu baris per alat di PowerShell. Mulai Docker Desktop setelah terinstal dan biarkan berjalan."
+          },
+          {
+            "title": "Dapatkan panel dan jalankan",
+            "body": "Buka terminal baru agar alat yang baru saja Anda instal dikenali."
+          },
+          {
+            "title": "Buka panel",
+            "body": "Jalankan pertama kali akan memandu Anda melalui pemeriksaan sistem, zona waktu Anda, dan pembuatan akun admin."
+          }
+        ]
+      },
+      "macos": {
+        "label": "macOS",
+        "steps": [
+          {
+            "title": "Instal Docker Desktop, Node.js, Git, dan pnpm",
+            "body": "Menggunakan Homebrew. Mulai Docker Desktop setelah terinstal dan biarkan berjalan."
+          },
+          {
+            "title": "Dapatkan panel dan jalankan",
+            "body": "Langkah instalasi juga membangun panel. Tidak ada yang perlu dikompilasi."
+          },
+          {
+            "title": "Buka panel",
+            "body": "Jalankan pertama kali akan memandu Anda melalui pemeriksaan sistem, zona waktu Anda, dan pembuatan akun admin."
+          }
+        ]
+      }
+    },
+    "advancedIntro": "Isi kedua kolom isian, dan setiap perintah di bawah ini akan menulis ulang dirinya sendiri untuk mesin Anda.",
     "dataDir": "Folder data di host",
-    "dataDirHint": "Jalur absolut. Dunia, cadangan, mod, dan basis data semuanya ada di sini.",
+    "dataDirHint": "Jalur absolut. Dunia, cadangan, mod, dan basis data semuanya berada di sini.",
     "host": "Nama host atau IP",
-    "hostHint": "Dari mana Anda akan membuka panel dari peramban.",
+    "hostHint": "Tempat Anda akan membuka panel dari peramban.",
     "then": "Kemudian buka panel",
     "copy": "Salin",
     "copied": "Tersalin!",
@@ -364,12 +461,12 @@
             "body": "Satu folder menampung semua yang dimiliki panel."
           },
           {
-            "title": "Unduh file compose dan arahkan ke folder itu",
+            "title": "Unduh file compose dan arahkan ke folder tersebut",
             "body": "DATA_DIR_HOST harus berupa jalur absolut di host, karena Docker memasangnya dari sudut pandang host."
           },
           {
             "title": "Mulai panel",
-            "body": "Image ini multi-arsitektur (amd64 dan arm64) dan diperbarui di setiap rilis."
+            "body": "Image ini multi-arsitektur (amd64 dan arm64) dan diperbarui pada setiap rilis."
           }
         ]
       },
@@ -385,8 +482,8 @@
             "body": "Tempelkan isi file compose ke dalam stack baru. File mentahnya ada di sini:"
           },
           {
-            "title": "Atur variabel lingkungan dan terapkan",
-            "body": "Tambahkan di bagian lingkungan stack, lalu terapkan."
+            "title": "Atur variabel lingkungan dan deploy",
+            "body": "Tambahkan di bagian lingkungan stack, lalu deploy."
           }
         ]
       },
@@ -416,11 +513,11 @@
           },
           {
             "title": "Simpan daftar proses dan aktifkan startup",
-            "body": "pm2 startup mencetak satu perintah untuk dijalankan dengan sudo; jalankan sekali."
+            "body": "pm2 startup akan menampilkan satu perintah untuk dijalankan dengan sudo; jalankan sekali."
           },
           {
             "title": "Lebih suka systemd?",
-            "body": "Unit yang menjalankan node src/server.js dari folder yang dikloning dengan WorkingDirectory yang diatur bekerja dengan cara yang sama. Panel tidak memerlukan flag tambahan."
+            "body": "Unit yang menjalankan node src/server.js dari folder yang dikloning dengan WorkingDirectory yang diatur berfungsi sama. Panel tidak memerlukan flag tambahan."
           }
         ]
       }
@@ -436,5 +533,1650 @@
     "checksums": "Checksum",
     "integrations": "Integrasi",
     "keyless": "tanpa kunci"
+  },
+  "landing": {
+    "breadcrumb": "Jalur Navigasi",
+    "install": "Instal Panel",
+    "docs": "Baca Dokumentasi",
+    "related": "Baca Selengkapnya",
+    "open": "Buka",
+    "docsGuides": "Panduan Lain di Dokumentasi",
+    "docsGuidesIntro": "Jawaban singkat dan praktis untuk pertanyaan yang paling sering diajukan pemilik server, diletakkan di samping dokumentasi."
+  },
+  "serversHub": {
+    "meta": {
+      "title": "Jenis server Minecraft: Paper, Fabric, Forge",
+      "description": "Jalankan Paper, Purpur, Fabric, Quilt, Forge, NeoForge, vanilla, atau modpack lengkap dari satu panel yang di-host sendiri. Pilih jenis server dan lihat apa yang Anda dapatkan."
+    },
+    "eyebrow": "Setiap jenis server",
+    "title": "Satu panel untuk setiap jenis server Minecraft",
+    "intro": "Plugin, mod, game yang tidak diubah, atau modpack utuh. Pilih apa yang ingin Anda jalankan dan panel akan menangani versi Java, unduhan, dan penyematan untuk Anda.",
+    "pills": [
+      "vanilla",
+      "paper",
+      "purpur",
+      "fabric",
+      "quilt",
+      "forge",
+      "neoforge",
+      "packs-curseforge",
+      "packs-modrinth",
+      "ftb",
+      "gtnh"
+    ],
+    "cards": {
+      "serverPaper": "Server plugin Paper dan Purpur, dengan plugin dari empat registri dan pemain bergabung dengan klien yang tidak dimodifikasi.",
+      "serverFabric": "Server Fabric dan Quilt untuk mod yang ringan dan cepat diperbarui, dengan pemeriksaan versi sebelum setiap peningkatan Minecraft.",
+      "serverForge": "Forge dan NeoForge untuk mod yang berat, dari klasik 1.7.10 hingga paket saat ini, dengan Java yang tepat dipilih untuk Anda.",
+      "serverVanilla": "Game yang tidak diubah, dari snapshot hingga beta lama, dengan kontrol dunia, cadangan, dan statistik pemain di sekitarnya.",
+      "serverModpacks": "Paket CurseForge, Modrinth, FTB, dan GT New Horizons disematkan ke versi yang tepat, ditambah zip atau .mrpack Anda sendiri."
+    },
+    "sections": [
+      {
+        "title": "Tidak Yakin yang Mana?",
+        "body": "Pilih berdasarkan apa yang harus diinstal oleh pemain Anda, bukan berdasarkan apa yang terdengar paling cepat. Jika tidak ada yang boleh menginstal apa pun, jalankan vanilla atau Paper. Jika Anda menginstal paket yang diterbitkan, paket tersebut menentukan loader dan versi Minecraft untuk Anda. Jika Anda membuat server modifikasi sendiri, Fabric dan NeoForge mencakup sebagian besar mod modern, dan Forge mencakup era yang lebih lama.",
+        "points": [
+          "Survival bersama teman, tidak ada yang aneh: vanilla.",
+          "Server publik dengan peringkat, klaim, dan moderasi: Paper.",
+          "Paket tertentu dari CurseForge atau Modrinth: apa pun yang dikatakan paket.",
+          "Paket modern yang Anda susun sendiri: Fabric atau NeoForge.",
+          "Paket lama dari era 1.7 hingga 1.12: Forge."
+        ]
+      }
+    ],
+    "related": ["guidesHub", "serverModpacks"],
+    "cta": {
+      "title": "Mulai Server Pertama Anda",
+      "body": "Instal panel, buka wizard pembuatan, dan pilih jenis server. Setiap jenis gratis dan berjalan di mesin Anda sendiri."
+    }
+  },
+  "serverPaper": {
+    "meta": {
+      "title": "Panel server Paper: plugin, self-hosted",
+      "description": "Panel server Paper dan Purpur gratis, self-hosted. Cari plugin di Hangar, SpigotMC, dan Modrinth, verifikasi setiap unduhan, dan perbarui."
+    },
+    "eyebrow": "Paper dan Purpur",
+    "title": "Panel server Paper self-hosted dengan penjelajah plugin sungguhan",
+    "intro": "Jalankan Paper atau Purpur di kontainer Docker-nya sendiri, cari plugin dari empat registri tanpa meninggalkan panel, dan biarkan pemain bergabung dengan game yang sudah mereka miliki.",
+    "pills": ["paper", "purpur", "hangar", "spigotmc", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Mengapa Paper untuk Server Publik",
+        "body": "Plugin hanya berjalan di server, jadi pemain bergabung dengan klien biasa yang tidak dimodifikasi dan tidak perlu menginstal apa pun. Apa pun yang berkaitan dengan aturan, izin, ekonomi, klaim tanah, minigame, atau moderasi adalah plugin, dan itulah mengapa hampir setiap server publik menjalankan Paper. Ia memiliki pengalaman bertahun-tahun dalam optimasi kinerja dan pengaturan untuk hampir setiap perilaku yang pernah mengganggu administrator. Purpur adalah fork dari Paper dengan lebih banyak sakelar, termasuk yang berkaitan dengan gameplay. Keduanya ada di tab Vanilla pada wizard pembuatan.",
+        "points": [
+          "Pemain terhubung dengan game normal. Tanpa mod, tanpa pengaturan peluncur.",
+          "Sebagian besar plugin dari era Bukkit masih berfungsi.",
+          "Pilih Purpur hanya jika Anda menginginkan sakelar tambahannya; jika tidak, pilih Paper."
+        ]
+      },
+      {
+        "title": "Empat Registri Plugin dalam Satu Pencarian",
+        "body": "Tab Mods pada server plugin mencari Hangar (registri plugin PaperMC sendiri), SpigotMC, Modrinth, dan CurseForge, difilter berdasarkan versi Minecraft server. Hanya CurseForge yang memerlukan kunci API. Anda juga dapat menempelkan halaman proyek, repositori atau rilis GitHub, atau tautan jar langsung, dan panel akan menemukan build yang tepat. Setiap unduhan dari registri diperiksa terhadap checksum terkuat yang dipublikasikan oleh registri sebelum mencapai server, sehingga file yang rusak atau diubah tidak akan pernah terpasang.",
+        "pills": ["hangar", "spigotmc", "modrinth", "curseforge", "github-releases", "sha512", "sha256"],
+        "points": [
+          "Hasil yang sudah ada di server akan menampilkan lencana Terinstal.",
+          "Jika sumber daya SpigotMC di-host di tempat lain, panel akan memberitahukannya di awal dan menawarkan untuk membuka halaman tersebut dan menerima jar sebagai unggahan sebagai gantinya.",
+          "Jar yang diunggah diidentifikasi, sehingga mereka mempertahankan nama aslinya dan tetap dapat diperiksa pembaruannya."
+        ],
+        "shot": "mods"
+      },
+      {
+        "title": "Pembaruan Plugin Tanpa Menebak-nebak",
+        "body": "Setiap plugin yang Anda tambahkan diperiksa terhadap sumbernya setiap hari, dan sesuai permintaan. Perbarui satu plugin, abaikan versi yang tidak Anda inginkan, atau tekan Perbarui Semua untuk menerapkan semuanya dengan satu kali restart. Jika pembaruan ternyata buruk, kembalikan ke build sebelumnya dari pustaka bersama. Aktifkan Beri Tahu Saya di kebijakan pembaruan server dan pembaruan yang tertunda akan muncul sebagai lencana dan di halaman Pembaruan.",
+        "points": [
+          "Pemeriksaan harian terhadap Hangar, SpigotMC, Modrinth, CurseForge, dan Rilis GitHub.",
+          "Mengembalikan ke versi sebelumnya akan mengembalikan build sebelumnya dari pustaka.",
+          "Jika Anda menyematkan build Paper, halaman Pembaruan akan memberi tahu Anda saat build yang lebih baru dirilis."
+        ]
+      },
+      {
+        "title": "Jalankan Seperti Server Komunitas",
+        "body": "Server Paper mendapatkan alat yang sama seperti server lain di panel: konsol langsung dengan bilah perintah RCON, daftar putih, ops, larangan dan larangan IP, teleportasi, dan perintah obrolan kustom dengan waktu tunda. Berikan staf Anda akun dengan izin per server, sehingga moderator dapat menjalankan konsol tanpa menyentuh cadangan atau file. Satu klik menambahkan peta langsung BlueMap, yang disajikan hanya melalui login panel itu sendiri, dan notifikasi Discord memberi tahu Anda saat ada yang memerlukan perhatian Anda.",
+        "pills": ["bluemap", "discord"],
+        "shot": "console"
+      }
+    ],
+    "steps": {
+      "title": "Mulai Server Paper dalam Tiga Langkah",
+      "items": [
+        {
+          "title": "Pilih Paper di Wizard",
+          "body": "Buka Buat Server, tetap di tab Vanilla, pilih Paper atau Purpur, dan pilih versi Minecraft. Port game gratis dan memori yang masuk akal akan terisi secara otomatis."
+        },
+        {
+          "title": "Tambahkan Plugin Anda",
+          "body": "Di tab Mods server, cari Hangar, SpigotMC, Modrinth, atau CurseForge, atau tempel tautan. Instalasi diverifikasi saat diunduh."
+        },
+        {
+          "title": "Bagikan Alamatnya",
+          "body": "Tab Overview menampilkan alamat yang diberikan kepada pemain. Mereka bergabung dengan game yang sudah mereka miliki."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pertanyaan Server Paper",
+      "items": [
+        {
+          "q": "Bisakah saya menambahkan mod ke server Paper?",
+          "a": "Tidak. Paper memuat plugin, yang hanya berjalan di server. Mod mengubah game itu sendiri dan memerlukan mod loader seperti Fabric atau NeoForge di server dan setiap klien. Jika Anda menginginkan keduanya, jalankan server modded dan server plugin secara berdampingan daripada satu hibrida."
+        },
+        {
+          "q": "Apakah saya memerlukan akun SpigotMC atau kunci API untuk menginstal plugin?",
+          "a": "Tidak. SpigotMC, Hangar, dan Modrinth semuanya berfungsi tanpa kunci. Hanya CurseForge yang meminta kunci API, yang Anda tambahkan sekali di bawah Pengaturan, Kunci API."
+        },
+        {
+          "q": "Pertanian redstone dari video tidak berfungsi di server saya. Mengapa?",
+          "a": "Paper mengubah beberapa perilaku vanilla secara default demi kinerja. Itu biasanya alasannya, dan biasanya pengaturan di konfigurasi Paper, yang dapat Anda edit di manajer file server."
+        },
+        {
+          "q": "Apakah plugin Bukkit dan Spigot lama saya masih berfungsi?",
+          "a": "Sebagian besar, ya. Paper adalah fork dari Spigot dan mempertahankan API plugin, jadi plugin yang ditulis untuk Bukkit dan Spigot sebagian besar berjalan tanpa perubahan. Periksa halaman setiap plugin untuk versi Minecraft yang didukungnya."
+        }
+      ]
+    },
+    "related": ["serverFabric", "serverVanilla", "guideMulti"],
+    "cta": {
+      "title": "Jalankan Server Paper Anda di Rumah",
+      "body": "Instal panel di mesin mana pun dengan Docker, lalu buat server Paper dari wizard. Gratis, sumber terbuka, dan milik Anda."
+    }
+  },
+  "serverFabric": {
+    "meta": {
+      "title": "Server Fabric self-hosted dengan peramban mod",
+      "description": "Host server Minecraft Fabric atau Quilt Anda sendiri. Cari Modrinth dan CurseForge, sematkan build loader, dan periksa setiap mod sebelum melakukan pembaruan."
+    },
+    "eyebrow": "Fabric dan Quilt",
+    "title": "Server Fabric self-hosted yang mengetahui dukungan mod Anda",
+    "intro": "Buat server Fabric atau Quilt dari mod yang Anda inginkan, simpan build loader di tempat Anda meletakkannya, dan pindah ke versi Minecraft baru hanya jika setiap mod dapat mengikutinya.",
+    "pills": ["fabric", "quilt", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Mengapa Fabric",
+        "body": "Fabric kecil, mengikuti versi Minecraft baru dalam hitungan hari, dan membawa sebagian besar mod performa modern. Jika tujuan Anda adalah server yang cepat dengan beberapa mod kualitas hidup, ini adalah loader yang harus dipilih. Hampir setiap mod Fabric juga membutuhkan Fabric API, yang merupakan unduhan terpisah yang Anda tambahkan seperti mod lainnya. Quilt adalah fork dari Fabric yang menjalankan sebagian besar mod Fabric; pilih jika Anda memiliki alasan khusus, jika tidak, pilih Fabric.",
+        "points": [
+          "Cepat mengikuti rilis Minecraft baru.",
+          "Rumah bagi sebagian besar mod performa modern.",
+          "Server Quilt melihat build Fabric secara otomatis, karena Quilt menjalankan mod Fabric."
+        ]
+      },
+      {
+        "title": "Mulai Dari Mod yang Anda Inginkan",
+        "body": "Tab Dari Mod pada wizard memilih loader, versi Minecraft, dan build loader: yang terbaru, atau yang spesifik yang Anda sematkan. Anda juga bisa melakukannya sebaliknya. Pilih mod terlebih dahulu, dan pemecah masalah akan mengusulkan versi loader dan Minecraft terbaru yang didukung oleh semuanya, lalu menginstal set saat server dibuat.",
+        "points": [
+          "Sematkan build loader Fabric atau Quilt alih-alih melacak yang terbaru.",
+          "Halaman Pembaruan menawarkan build yang lebih baru untuk loader yang disematkan.",
+          "Peramban mod memfilter berdasarkan loader, sehingga jar Forge tidak dapat masuk ke server Fabric secara keliru."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Pemeriksaan Versi Sebelum Setiap Pembaruan",
+        "body": "Tab Mod server Fabric memiliki sub-tab Versi. Ini memeriksa setiap mod yang terinstal terhadap Modrinth dan CurseForge dan melaporkan versi Minecraft tertinggi yang semuanya memiliki build, ditambah rincian tentang apa yang akan ditinggalkan oleh setiap versi yang lebih baru. Versi Minecraft yang lebih baru hanya ditawarkan setelah pemeriksaan tersebut mendukungnya, dan tidak pernah saat jar tidak dapat diidentifikasi.",
+        "pills": ["modrinth", "curseforge"]
+      },
+      {
+        "title": "Mod yang Dapat Anda Percayai dan Batalkan",
+        "body": "Setiap unduhan registri diverifikasi terhadap checksum terkuat yang diterbitkan oleh registri sebelum mencapai server. Mod yang Anda tambahkan berada di pustaka bersama, didedupikasi berdasarkan sha256, sehingga sepuluh server yang menjalankan mod yang sama menyimpannya sekali. Perbarui mod, abaikan versi, atau kembalikan ke build sebelumnya ketika pembaruan salah. Impor .mrpack Modrinth atau zip jar dan setiap jar diidentifikasi dan diperiksa terhadap server sebelum apa pun diinstal.",
+        "pills": ["mrpack", "zip", "sha512", "sha256"],
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Mulai Server Fabric dalam Tiga Langkah",
+      "items": [
+        {
+          "title": "Pilih Fabric di Tab Dari Mod",
+          "body": "Pilih Fabric atau Quilt, versi Minecraft, dan build loader terbaru atau yang disematkan."
+        },
+        {
+          "title": "Cari dan Tambahkan Mod",
+          "body": "Cari Modrinth atau CurseForge, tambahkan Fabric API, dan tambahkan sisanya. Setiap unduhan diverifikasi."
+        },
+        {
+          "title": "Undang Pemain Anda",
+          "body": "Tab Undangan membuat undangan siap tempel dan .mrpack klien dari mod yang Anda tambahkan, dengan server Anda sudah ada di daftar server dalam game."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pertanyaan Server Fabric",
+      "items": [
+        {
+          "q": "Apakah pemain perlu menginstal mod yang sama?",
+          "a": "Ya, untuk mod apa pun yang menambahkan konten. Mod mengubah permainan itu sendiri, jadi klien harus memuat mod yang sama. Tab Undangan membuat .mrpack klien dari mod yang Anda tambahkan, dengan server Anda sudah ada di daftar server dalam game, yang diimpor pemain ke peluncur seperti Prism atau Aplikasi Modrinth."
+        },
+        {
+          "q": "Apakah saya benar-benar membutuhkan Fabric API?",
+          "a": "Hampir selalu. Hampir setiap mod Fabric bergantung padanya, dan itu adalah unduhan terpisah. Tambahkan dari peramban mod seperti mod lainnya."
+        },
+        {
+          "q": "Bagaimana saya tahu mod saya akan berfungsi pada versi Minecraft berikutnya?",
+          "a": "Buka tab Mod server lalu Versi. Ini menunjukkan versi Minecraft tertinggi yang dimiliki setiap mod yang terinstal, dan apa yang akan ditinggalkan oleh versi yang lebih baru."
+        },
+        {
+          "q": "Pembaruan mod merusak server. Bisakah saya kembali?",
+          "a": "Ya. Kembalikan mod dari barisnya di tab Mod dan build sebelumnya akan kembali dari pustaka bersama."
+        }
+      ]
+    },
+    "related": ["serverForge", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Host Server Fabric Anda Sendiri",
+      "body": "Instal panel, buka tab Dari Mod, dan pilih mod Anda. Tanpa langganan dan tanpa batasan berapa banyak server yang Anda jalankan."
+    }
+  },
+  "serverForge": {
+    "meta": {
+      "title": "Panel server modded Forge dan NeoForge",
+      "description": "Jalankan server Minecraft modded Forge atau NeoForge Anda sendiri. Java yang tepat akan dipilih untuk Anda, build loader dapat disematkan, dan penyebab crash akan teridentifikasi."
+    },
+    "eyebrow": "Forge dan NeoForge",
+    "title": "Panel server modded Forge yang memilihkan Java yang tepat untuk Anda",
+    "intro": "Dari klasik 1.7.10 hingga paket NeoForge terbaru, buat server, atur memorinya, dan temukan mod di balik crash tanpa perlu membaca baris demi baris stack trace.",
+    "pills": ["forge", "neoforge", "curseforge", "modrinth"],
+    "sections": [
+      {
+        "title": "Forge atau NeoForge?",
+        "body": "NeoForge adalah tempat ekosistem Forge lama kini bekerja untuk versi terbaru. NeoForge berpisah dari Forge pada versi 1.20.1, dan sebagian besar paket besar yang dibuat untuk 1.20.2 ke atas menargetkannya, jadi mulailah server baru yang berat pada NeoForge. Forge masih menguasai masa lalu: apa pun dari era 1.7.10, 1.12.2, dan 1.16.5 adalah Forge, dan itu mencakup banyak paket yang paling disukai. Mod untuk satu loader tidak berjalan di loader lain, dan paket NeoForge 1.20.1 tidak berjalan di Forge 1.20.1.",
+        "points": [
+          "Server baru yang berat: NeoForge.",
+          "Era 1.7.10, 1.12.2, atau 1.16.5: Forge.",
+          "Paket yang dipublikasikan: apa pun yang terdaftar di paket, tepatnya."
+        ]
+      },
+      {
+        "title": "Java yang Tepat, Setiap Saat",
+        "body": "Persyaratan Java Minecraft bergerak seiring dengan game, dan versi yang salah akan memberi Anda pesan UnsupportedClassVersionError yang tidak membantu alih-alih pesan yang jelas. Paket lama benar-benar membutuhkan Java 8, dan versi terbaru membutuhkan 21 atau lebih baru. Wizard pembuatan membaca versi Minecraft yang Anda pilih dan memilih runtime itu sendiri, sehingga ketidakcocokan tidak pernah terjadi secara tidak sengaja. Memperbarui paket akan menyelesaikan ulang Java jika versi baru membutuhkan yang berbeda.",
+        "points": ["1.16.5 dan sebelumnya: Java 8.", "1.18 hingga 1.20.4: Java 17.", "1.20.5 hingga 1.21: Java 21."]
+      },
+      {
+        "title": "Memori Disesuaikan untuk Modded",
+        "body": "Setiap server memiliki dua angka: heap Java dan batas memori kontainer. Java membutuhkan memori di luar heap, sekitar 1,5 hingga 2 GB pada modpack besar, dan kontainer tanpa ruang cadangan akan dimatikan saat Java mencapainya. Wizard mengatur batas 50 persen di atas heap, dan panel menolak batas kontainer yang tidak di atas heap. Paket 'kitchen-sink' dengan 150 hingga 300 mod membutuhkan heap 6 hingga 8 GB.",
+        "points": [
+          "Server yang berhenti karena kehabisan memori dicatat persis seperti itu dalam riwayatnya.",
+          "Atur heap awal yang lebih kecil untuk melihat memori mengikuti penggunaan aktual."
+        ]
+      },
+      {
+        "title": "Crash yang Mengidentifikasi Penyebabnya",
+        "body": "Laporan crash diambil secara otomatis dan diurai menjadi ringkasan satu baris dengan pengecualian dan mod yang paling mungkin menjadi penyebabnya. Buka penampil bawaan, salin stack trace, atau, setelah konfirmasi eksplisit, bagikan ke mclo.gs dan dapatkan wawasan otomatisnya: masalah yang diketahui dengan perbaikan yang disarankan, ditampilkan langsung di panel. Restart otomatis saat crash mencoba lagi dengan jeda yang meningkat, dan melewati crash yang memerlukan perbaikan terlebih dahulu, seperti Java yang salah atau kehabisan memori.",
+        "pills": ["mclogs"],
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Mulai Server Forge dalam Tiga Langkah",
+      "items": [
+        {
+          "title": "Pilih Loader dan Versi",
+          "body": "Pada tab From Mods di wizard, pilih Forge atau NeoForge, versi Minecraft, dan build loader terbaru atau yang disematkan."
+        },
+        {
+          "title": "Berikan Memori yang Cukup",
+          "body": "Atur heap Java sesuai ukuran daftar mod Anda. Batas kontainer akan mengikuti, 50 persen di atasnya."
+        },
+        {
+          "title": "Tambahkan Mod atau Impor Zip",
+          "body": "Cari di CurseForge dan Modrinth, atau impor ekspor CurseForge atau zip berisi jar. Setiap jar diidentifikasi dan diperiksa terhadap server terlebih dahulu."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pertanyaan Server Forge",
+      "items": [
+        {
+          "q": "Bisakah saya masih menjalankan paket 1.12.2 atau 1.7.10?",
+          "a": "Ya. Pilih versi dan Forge di wizard dan panel akan menjalankannya pada Java 8, yang dibutuhkan versi tersebut. GT New Horizons, paket ahli 1.7.10, terinstal dari halaman Modpacks dengan pilihan Java-nya sendiri."
+        },
+        {
+          "q": "Berapa banyak memori yang dibutuhkan server Forge?",
+          "a": "Paket ringan dengan 40 hingga 80 mod berjalan baik pada heap 4 GB dalam kontainer 6 GB. Paket dengan 150 hingga 300 mod membutuhkan 6 hingga 8 GB heap dan sekitar 10 GB untuk kontainer."
+        },
+        {
+          "q": "Bisakah saya menyematkan build Forge tertentu?",
+          "a": "Ya. Pemilih build loader di wizard menerima build terbaru atau spesifik, dan halaman Updates menawarkan build yang lebih baru untuk yang disematkan tanpa menerapkannya secara otomatis."
+        },
+        {
+          "q": "Server saya crash saat mulai. Di mana saya harus melihat?",
+          "a": "Buka Monitoring lalu History. Kartu laporan crash mencantumkan pengecualian dan mod yang dicurigai, dan Analyze menjalankan wawasan mclo.gs untuk masalah dan perbaikan yang diketahui."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "serverFabric", "guideHome"],
+    "cta": {
+      "title": "Jalankan Server Modded Anda Sendiri",
+      "body": "Instal panel pada mesin dengan memori yang cukup, lalu buat server Forge atau NeoForge dari wizard."
+    }
+  },
+  "serverVanilla": {
+    "meta": {
+      "title": "Panel server Minecraft Vanilla, self-hosted",
+      "description": "Host server Minecraft Vanilla sendiri: versi apa pun dari beta lama hingga snapshot terbaru, dengan kontrol dunia, pencadangan harian, dan statistik pemain."
+    },
+    "eyebrow": "Permainan yang tidak berubah",
+    "title": "Server Minecraft Vanilla dengan semua hal di sekitarnya ditangani",
+    "intro": "Jaga agar permainan tetap persis seperti yang dikirimkan Mojang, dan dapatkan pencadangan, alat dunia, moderasi, dan statistik pemain dari panel, bukan dari plugin.",
+    "pills": ["vanilla", "docker"],
+    "sections": [
+      {
+        "title": "Versi Apa Pun yang Anda Inginkan",
+        "body": "Pilih rilis terbaru, snapshot, atau versi tertentu, termasuk beta dan alpha lama. Panel memilih runtime Java yang dibutuhkan versi tersebut, menarik image, dan memulai server dari yang tersebut. Tidak ada yang perlu menginstal apa pun untuk bergabung: pemain terhubung dengan game yang sudah mereka miliki.",
+        "points": [
+          "Rilis terbaru, snapshot, atau versi tertentu.",
+          "Beta dan alpha lama untuk server nostalgia.",
+          "Java yang tepat dipilih untuk setiap versi."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Kontrol Dunia Tanpa Mengetik Perintah",
+        "body": "Rel Kontrol Dunia berjalan di setiap tab server: jam dalam game, cuaca, dan gamerule umum sebagai chip toggle, dengan setiap aturan lainnya berjarak satu klik. Tab Dunia mengatur ulang dunia aktif dengan seed baru, yang disimpan, atau kustom, menawarkan pencadangan keamanan terlebih dahulu. Gandakan dunia, simpan yang sudah selesai di perpustakaan dunia, atau unggah dunia yang sudah Anda miliki sebagai arsip .zip atau .tar.",
+        "points": [
+          "Atur ulang dengan seed baru, seed yang sama, atau yang Anda ketik.",
+          "Perpustakaan dunia yang dibagikan oleh setiap server.",
+          "Edit server.properties di browser; nilai pada disk yang menang."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Pencadangan Sejak Hari Pertama",
+        "body": "Setiap server baru mendapatkan jadwal pencadangan harian secara otomatis. Pencadangan aman: panel menjeda penyimpanan, membersihkan dunia, mengompresnya, dan memeriksa arsip terbuka sebelum mencatatnya. Pemulihan mengembalikan server persis seperti semula, dan mengambil pencadangan keamanan data saat ini terlebih dahulu.",
+        "shot": "backups"
+      },
+      {
+        "title": "Moderasi dan Statistik Tanpa Plugin",
+        "body": "Vanilla tidak memiliki sistem izin, jadi panel memberi Anda alat moderasi sebagai gantinya: daftar putih, op di setiap level, larangan dan larangan IP, dan teleportasi, langsung saat server berjalan dan langsung ke file saat server berhenti. Statistik game itu sendiri dibaca sesuai jadwal ke dalam profil pemain dan papan skor: waktu bermain, kematian, pembunuhan, blok dan berlian yang ditambang, dan jarak yang ditempuh. Linimasa aktivitas menyimpan obrolan, bergabung, kematian, dan kemajuan yang dapat dicari."
+      }
+    ],
+    "faq": {
+      "title": "Pertanyaan Server Vanilla",
+      "items": [
+        {
+          "q": "Bisakah saya menjalankan server snapshot?",
+          "a": "Ya. Pilih snapshot sebagai versi Minecraft di wizard. Simpan cadangan sebelum setiap snapshot baru, karena dunia snapshot tidak dapat dibuka di versi yang lebih lama."
+        },
+        {
+          "q": "Bisakah server vanilla memiliki peta langsung?",
+          "a": "Tidak pada vanilla. BlueMap memerlukan plugin atau pemuat mod untuk berjalan. Server Paper mendapatkannya dengan satu klik, dan pemain masih bergabung dengan klien yang tidak dimodifikasi."
+        },
+        {
+          "q": "Bisakah saya mengatur ulang dunia tetapi menyimpan seed-nya?",
+          "a": "Ya. Atur ulang dunia aktif dari tab Dunia dan pilih untuk menyimpan seed saat ini. Panel menawarkan pencadangan keamanan dunia lama terlebih dahulu."
+        },
+        {
+          "q": "Berapa banyak pemain yang dapat ditangani oleh server vanilla?",
+          "a": "Vanilla lebih lambat dengan banyak pemain daripada Paper. Untuk sekelompok teman, itu baik-baik saja. Untuk server publik yang ramai, Paper menjalankan permainan yang sama dengan pekerjaan kinerja selama bertahun-tahun."
+        }
+      ]
+    },
+    "related": ["serverPaper", "guidePi", "guideHome"],
+    "cta": {
+      "title": "Mulai Server Vanilla",
+      "body": "Instal panel, pilih Vanilla di wizard, dan bagikan alamatnya. Gratis dan sumber terbuka."
+    }
+  },
+  "serverModpacks": {
+    "meta": {
+      "title": "Server modpack Minecraft: instalasi sekali klik",
+      "description": "Jalankan server modpack Minecraft dari CurseForge, Modrinth, FTB, atau GT New Horizons. Pack tetap terpasang, dan setiap pembaruan dilengkapi dengan cadangan dan pemulihan."
+    },
+    "eyebrow": "Server modpack",
+    "title": "Server modpack Minecraft yang tidak pernah diperbarui di belakang layar",
+    "intro": "Instal pack berdasarkan nama, pasang ke versi yang tepat, dan tingkatkan hanya jika Anda mau, dengan cadangan terlebih dahulu dan pemulihan sekali klik jika versi baru tidak dapat dimulai.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"],
+    "sections": [
+      {
+        "title": "Semua Sumber Pack Besar",
+        "body": "Halaman Modpacks dan tab Dari Modpack di wizard menginstal pack dari CurseForge dan Modrinth dengan mencari nama mereka, pack FTB berdasarkan ID pack dan versi mereka, dan GT New Horizons dari indeks rilisnya sendiri. Bukan pack yang diterbitkan sama sekali? Unggah .mrpack Modrinth, ekspor modpack CurseForge, atau zip jar mod apa pun. Manifest, atau suara mayoritas di antara jar yang teridentifikasi, akan mengisi loader dan versi Minecraft.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export", "zip"],
+        "points": [
+          "CurseForge memerlukan kunci API, ditambahkan sekali di bawah Pengaturan, Kunci API.",
+          "Mod yang penulisnya tidak mengizinkan unduhan otomatis terdaftar dengan tautan dan slot unggah alih-alih gagal menginstal.",
+          "GT New Horizons mengatur versi Java dan minimum memori serta disk yang masuk akal untuk Anda."
+        ]
+      },
+      {
+        "title": "Terpasang ke Versi yang Tepat",
+        "body": "Saat Anda memilih pack, panel akan menyelesaikan versi yang tepat, mencatatnya, dan menginstal yang itu. Restart tidak akan pernah memperbarui pack secara diam-diam. Anda memilih bagaimana setiap server diberi tahu tentang versi baru: Hanya Manual membiarkannya sepenuhnya, Beri Tahu Saya menampilkan lencana dan mendaftarkannya di halaman Pembaruan, dan Perbarui Otomatis menerapkan pembaruan pack setelah pemeriksaan harian melalui jalur yang sama yang dijaga. Pembaruan yang akan memindahkan dunia ke versi Minecraft yang berbeda selalu dilewati, karena mengonversi dunia adalah keputusan Anda.",
+        "points": [
+          "Hanya Manual adalah default.",
+          "Server yang melacak rilis stabil tidak pernah ditawari beta.",
+          "Perbarui Otomatis tidak pernah melintasi versi Minecraft."
+        ]
+      },
+      {
+        "title": "Pembaruan dengan Jalan Kembali",
+        "body": "Memperbarui pack adalah satu tindakan. Panel mengambil cadangan, menghentikan server dengan baik, menukar versi yang terpasang, membangun kembali server dengan Java yang tepat untuk versi baru, dan mengawasi boot pertama, dengan jendela yang cukup untuk pack besar yang mengunduh gigabyte saat pertama kali dimulai. Jika versi baru tidak muncul, pulihkan dengan satu klik.",
+        "shot": "backups"
+      },
+      {
+        "title": "Mod Anda Sendiri di Atasnya",
+        "body": "Mod yang Anda tambahkan ke server pack hidup di pustaka bersama dan ditautkan ke server, sehingga mereka bertahan dari pembaruan pack. Nonaktifkan mod pack yang tidak Anda inginkan, tambahkan mod kinerja yang kurang pada pack, dan simpan keduanya melalui pembaruan berikutnya. Pemain menginstal pack yang sama pada versi yang sama dari CurseForge atau Modrinth, dan tab Undangan memberi Anda undangan siap tempel dengan alamat dan versi.",
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Mulai Server Modpack dalam Tiga Langkah",
+      "items": [
+        {
+          "title": "Temukan Pack",
+          "body": "Cari CurseForge atau Modrinth di halaman Modpacks, atau unggah .mrpack, ekspor CurseForge, atau zip jar."
+        },
+        {
+          "title": "Pilih Versi dan Memori",
+          "body": "Pilih versi pack yang tepat. Berikan ruang heap Java untuk jumlah mod; batas kontainer mengikuti."
+        },
+        {
+          "title": "Buat dan Awasi Bootnya",
+          "body": "Panel menginstal pack, memasangnya, dan memulai server. Boot pertama pack besar membutuhkan waktu; konsol menampilkan setiap baris."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pertanyaan Server Modpack",
+      "items": [
+        {
+          "q": "Apakah me-restart server akan memperbarui modpack saya?",
+          "a": "Tidak. Pack dipasang ke versi yang Anda instal. Itu hanya berubah ketika Anda memperbaruinya, atau setelah pemeriksaan harian jika Anda mengatur server ke Perbarui Otomatis."
+        },
+        {
+          "q": "Mengapa CurseForge memerlukan kunci API padahal Modrinth tidak?",
+          "a": "CurseForge hanya menjawab permintaan yang membawa kunci. Anda bisa mendapatkannya dari konsol CurseForge dan menambahkannya sekali di bawah Pengaturan, Kunci API. Modrinth bekerja tanpanya."
+        },
+        {
+          "q": "Beberapa mod di pack saya tidak dapat diunduh. Bagaimana sekarang?",
+          "a": "Penulisnya tidak mengizinkan unduhan otomatis. Panel mencantumkan masing-masing dengan tautan ke halamannya dan slot unggah, jadi Anda mengunduh jar di browser Anda dan menjatuhkannya."
+        },
+        {
+          "q": "Bisakah saya menginstal pack FTB?",
+          "a": "Ya, melalui API FTB dengan ID numerik pack dan ID versi eksplisit. Panel belum memeriksa pembaruan pack FTB."
+        }
+      ]
+    },
+    "related": ["guideFriends", "serverForge", "serverFabric"],
+    "cta": {
+      "title": "Jalankan Server Modpack Anda di Rumah",
+      "body": "Instal panel, buka halaman Modpacks, dan pilih pack. Itu tetap pada versi yang Anda pilih sampai Anda mengatakan sebaliknya."
+    }
+  },
+  "guidesHub": {
+    "meta": {
+      "title": "Panduan: hosting server Minecraft sendiri",
+      "description": "Panduan untuk hosting server Minecraft sendiri: server modpack untuk teman, Raspberry Pi, PC rumah, pindah dari hosting berbayar, dan banyak server di satu mesin."
+    },
+    "eyebrow": "Panduan",
+    "title": "Panduan untuk hosting server Minecraft sendiri",
+    "intro": "Panduan praktis untuk penyiapan yang benar-benar dijalankan orang, dari Raspberry Pi di rak hingga mesin yang penuh dengan server.",
+    "cards": {
+      "guideFriends": "Host modpack CurseForge atau Modrinth untuk teman-teman Anda, dengan memori yang tepat dan undangan yang bisa mereka ikuti.",
+      "guidePi": "Ubah Raspberry Pi 4 atau 5 menjadi server Minecraft dengan panel web, dan ukur dengan jujur.",
+      "guideHome": "Host server Minecraft di rumah pada Windows, macOS, atau Linux, dan biarkan teman bergabung dengan aman.",
+      "guideHosting": "Pindahkan dunia, plugin, dan mod Anda dari host berbayar tanpa kehilangan satu inventaris pun.",
+      "guideMulti": "Jalankan beberapa server Minecraft di satu mesin tanpa port, memori, atau disk saling menghalangi."
+    },
+    "related": ["serversHub"],
+    "cta": {
+      "title": "Butuh Sesuatu yang Tidak Tercakup di Sini?",
+      "body": "Dokumentasi membahas lebih dalam setiap fitur, dan Discord memiliki manusia sungguhan yang menjalankan server."
+    }
+  },
+  "guideFriends": {
+    "meta": {
+      "title": "Host Server Modpack untuk Teman",
+      "description": "Host server modpack CurseForge atau Modrinth di mesin Anda sendiri untuk teman-teman Anda: pilih paketnya, berikan memori yang cukup, undang teman, dan buat cadangan."
+    },
+    "eyebrow": "Panduan server modpack",
+    "title": "Cara Host Server Modpack untuk Teman Anda",
+    "intro": "Mesin Anda sendiri dapat menghosting paket yang Anda mainkan bersama teman-teman. Instal panelnya, buat server dari paketnya, berikan memori yang dibutuhkan, dan kirimkan undangan yang bisa diikuti teman.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "docker"],
+    "sections": [
+      {
+        "title": "Pilih Paket dari Wizard",
+        "body": "Halaman Modpacks dan tab Dari Modpack pada wizard pembuatan mencari CurseForge dan Modrinth berdasarkan nama; wizard juga menerima paket FTB berdasarkan ID, atau ekspor paket yang sudah Anda miliki. Pilih versi yang akan dimainkan teman Anda. Panel akan menginstal versi tersebut persis dan menjaganya tetap di sana: restart tidak akan pernah memperbarui paket di belakang layar. CurseForge memerlukan kunci API gratis, yang ditambahkan sekali di bawah Pengaturan, Kunci API; Modrinth tidak memerlukan apa pun.",
+        "points": [
+          "Cari di CurseForge dan Modrinth, atau unggah .mrpack, ekspor CurseForge, atau zip dari mod jar.",
+          "Versi paket disematkan, jadi semua orang memainkan versi yang sama.",
+          "Java dipilih untuk versi Minecraft dari paket tersebut."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "mrpack", "cf-export"],
+        "shot": "modpacks"
+      },
+      {
+        "title": "Berikan Memori yang Cukup",
+        "body": "Modpack membutuhkan memori jauh lebih banyak daripada server vanilla, dan server memiliki dua angka: heap Java, dan batas kontainer di sekitarnya, yang harus lebih besar karena Java menggunakan memori di luar heap-nya. Paket ringan dengan 40 hingga 80 mod membutuhkan heap 4 GB dalam kontainer 6 GB; paket besar 'kitchen-sink' membutuhkan 6 hingga 8 GB heap dalam 10 GB. Panel memberi tahu server yang berhenti karena kehabisan memori terpisah dari crash, sehingga Anda tahu pengaturan mana yang harus diubah.",
+        "points": [
+          "Atur memori di wizard, dan ubah nanti di pengaturan server.",
+          "Sisakan memori untuk sistem operasi dan panel.",
+          "Tab Monitoring menunjukkan apa yang sebenarnya digunakan server."
+        ]
+      },
+      {
+        "title": "Kirim Undangan yang Bisa Diikuti Teman",
+        "body": "Teman-teman menginstal paket yang sama pada versi yang sama di launcher mereka: aplikasi CurseForge, Aplikasi Modrinth, atau Prism Launcher. Tab Undangan server, di bawah Pengaturan, menyalin alamat untuk dibagikan dan teks undangan dengan versi Minecraft. Teman di jaringan Anda menggunakan alamat lokal. Untuk teman di luar jaringan, teruskan port game di router Anda, atau gunakan terowongan saat penyedia Anda tidak mengizinkannya.",
+        "points": [
+          "Tab Undangan menawarkan alamat lokal, alamat publik Anda, dan alamat kustom.",
+          "Jika whitelist aktif, tambahkan setiap teman di tab Pemain terlebih dahulu.",
+          "Untuk server yang dibuat dari mod pilihan Anda, tab Undangan juga membuat .mrpack klien yang menginstalnya dan menambahkan server ke daftar multipemain."
+        ],
+        "pills": ["mrpack"]
+      },
+      {
+        "title": "Jaga Dunia Tetap Aman",
+        "body": "Setiap server baru mendapatkan jadwal pencadangan harian. Sebelum pembaruan paket, panel akan membuat cadangan lagi, membangun kembali server pada versi baru, dan memantau boot pertama; jika tidak berhasil, satu klik akan mengembalikannya. Mod yang Anda tambahkan di atas paket akan tetap ada setelah pembaruan.",
+        "points": [
+          "Cadangan harian sejak hari pertama.",
+          "Pembaruan dan penurunan versi paket dengan cadangan dan pemulihan.",
+          "Laporan crash terdeteksi, dijelaskan, dan dapat dibagikan."
+        ],
+        "shot": "backups"
+      }
+    ],
+    "steps": {
+      "title": "Host Server Modpack Anda",
+      "items": [
+        {
+          "title": "Instal Panel",
+          "body": "Di Linux, penginstal satu baris menyiapkan Docker dan panel. Di Windows dan macOS, jalankan panel dengan Node.js di samping Docker Desktop."
+        },
+        {
+          "title": "Tambahkan Kunci API CurseForge",
+          "body": "Hanya untuk paket CurseForge: tambahkan kunci gratis di bawah Pengaturan, Kunci API."
+        },
+        {
+          "title": "Buat Server dari Paket",
+          "body": "Buka tab Dari Modpack pada wizard, cari paketnya, pilih versinya dan memorinya, lalu buat servernya."
+        },
+        {
+          "title": "Undang Teman Anda",
+          "body": "Mulai server, buka Pengaturan, Undangan, dan kirimkan teks undangan. Teman menginstal versi paket yang sama di launcher mereka dan bergabung."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pertanyaan Server Modpack",
+      "items": [
+        {
+          "q": "Berapa banyak RAM yang dibutuhkan server modpack?",
+          "a": "Sekitar 6 GB untuk paket ringan 40 hingga 80 mod dan 10 GB untuk paket besar 150 hingga 300, masing-masing dengan heap Java yang lebih kecil di dalamnya. Paket ahli seperti GregTech New Horizons membutuhkan 16 GB. Sisakan ruang untuk sistem operasi juga."
+        },
+        {
+          "q": "Apakah teman saya perlu versi modpack yang sama?",
+          "a": "Ya. Server menjalankan satu versi paket yang disematkan, dan klien dengan versi mod yang berbeda biasanya ditolak atau crash. Beri tahu teman versi yang ditampilkan di tab Ikhtisar server."
+        },
+        {
+          "q": "Bisakah teman bergabung tanpa port forwarding?",
+          "a": "Ya, jika mereka berada di jaringan Anda. Dari tempat lain, teruskan port game di router Anda atau gunakan layanan terowongan, yang juga berfungsi saat penyedia Anda memblokir port forwarding."
+        },
+        {
+          "q": "Apa yang terjadi saat paket mendapatkan pembaruan?",
+          "a": "Dengan kebijakan Beri Tahu Saya, halaman Pembaruan menunjukkannya. Menerapkannya memerlukan pencadangan, membangun kembali server, dan memantau boot pertama, dan pemulihan hanya dengan satu klik. Teman Anda kemudian juga memperbarui paket di launcher mereka."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "guideHome", "guidePi"],
+    "cta": {
+      "title": "Mainkan Paket Anda di Server Anda Sendiri",
+      "body": "Gratis, sumber terbuka, dan tanpa akun dengan siapa pun. Instal panelnya dan buat server dari paketnya di wizard."
+    }
+  },
+  "guidePi": {
+    "meta": {
+      "title": "Server Minecraft Raspberry Pi dengan panel web",
+      "description": "Siapkan server Minecraft Raspberry Pi dengan panel web gratis. Perangkat keras apa yang Anda butuhkan, cara menginstalnya dalam satu perintah, dan cara mengatur memori."
+    },
+    "eyebrow": "Panduan Raspberry Pi",
+    "title": "Jalankan server Minecraft Raspberry Pi dengan panel web sungguhan",
+    "intro": "Raspberry Pi 4 atau 5 adalah rumah yang senyap dan hemat daya untuk server Minecraft kecil. Berikut adalah apa yang perlu dibeli, cara menginstal panel dalam satu perintah, dan seberapa jauh Anda bisa mendorongnya.",
+    "pills": ["arm64", "linux", "docker", "paper", "fabric"],
+    "sections": [
+      {
+        "title": "Apa yang Anda Butuhkan",
+        "body": "Panel dan citra servernya diterbitkan untuk arm64, jadi Raspberry Pi 64-bit menjalankannya seperti mesin Linux lainnya. Memori adalah batasan yang paling penting: server vanilla atau Paper untuk hingga sepuluh pemain membutuhkan heap Java 2 GB pada mesin 4 GB, dan modpack ringan membutuhkan heap 4 GB pada mesin 6 GB. Itu menempatkan Pi 4 GB di ujung bawah dan Pi 8 GB di tengah yang nyaman.",
+        "points": [
+          "Raspberry Pi 4 atau 5 dengan memori 4 GB atau lebih. 8 GB jika Anda menginginkan mod.",
+          "Sistem operasi 64-bit, seperti Raspberry Pi OS 64-bit.",
+          "SSD melalui USB daripada kartu SD. Dunia dibaca dan ditulis terus-menerus, dan dunia pada penyimpanan lambat tersendat saat memuat chunk.",
+          "Koneksi jaringan kabel jika memungkinkan."
+        ]
+      },
+      {
+        "title": "Pilih Tipe Server yang Cocok untuk Pi",
+        "body": "Minecraft lebih peduli tentang seberapa cepat satu inti berjalan daripada tentang berapa banyak inti yang ada, dan inti Pi sederhana. Paper menjalankan game yang sama dengan vanilla dengan bertahun-tahun kerja kinerja, dan pemain masih bergabung dengan klien yang tidak dimodifikasi. Jika Anda menginginkan mod, Fabric dengan segelintir mod kinerja dan kualitas hidup lebih cocok daripada paket Forge besar. Paket 'kitchen-sink' dengan 200 mod bukanlah pekerjaan Pi.",
+        "pills": ["paper", "purpur", "fabric"],
+        "points": [
+          "Grup kecil, game tidak berubah: Paper.",
+          "Beberapa mod: Fabric.",
+          "Turunkan jarak pandang; menurunkan dari 12 menjadi 8 chunk menghemat banyak memori dan hampir tidak terlihat saat bermain."
+        ]
+      },
+      {
+        "title": "Awasi Servernya",
+        "body": "Tab Monitoring server menampilkan tick per detik dan milidetik per tick, sehingga Anda dapat melihat kapan Pi tertinggal. Meter memori menunjukkan apa yang sebenarnya digunakan oleh kontainer. Java mengklaim seluruh heapnya di muka secara default; jika Anda lebih suka melihat memori mengikuti penggunaan nyata, atur heap awal yang lebih kecil di kartu Resources server. Cadangan harian aktif sejak hari pertama.",
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Instal Panel di Raspberry Pi",
+      "items": [
+        {
+          "title": "Flash OS 64-bit",
+          "body": "Instal Raspberry Pi OS 64-bit (atau Linux 64-bit lainnya), boot dari SSD jika memungkinkan, dan perbarui sistem."
+        },
+        {
+          "title": "Jalankan Installer Satu Baris",
+          "body": "Installer di halaman Install menginstal Docker jika hilang, menyiapkan panel di /opt/msm, memulainya, dan menunggu hingga merespons. Ia mendeteksi arm64 sendiri."
+        },
+        {
+          "title": "Selesaikan Pengaturan di Peramban",
+          "body": "Buka alamat Pi di port 25564 dari komputer lain. Karena panel dapat dijangkau dari jaringan Anda, pengaturan akan meminta PIN 6 digit, yang dicetak oleh installer untuk Anda."
+        },
+        {
+          "title": "Buat Server Kecil",
+          "body": "Pilih Paper atau Fabric di wizard. Memori default menyesuaikan dengan RAM Pi; sisakan ruang untuk sistem dan layanan lainnya."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pertanyaan Raspberry Pi",
+      "items": [
+        {
+          "q": "Apakah Raspberry Pi 3 akan berfungsi?",
+          "a": "Tidak cocok. Pi 3 memiliki memori 1 GB, sementara bahkan server vanilla atau Paper kecil membutuhkan heap 2 GB pada mesin 4 GB. Gunakan Pi 4 atau 5 dengan 4 GB atau lebih."
+        },
+        {
+          "q": "Apakah saya memerlukan sistem operasi 64-bit?",
+          "a": "Ya. Citra panel dan installer dibuat untuk arm64 dan amd64, dan installer berhenti pada arsitektur lain."
+        },
+        {
+          "q": "Bisakah saya menjalankan modpack besar di Pi?",
+          "a": "Paket besar membutuhkan heap Java 6 hingga 8 GB dan total sekitar 10 GB memori, lebih dari yang dimiliki Pi mana pun. Tetap gunakan Paper atau pengaturan Fabric yang ringan."
+        },
+        {
+          "q": "Bagaimana cara pemain di luar rumah saya bergabung?",
+          "a": "Teruskan port game, 25565 secara default melalui TCP dan UDP, dari router Anda ke Pi. Jangan pernah meneruskan port panel atau port RCON; akses panel melalui VPN atau reverse proxy dengan TLS sebagai gantinya."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverPaper", "serverFabric"],
+    "cta": {
+      "title": "Ubah Pi Anda Menjadi Server",
+      "body": "Satu perintah menginstal semuanya. Panel ini gratis, sumber terbuka, dan berjalan sepenuhnya di Pi."
+    }
+  },
+  "guideHome": {
+    "meta": {
+      "title": "Host server Minecraft di rumah, langkah demi langkah",
+      "description": "Host server Minecraft di rumah pada Windows, macOS, atau Linux dengan panel web gratis. Instal, jaga kerahasiaan panel, dan biarkan teman bergabung dengan aman."
+    },
+    "eyebrow": "Panduan server rumah",
+    "title": "Host server Minecraft di rumah pada Windows, macOS, atau Linux",
+    "intro": "Komputer apa pun yang dapat menjalankan Docker dapat menghosting server Anda. Instal panel, jaga kerahasiaannya, buka hanya port game, dan teman-teman Anda dapat bergabung dari mana saja.",
+    "pills": ["windows", "macos", "linux", "docker", "nodejs"],
+    "sections": [
+      {
+        "title": "Dua Cara Instalasi",
+        "body": "Pada mesin Linux, penginstal satu baris melakukan semuanya: menginstal Docker jika hilang, menjalankan panel sebagai kontainer, dan memulainya lagi setelah reboot. Pada Windows dan macOS, jalankan panel langsung dengan Node.js 24 di samping Docker Desktop. Panel akan menampilkan pesan yang jelas dan berhenti jika Node.js Anda terlalu lama, dan jika Docker belum berjalan, Anda tetap mendapatkan panel lengkap; server akan mulai segera setelah Docker aktif.",
+        "pills": ["linux", "docker", "windows", "macos", "nodejs"],
+        "points": [
+          "Linux: penginstal, atau file compose di Portainer atau Dockge.",
+          "Windows: Docker Desktop dengan backend WSL2, lalu panel dari sumber.",
+          "macOS: Docker Desktop, lalu panel dari sumber.",
+          "Di bawah PM2 atau systemd, panel akan tetap aktif setelah reboot."
+        ]
+      },
+      {
+        "title": "Jaga Kerahasiaan Panel",
+        "body": "Pemain tidak pernah berinteraksi dengan panel. Mereka terhubung ke port game. Instalasi baru dari sumber hanya merespons di mesin tempat ia berjalan, di localhost port 25564. Untuk mengaksesnya dari komputer lain di rumah Anda, atur agar mendengarkan di jaringan Anda; pengaturan kemudian akan meminta PIN sekali pakai, sehingga orang asing yang mencapai port terlebih dahulu tidak dapat mengklaim akun admin. Jangan pernah meneruskan port panel ke internet. Untuk mengelola server dari luar rumah, gunakan VPN, terowongan SSH, atau reverse proxy dengan TLS.",
+        "points": [
+          "Hanya localhost secara default.",
+          "PIN pengaturan saat panel dapat dijangkau dari jaringan.",
+          "Autentikasi dua faktor untuk setiap akun."
+        ]
+      },
+      {
+        "title": "Biarkan Teman Bergabung",
+        "body": "Setiap server mendapatkan port game, dimulai dari 25565 dan seterusnya. Pada router Anda, teruskan port tersebut, melalui TCP dan UDP, ke komputer yang menjalankan server. Biarkan port konsol jarak jauh, 1000 di atas setiap port game, tertutup: panel mengaksesnya dari dalam kontainer dan tidak pernah membutuhkannya terbuka. Berikan pemain nama host yang Anda kontrol alih-alih alamat rumah Anda, sehingga perubahan alamat adalah perubahan DNS dan bukan pesan ke setiap pemain.",
+        "points": [
+          "Teruskan hanya port game, TCP dan UDP.",
+          "Biarkan RCON dan port panel tertutup.",
+          "Tab Overview menampilkan alamat yang akan dibagikan."
+        ],
+        "shot": "overview"
+      },
+      {
+        "title": "Buat Berperilaku Seperti Server",
+        "body": "Komputer rumah yang tidur akan mematikan server Anda, jadi matikan mode tidur pada mesin yang menghostingnya. Centang Start on Panel Boot di pengaturan server dan server akan kembali bersama panel. Auto-restart on crash akan mengembalikan server yang crash dengan jeda yang semakin lama di antara percobaan. Cadangan harian dijadwalkan untuk setiap server baru, dan jadwal dapat memulai ulang server pada jam-jam sepi.",
+        "shot": "schedules"
+      }
+    ],
+    "steps": {
+      "title": "Host Server Pertama Anda di Rumah",
+      "items": [
+        {
+          "title": "Instal Docker",
+          "body": "Docker Engine di Linux, atau Docker Desktop di Windows dan macOS. Di Windows, bagikan drive yang berisi panel dengan Docker Desktop."
+        },
+        {
+          "title": "Instal dan Buka Panel",
+          "body": "Ikuti halaman Instalasi untuk sistem Anda, lalu buka panel di peramban. Pengaturan akan memeriksa Docker, membuat akun admin Anda, dan menanyakan zona waktu Anda."
+        },
+        {
+          "title": "Buat Server",
+          "body": "Wizard akan menyarankan port gratis dan memori yang sesuai dengan mesin Anda. Pilih jenis server dan tekan buat."
+        },
+        {
+          "title": "Teruskan Port Game",
+          "body": "Teruskan port game server di router Anda, TCP dan UDP, dan kirimkan alamat dari tab Overview kepada teman."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pertanyaan Hosting Rumah",
+      "items": [
+        {
+          "q": "Bisakah saya host di PC yang sama tempat saya bermain?",
+          "a": "Ya, selama PC tersebut memiliki memori yang cukup untuk keduanya. Berikan server heap-nya ditambah ruang ekstra untuk Java, dan sisakan cukup untuk klien game. Server vanilla untuk beberapa teman membutuhkan sekitar 4 GB untuk dirinya sendiri."
+        },
+        {
+          "q": "Mengapa teman di Wi-Fi saya bisa bergabung tetapi teman di luar tidak bisa?",
+          "a": "Port game tidak diteruskan di router Anda, atau firewall memblokirnya. Teruskan port game server melalui TCP dan UDP ke mesin hosting, dan izinkan di firewall mesin."
+        },
+        {
+          "q": "Bisakah saya menjalankan image Docker panel di Windows atau macOS?",
+          "a": "Instalasi kontainer ditujukan untuk host Linux. Di Windows dan macOS, jalankan panel dari sumber dengan Node.js 24 di samping Docker Desktop, yang berfungsi sama setelah berjalan."
+        }
+      ]
+    },
+    "related": ["guidePi", "guideMulti", "serverVanilla"],
+    "cta": {
+      "title": "Mulai Hosting di Rumah",
+      "body": "Gratis, sumber terbuka, dan tanpa akun dengan siapa pun. Server Anda tersimpan di satu folder di mesin Anda sendiri."
+    }
+  },
+  "guideHosting": {
+    "meta": {
+      "title": "Tinggalkan hosting Minecraft berbayar: pindahkan dunia Anda",
+      "description": "Pindahkan server Minecraft dari host berbayar: ambil file yang tepat, bawa dunia dan plugin ke panel Anda sendiri, simpan setiap inventaris, dan pertahankan alamatnya."
+    },
+    "eyebrow": "Panduan Migrasi",
+    "title": "Pindahkan server Minecraft Anda dari hosting berbayar",
+    "intro": "Bawa pulang dunia, plugin, dan mod Anda dengan setiap inventaris utuh. Inventarisir dulu, salin seluruh folder server, bangun kembali di panel Anda sendiri, dan baru arahkan pemain ke sana.",
+    "pills": ["docker", "paper", "fabric", "forge", "packs-curseforge", "packs-modrinth"],
+    "sections": [
+      {
+        "title": "Inventarisir Sebelum Mengunduh",
+        "body": "Tulis ini selagi server lama masih berjalan. Setiap satu dari ini telah mengakhiri migrasi dengan buruk ketika diasumsikan daripada diperiksa. Mode online paling penting: jika server lama berjalan tanpa mode ini dan yang baru berjalan dengan mode ini, atau sebaliknya, setiap pemain akan mendapatkan identitas yang berbeda dan inventaris baru yang kosong.",
+        "points": [
+          "Versi Minecraft dan loader yang tepat. 1.20.1 NeoForge bukan 1.20.1 Forge.",
+          "Daftar mod atau plugin, beserta versinya.",
+          "Nama level dari server.properties. Folder dunia seringkali tidak bernama world.",
+          "Mode online, aktif atau nonaktif.",
+          "Apa pun yang berada di luar folder server, seperti database plugin."
+        ]
+      },
+      {
+        "title": "Ambil Seluruh Folder, Bukan Hanya Dunia",
+        "body": "Gunakan manajer file host atau opsi unduh dan ambil seluruh direktori server. Dapatkan file jar plugin dan mod itu sendiri, bukan daftar nama: versi itu penting, dan 'terbaru' adalah file yang berbeda bulan depan. Unduh cadangan Anda juga. Cadangan yang hanya ada di dalam panel yang Anda tinggalkan bukanlah cadangan yang Anda miliki. Hentikan server dengan benar sebelum unduhan terakhir agar game menyiram dunia ke disk."
+      },
+      {
+        "title": "Bangun Kembali di Panel Anda Sendiri",
+        "body": "Buat server dengan tipe yang sama dan versi yang sama persis. Kemudian masukkan bagian-bagiannya. Halaman Dunia menerima dunia Anda sebagai arsip .zip atau .tar, menemukan dunia di dalamnya secara otomatis, dan menginstalnya ke server, mencadangkan yang saat ini terlebih dahulu. Di server plugin atau mod, impor zip file jar Anda: masing-masing diidentifikasi, dinilai terhadap server, dan diinstal jika cocok. Konfigurasi dan sisanya dimasukkan melalui manajer file, yang mengedit dan mengunggah langsung di browser. Jika server lama menjalankan paket yang diterbitkan, instal paket yang sama pada versi yang sama sebagai gantinya.",
+        "pills": ["zip", "mrpack", "cf-export"],
+        "points": [
+          "Unggah Dunia menemukan dunia di dalam arsip Anda.",
+          "Impor Zip mengidentifikasi setiap file jar dan memeriksanya terhadap server.",
+          "Manajer file menangani file konfigurasi, daftar putih, dan ops."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Pertahankan Alamat, Pertahankan Pemain",
+        "body": "Jika pemain terhubung ke alamat IP kosong, setiap gerakan membuat mereka mengedit daftar server mereka, dan beberapa tidak pernah melakukannya. Gunakan nama host yang Anda kontrol dan arahkan ke mesin baru Anda. Perpindahan kemudian menjadi perubahan DNS. Turunkan waktu hidup (TTL) rekaman sehari sebelum peralihan agar perubahan menyebar dengan cepat. Rekaman SRV memungkinkan pemain mengetik domain kosong bahkan ketika server berjalan pada port yang berbeda, hal yang sama dilakukan host untuk memberikan alamat bermain."
+      }
+    ],
+    "steps": {
+      "title": "Peralihan, Berurutan",
+      "items": [
+        {
+          "title": "Uji pada Port Pribadi",
+          "body": "Mulai server baru pada port yang tidak diketahui pemain, bergabunglah sendiri, dan periksa basis yang Anda kenal, inventaris Anda, dan bahwa setiap plugin atau mod dimuat."
+        },
+        {
+          "title": "Salinan Terakhir",
+          "body": "Umumkan restart, hentikan server lama dengan benar, unduh dunia sekali lagi, dan instal salinan itu agar perubahan terbaru ikut terbawa."
+        },
+        {
+          "title": "Ubah Port dan Alamat",
+          "body": "Pindahkan server ke port publiknya dengan kartu Game Port, lalu arahkan nama host Anda ke mesin baru."
+        },
+        {
+          "title": "Pertahankan yang Lama untuk Sementara Waktu",
+          "body": "Batalkan paket lama hanya setelah beberapa hari. Biarkan tetap berhenti, agar tidak ada yang membangun di salinan yang ditinggalkan."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pertanyaan Migrasi",
+      "items": [
+        {
+          "q": "Apakah pemain akan mempertahankan inventaris mereka?",
+          "a": "Ya, selama mode online sama di kedua server dan Anda memindahkan seluruh folder dunia. Data pemain berada di dalam dunia, diberi kunci berdasarkan identitas setiap pemain, dan identitas itu berubah jika mode online berubah."
+        },
+        {
+          "q": "Host saya hanya mengizinkan saya mengunduh dunia. Apakah itu cukup?",
+          "a": "Untuk vanilla, sebagian besar. Untuk server plugin atau mod, Anda juga memerlukan file jar pada versi yang tepat, karena dunia tidak akan dimuat dengan benar tanpa mod yang membuatnya. Minta direktori server lengkap dari host Anda."
+        },
+        {
+          "q": "Apa yang digantikan oleh panel dari panel kontrol host saya?",
+          "a": "Konsol, manajer file, cadangan, jadwal, manajemen pemain, instalasi plugin dan mod, serta instalasi modpack, ditambah hal-hal yang sering dikenakan biaya tambahan oleh host, seperti lebih banyak server atau slot cadangan. Batasannya adalah perangkat keras Anda sendiri."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverModpacks", "guideMulti"],
+    "cta": {
+      "title": "Bawa Server Anda Pulang",
+      "body": "Instal panel, buat server yang cocok dengan server lama Anda, dan unggah dunia Anda. Gratis, sumber terbuka, dan milik Anda untuk disimpan."
+    }
+  },
+  "guideMulti": {
+    "meta": {
+      "title": "Jalankan beberapa server Minecraft di satu mesin",
+      "description": "Jalankan beberapa server Minecraft di satu mesin: port otomatis, batas memori, CPU, dan disk per server, mod bersama, dan satu dasbor untuk seluruh armada."
+    },
+    "eyebrow": "Panduan multi-server",
+    "title": "Jalankan beberapa server Minecraft di satu mesin, dengan rapi",
+    "intro": "Satu dunia survival, satu server creative build, dan satu modpack untuk akhir pekan, semuanya di mesin yang sama. Masing-masing mendapatkan containernya sendiri, portnya sendiri, dan batasannya sendiri, dan Anda melihat semuanya di satu dasbor.",
+    "pills": ["docker", "paper", "fabric", "forge", "vanilla"],
+    "sections": [
+      {
+        "title": "Port Diatur untuk Anda",
+        "body": "Port game dibagikan berdasarkan yang pertama bebas, dihitung naik dari 25565, dengan konsol jarak jauh 1000 di atas masing-masing. Sepuluh server menggunakan port game 25565 hingga 25574 dan menjaga RCON di bloknya sendiri, sehingga Anda dapat membuka rentang game yang berdekatan di firewall Anda tanpa pernah mengekspos RCON. Sebuah port dianggap terpakai jika server lain menggunakannya, wadah Docker apa pun di mesin menerbitkannya, atau sistem melaporkannya sibuk. Pindahkan server nanti dengan kartu Game Port, dan panel memeriksa port baru sebelum menyimpannya.",
+        "points": [
+          "Satu pasangan game dan RCON per server, ditetapkan secara otomatis.",
+          "Gunakan Next Free Port untuk memilih yang terendah yang bebas.",
+          "Buka hanya rentang game. RCON tetap tertutup."
+        ]
+      },
+      {
+        "title": "Batas Agar Satu Server Tidak Menguras yang Lain",
+        "body": "Setiap server adalah wadah Docker-nya sendiri dengan batas CPU, heap Java, dan batas memori keras di atasnya. Docker tidak dapat membatasi penggunaan disk sebuah folder, jadi panel melakukannya: setiap server memiliki kuota disk, dan tindakan yang akan mendorong server melewatinya, seperti menginstal mod atau mengunggah dunia, diblokir sampai ruang dibebaskan. Aktifkan Stop the Server When Over Quota dan server yang tumbuh lebih dari 10 persen di atas kuotanya akan dihentikan dan dicatat dalam riwayatnya.",
+        "points": [
+          "Batas CPU, heap, dan memori per server.",
+          "Kuota disk yang diberlakukan oleh panel.",
+          "Default untuk server baru menyesuaikan dengan memori mesin."
+        ],
+        "shot": "storage"
+      },
+      {
+        "title": "Bagikan Apa yang Bisa Dibagikan",
+        "body": "Mod yang Anda tambahkan disimpan sekali di pustaka bersama, dideduplikasi berdasarkan sha256, dan ditautkan ke setiap server yang menggunakannya, sehingga sepuluh server yang menjalankan mod yang sama tidak menyimpannya sepuluh kali. Dunia masuk ke pustaka dunia yang dapat diinstal oleh server mana pun. Cetak biru menangkap seluruh resep server sebagai satu file .mcserver.zip, dan Clone menggunakannya untuk membuat server identik dengan port baru.",
+        "shot": "blueprints"
+      },
+      {
+        "title": "Satu Tampilan Armada",
+        "body": "Dasbor menampilkan setiap server secara sekilas: status, memori, pemain online, pembaruan yang menunggu, dan aktivitas terbaru. Tag mengatur daftar server. Jadwal global menjalankan restart, pencadangan, atau perintah di seluruh server, dan halaman Pembaruan mengumpulkan apa yang sudah usang di seluruh armada. Izin per server memungkinkan teman menjalankan server mereka sendiri di panel tanpa melihat server Anda.",
+        "shot": "dashboard"
+      }
+    ],
+    "steps": {
+      "title": "Rencanakan Mesin Multi-Server",
+      "items": [
+        {
+          "title": "Jumlahkan Memori",
+          "body": "Jumlahkan heap Java setiap server dan ruang cadangannya, lalu sisakan ruang untuk sistem. Server yang dihentikan tidak menggunakan memori, jadi paket akhir pekan tidak memakan biaya apa pun di hari kerja."
+        },
+        {
+          "title": "Atur Default yang Masuk Akal",
+          "body": "Admin mengatur heap, kuota disk, dan batas CPU yang dimulai oleh setiap server baru di bawah Pengaturan, Default untuk Server Baru."
+        },
+        {
+          "title": "Buka Satu Rentang Port",
+          "body": "Buka rentang port game yang ukurannya sesuai dengan server yang Anda rencanakan untuk dijalankan, melalui TCP dan UDP. Biarkan blok RCON tertutup."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pertanyaan Multi-Server",
+      "items": [
+        {
+          "q": "Berapa banyak server yang dapat dijalankan satu mesin?",
+          "a": "Memori yang menentukan pertama kali. Jumlahkan heap setiap server yang berjalan dan ruang cadangannya: server vanilla atau Paper kecil membutuhkan sekitar 4 GB total, modpack ringan sekitar 6 GB. Server yang dihentikan tidak dikenakan biaya apa pun."
+        },
+        {
+          "q": "Bisakah setiap server memiliki adminnya sendiri?",
+          "a": "Ya. Izin per server memberikan tampilan, kekuatan, konsol, pemain, konten, pencadangan, file, pengaturan, dan hapus secara terpisah untuk setiap server, dan server dapat disembunyikan dari pengguna sepenuhnya."
+        },
+        {
+          "q": "Bisakah pemain beralih antar server saya dalam game?",
+          "a": "Tidak melalui panel itu sendiri. Setiap server memiliki alamat dan portnya sendiri. Menautkan server agar pemain berpindah di antara mereka dalam game memerlukan server proxy, yang akan Anda jalankan bersama mereka."
+        }
+      ]
+    },
+    "related": ["guideHome", "serversHub", "guideHosting"],
+    "cta": {
+      "title": "Jalankan Seluruh Armada Anda dari Satu Tempat",
+      "body": "Instal panel sekali dan tambahkan server sesuai kebutuhan Anda. Tidak ada biaya per server dan tidak ada batasan instans."
+    }
+  },
+  "compareHub": {
+    "meta": {
+      "title": "Perbandingan Panel Server Minecraft: Pterodactyl, AMP, Crafty",
+      "description": "Perbandingan adil panel server Minecraft gratis dan berbayar: Pterodactyl, Crafty Controller, AMP, MCSManager dan PufferPanel, dibandingkan dengan Minecraft Server Manager."
+    },
+    "eyebrow": "Bandingkan panel",
+    "title": "Perbandingan Panel Server Minecraft",
+    "intro": "Beberapa panel bagus dapat menjalankan server Minecraft. Inilah perbedaan Minecraft Server Manager dari masing-masing panel tersebut, beserta kasus di mana panel lain adalah pilihan yang lebih baik.",
+    "cards": {
+      "comparePtero": "Panel multi-game gratis yang dibuat untuk perusahaan hosting, dengan daemon terpisah di setiap mesin. Bandingkan upaya penyiapan dan fitur Minecraft.",
+      "compareCrafty": "Panel Minecraft gratis yang ditulis dalam Python yang menjalankan server sebagai proses biasa. Bandingkan bagaimana server diisolasi dan bagaimana modpack masuk.",
+      "compareAmp": "Panel komersial untuk ratusan game, dijual dalam tingkatan lisensi. Bandingkan harga, batasan instance, dan kedalaman Minecraft.",
+      "compareMcsm": "Panel terdistribusi gratis untuk game Minecraft dan Steam. Bandingkan arsitektur, penggunaan Docker, dan penanganan modpack.",
+      "comparePuffer": "Panel gratis dan ringan untuk banyak game dan banyak mesin, dengan server sebagai proses atau kontainer. Bandingkan isolasi, node, dan kedalaman Minecraft."
+    },
+    "sections": [
+      {
+        "title": "Bagaimana Perbandingan Ini Ditulis",
+        "body": "Setiap fakta tentang panel lain berasal dari situs web, dokumentasi, atau repositori proyek itu sendiri, dan setiap halaman menyatakan kapan itu diperiksa. Di mana kami tidak dapat mengonfirmasi sesuatu, kami menghapusnya daripada menebak. Jika suatu fakta telah berubah, beri tahu kami di Discord atau GitHub dan kami akan memperbaiki halaman tersebut.",
+        "points": [
+          "Setiap halaman mencantumkan apa yang dilakukan panel lain dengan lebih baik.",
+          "Harga dan versi dikutip dengan tanggal pemeriksaan.",
+          "Minecraft Server Manager tidak berafiliasi dengan proyek-proyek ini. Nama mereka adalah milik pemiliknya."
+        ]
+      },
+      {
+        "title": "Untuk Apa Minecraft Server Manager Dibangun",
+        "body": "Satu pemilik, atau tim kecil, menjalankan server Minecraft Java di mesin mereka sendiri. Setiap server adalah kontainer Docker dengan batasan sumber daya, seluruh panel berada dalam satu folder, dan bagian Minecraft yang rumit di tempat lain sudah terpasang: modpack yang disematkan dengan pemulihan, lima registri mod dalam satu pencarian, forensik kerusakan, peta langsung sekali klik, dan cetak biru portabel.",
+        "pills": ["paper", "purpur", "fabric", "forge", "neoforge", "quilt", "vanilla"]
+      }
+    ],
+    "faq": {
+      "title": "Pertanyaan Tentang Memilih Panel",
+      "items": [
+        {
+          "q": "Panel mana yang harus saya pilih untuk satu server Minecraft di rumah?",
+          "a": "Jika Anda hanya menjalankan Minecraft Java dan menginginkan modpack, cadangan, dan peta langsung tanpa merakitnya sendiri, Minecraft Server Manager dibuat untuk itu. Jika Anda juga meng-host game lain atau mengelola banyak mesin, panel multi-game seperti Pterodactyl, MCSManager, atau AMP lebih cocok."
+        },
+        {
+          "q": "Apakah Minecraft Server Manager benar-benar gratis?",
+          "a": "Ya. Lisensinya MIT, tidak memiliki tingkatan berbayar, dan tidak menggunakan layanan berbayar. Unduhan CurseForge memerlukan kunci API CurseForge, yang Anda tambahkan di Pengaturan."
+        },
+        {
+          "q": "Bisakah saya memindahkan dunia saya yang sudah ada ke Minecraft Server Manager?",
+          "a": "Ya. Unggah dunia di halaman Dunia dan instal ke server baru, atau impor ekspor modpack atau zip jar mod saat Anda membuat server."
+        }
+      ]
+    },
+    "related": ["serversHub", "guideHosting"],
+    "cta": {
+      "title": "Coba di Mesin Anda Sendiri",
+      "body": "Instal panel dalam tiga langkah dan buat server pertama Anda dari wizard. Seluruh panel Anda tetap berada dalam satu folder yang dapat Anda salin ke mana saja."
+    },
+    "table": {
+      "title": "Semua Panel Sekilas",
+      "columns": [
+        "",
+        "Minecraft Server Manager",
+        "Pterodactyl",
+        "Crafty Controller",
+        "AMP",
+        "MCSManager",
+        "PufferPanel"
+      ],
+      "rows": [
+        {
+          "label": "Harga",
+          "values": ["Gratis.", "Gratis.", "Gratis.", "Tingkatan lisensi berbayar.", "Gratis.", "Gratis."]
+        },
+        {
+          "label": "Lisensi",
+          "values": ["MIT.", "MIT.", "GPL-3.0.", "Komersial, sumber tertutup.", "Apache-2.0.", "Apache-2.0."]
+        },
+        {
+          "label": "Game",
+          "values": [
+            "Minecraft Java Edition.",
+            "Banyak, melalui telur.",
+            "Minecraft Java dan Bedrock.",
+            "Lebih dari 200.",
+            "Game Minecraft dan Steam.",
+            "Banyak, melalui templat."
+          ]
+        },
+        {
+          "label": "Server game berjalan sebagai",
+          "values": [
+            "Kontainer Docker.",
+            "Kontainer Docker.",
+            "Proses di host.",
+            "Proses, atau kontainer Docker setelah diaktifkan.",
+            "Kontainer atau proses.",
+            "Proses atau kontainer."
+          ]
+        },
+        {
+          "label": "Beberapa mesin",
+          "values": [
+            "Tidak. Satu panel per mesin.",
+            "Ya, dengan node Wings.",
+            "Tidak ada node jarak jauh dalam dokumentasinya.",
+            "Lisensi Profesional ke atas.",
+            "Ya, dengan daemon.",
+            "Ya, dengan node."
+          ]
+        },
+        {
+          "label": "Sistem host",
+          "values": [
+            "Linux, Windows, macOS.",
+            "Linux.",
+            "Linux, Windows, macOS.",
+            "Linux, Windows.",
+            "Linux, Windows, macOS.",
+            "Linux."
+          ]
+        }
+      ],
+      "note": "Fakta diperiksa terhadap dokumentasi masing-masing proyek, Oktober dan November 2026. Setiap halaman perbandingan berisi detailnya."
+    }
+  },
+  "comparePtero": {
+    "meta": {
+      "title": "Alternatif Pterodactyl untuk Server Minecraft",
+      "description": "Minecraft Server Manager dibandingkan dengan Pterodactyl: satu proses dan satu folder alih-alih panel, daemon, database, dan Redis, dengan fitur Minecraft bawaan."
+    },
+    "eyebrow": "Alternatif Pterodactyl",
+    "title": "Alternatif Pterodactyl yang Dibuat Khusus untuk Minecraft",
+    "intro": "Pterodactyl adalah panel gratis dan sumber terbuka yang menjalankan banyak game untuk banyak mesin. Minecraft Server Manager melakukan satu game di satu mesin, sehingga membutuhkan jauh lebih sedikit untuk disiapkan dan dilengkapi dengan alat Minecraft bawaan.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Perbandingan Langsung",
+      "columns": ["", "Minecraft Server Manager", "Pterodactyl"],
+      "rows": [
+        {
+          "label": "Harga dan lisensi",
+          "values": ["Gratis, MIT.", "Gratis, MIT."]
+        },
+        {
+          "label": "Apa yang Anda instal",
+          "values": [
+            "Satu proses Node.js, atau satu kontainer Docker.",
+            "Panel PHP (Laravel) dengan frontend React, ditambah daemon Wings yang ditulis dalam Go di setiap node."
+          ]
+        },
+        {
+          "label": "Database dan cache",
+          "values": [
+            "File SQLite bawaan di dalam folder data. Tidak ada lagi yang perlu dijalankan.",
+            "MySQL 5.7.22+ atau MariaDB 10.2+, Redis, server web, dan Composer."
+          ]
+        },
+        {
+          "label": "Server game berjalan sebagai",
+          "values": ["Kontainer Docker dengan batasan sumber daya.", "Kontainer Docker terisolasi (Docker diperlukan)."]
+        },
+        {
+          "label": "Sistem host",
+          "values": [
+            "Linux, Windows, dan macOS. Image dibuat untuk amd64 dan arm64.",
+            "Hanya Linux: rilis keluarga Ubuntu, Debian, dan RHEL. Wings tidak berjalan di Windows."
+          ]
+        },
+        {
+          "label": "Mesin yang dikelola",
+          "values": [
+            "Satu. Panel dan Docker berjalan di host yang sama.",
+            "Banyak. Satu panel mengontrol node Wings di banyak mesin."
+          ]
+        },
+        {
+          "label": "Game",
+          "values": [
+            "Minecraft Java Edition. Pemain Bedrock dapat bergabung melalui Geyser.",
+            "Banyak game melalui \"egg\", termasuk Minecraft, Rust, Terraria, dan ARK."
+          ]
+        }
+      ],
+      "note": "Fakta diperiksa Oktober 2026 terhadap dokumentasi masing-masing proyek."
+    },
+    "sections": [
+      {
+        "title": "Penyiapan Tanpa Tumpukan untuk Dirakit",
+        "body": "Dokumentasi Pterodactyl sendiri menyebutnya sebagai sistem yang sangat kompleks dengan banyak dependensi: PHP, server database, Redis, server web, worker antrean, dan Wings di setiap node. Desain tersebut yang memungkinkannya melayani perusahaan hosting. Minecraft Server Manager adalah satu proses yang berbicara ke soket Docker Anda dan menyimpan semuanya, termasuk database, dalam satu folder. Di Linux, satu skrip penginstal menyiapkannya, dan menginstal Docker jika hilang.",
+        "points": [
+          "Tidak ada daemon terpisah, server database, atau cache yang perlu terus berjalan.",
+          "Salin folder data untuk memindahkan seluruh panel ke mesin baru.",
+          "Berjalan secara native di Windows dan macOS bersama Docker Desktop."
+        ],
+        "pills": ["docker", "portainer", "dockge", "pm2"]
+      },
+      {
+        "title": "Di Mana Minecraft Server Manager Lebih Unggul untuk Minecraft",
+        "body": "Karena hanya menjalankan Minecraft, panel mengetahui apa itu modpack, mod jar, dan laporan crash. Alat yang digunakan pemilik Minecraft adalah bagian dari panel, bukan sesuatu yang perlu dicari dan dihubungkan.",
+        "points": [
+          "Modpack disematkan ke versi yang tepat, dan peningkatan mengambil cadangan terlebih dahulu dan mengembalikan dalam satu klik.",
+          "Satu pencarian di lima registri, difilter ke loader server dan versi Minecraft.",
+          "Setiap unduhan diverifikasi checksum sebelum mencapai server.",
+          "Kerusakan terdeteksi, diurai, dan dapat dibagikan ke mclo.gs dalam satu klik.",
+          "Peta langsung BlueMap satu klik, di balik login panel itu sendiri.",
+          "Setiap pengaturan image itzg dijelaskan dalam bahasa Inggris sederhana di wizard."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Kapan Pterodactyl Menjadi Pilihan yang Lebih Baik",
+        "body": "Pterodactyl matang, dikelola secara aktif, dan didukung oleh perusahaan hosting. Jika salah satu dari ini menggambarkan Anda, itu adalah pilihan yang lebih kuat.",
+        "points": [
+          "Anda menjalankan server di beberapa mesin dan menginginkan satu panel untuk semuanya.",
+          "Anda menghosting game selain Minecraft.",
+          "Anda menjual atau berbagi hosting dengan banyak pelanggan terpisah dan membutuhkan skala tersebut.",
+          "Anda sudah menjalankan Pterodactyl dan egg-nya mencakup apa yang Anda butuhkan."
+        ]
+      },
+      {
+        "title": "Catatan tentang Pelican",
+        "body": "Pelican Panel adalah fork dari Pterodactyl, dilisensikan AGPL-3.0 dan masih dalam tahap rilis kandidat saat halaman ini diperiksa. Ini mempertahankan desain panel ditambah Wings, menambahkan SQLite dan PostgreSQL sebagai opsi database, dan memiliki hub plugin di mana plugin pihak ketiga menelusuri modpack CurseForge dan Modrinth."
+      }
+    ],
+    "faq": {
+      "title": "Pertanyaan Pterodactyl",
+      "items": [
+        {
+          "q": "Bisakah saya memindahkan server dari Pterodactyl ke Minecraft Server Manager?",
+          "a": "Ya. Unduh dunia server dari Pterodactyl, buat server dengan tipe dan versi Minecraft yang sama di Minecraft Server Manager, lalu unggah dunia di halaman Dunia dan instal ke server tersebut. Untuk server yang dimodifikasi, impor paket atau zip mod jar Anda saat Anda membuatnya."
+        },
+        {
+          "q": "Apakah Minecraft Server Manager memerlukan server database seperti MySQL?",
+          "a": "Tidak. Ia menggunakan mesin SQLite yang terpasang di Node.js 24 dan menyimpan file database di folder data bersama dengan yang lainnya."
+        },
+        {
+          "q": "Bisakah Minecraft Server Manager mengelola beberapa mesin seperti node Wings?",
+          "a": "Tidak. Ia mengelola daemon Docker di mesin tempat ia berjalan. Untuk beberapa mesin, jalankan satu panel di masing-masing, atau pilih panel multi-node."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareMcsm", "guideMulti"],
+    "cta": {
+      "title": "Jalankan Minecraft Tanpa Tumpukan Tambahan",
+      "body": "Instal Minecraft Server Manager dalam tiga langkah dan buat server pertama Anda di wizard."
+    }
+  },
+  "compareCrafty": {
+    "meta": {
+      "title": "Crafty Controller vs Minecraft Server Manager",
+      "description": "Crafty Controller dan Minecraft Server Manager adalah panel Minecraft gratis. Bandingkan bagaimana server diisolasi, cara instalasi modpack, dan di mana posisi masing-masing."
+    },
+    "eyebrow": "Alternatif Crafty Controller",
+    "title": "Crafty Controller vs Minecraft Server Manager",
+    "intro": "Keduanya adalah panel gratis yang di-host sendiri dan dibuat untuk Minecraft. Crafty menjalankan setiap server sebagai proses di host, ditulis dalam Python. Minecraft Server Manager menjalankan setiap server dalam kontainer Docker-nya sendiri dan menyertakan alat instalasi modpack, pencarian mod, dan penanganan crash ke dalam panel.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Perbandingan Langsung",
+      "columns": ["", "Minecraft Server Manager", "Crafty Controller"],
+      "rows": [
+        {
+          "label": "Harga dan lisensi",
+          "values": ["Gratis, MIT.", "Gratis, GPL-3.0."]
+        },
+        {
+          "label": "Ditulis dalam",
+          "values": ["Node.js 24.", "Python 3.10 hingga 3.12."]
+        },
+        {
+          "label": "Server game berjalan sebagai",
+          "values": [
+            "Kontainer Docker dengan batasan sumber daya.",
+            "Proses di host. Panel itu sendiri juga dapat berjalan di Docker."
+          ]
+        },
+        {
+          "label": "Docker",
+          "values": ["Diperlukan di host.", "Opsional."]
+        },
+        {
+          "label": "Sistem host",
+          "values": [
+            "Linux, Windows, dan macOS. Image dibuat untuk amd64 dan arm64.",
+            "Panduan Linux, Windows, macOS, dan Raspberry Pi OS, ditambah Docker, UnRAID, dan CasaOS. Image-nya mencakup amd64 dan arm64."
+          ]
+        },
+        {
+          "label": "Edisi",
+          "values": [
+            "Java Edition. Pemain Bedrock dapat bergabung melalui Geyser.",
+            "Java Edition dari 1.8 hingga versi terbaru, dan Bedrock."
+          ]
+        },
+        {
+          "label": "Modpack",
+          "values": [
+            "Paket CurseForge, Modrinth, FTB, dan GT New Horizons dari wizard, disematkan ke versi yang tepat.",
+            "FAQ-nya menjelaskan impor paket sebagai zip, atau paket Modrinth melalui mrpack-install."
+          ]
+        },
+        {
+          "label": "Cadangan, jadwal, peran, 2FA",
+          "values": [
+            "Ya: retensi per server, jadwal cron, tiga peran dengan izin per server, TOTP.",
+            "Ya: manajer cadangan, penjadwal tugas, peran pengguna, dan TOTP ditambah passkey."
+          ]
+        }
+      ],
+      "note": "Fakta diperiksa Oktober 2026 terhadap dokumentasi masing-masing proyek."
+    },
+    "sections": [
+      {
+        "title": "Kontainer, Bukan Proses Host",
+        "body": "Di Minecraft Server Manager, setiap server adalah kontainer Docker-nya sendiri pada image Minecraft itzg yang terkenal, dengan batasan memori dan CPU sendiri serta kuota disk yang diberlakukan oleh panel. Satu server tidak dapat menghabiskan memori mesin atau mengisi disknya, dan membangun ulang server tidak pernah memengaruhi server lain. Konsekuensinya adalah Docker harus diinstal di host.",
+        "points": [
+          "Batasan memori, CPU, dan disk per server.",
+          "Penghentian RCON yang baik sebelum kontainer berhenti, dan deteksi crash dengan penundaan.",
+          "Java dipilih per server oleh image, sehingga versi Minecraft yang berbeda dapat berjalan bersamaan."
+        ],
+        "pills": ["docker", "amd64", "arm64"],
+        "shot": "overview"
+      },
+      {
+        "title": "Keunggulan Minecraft Server Manager",
+        "body": "Wizard menginstal modpack dan mod untuk Anda dan menjaganya tetap tersemat, sehingga restart tidak akan pernah memperbarui paket secara diam-diam.",
+        "points": [
+          "Instal paket CurseForge, Modrinth, FTB, dan GT New Horizons dari wizard.",
+          "Impor .mrpack Modrinth, ekspor CurseForge, atau zip jar Anda sendiri, dengan setiap jar teridentifikasi.",
+          "Cari lima registri sekaligus, difilter berdasarkan loader dan versi server.",
+          "Pembaruan mencadangkan terlebih dahulu dan mengembalikan dalam satu klik.",
+          "Peta langsung BlueMap satu klik dan berbagi crash mclo.gs.",
+          "Blueprint portabel: ekspor resep server dan dapatkan server yang sama di mana saja."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"]
+      },
+      {
+        "title": "Kapan Crafty Controller Lebih Baik",
+        "body": "Crafty matang, dikelola secara aktif, dan berjalan di lebih banyak tempat tanpa Docker.",
+        "points": [
+          "Anda ingin menjalankan server tanpa menginstal Docker, misalnya langsung di Windows, macOS, atau Raspberry Pi.",
+          "Anda menjalankan Bedrock Dedicated Server itu sendiri, bukan hanya Java dengan Geyser.",
+          "Anda ingin masuk menggunakan passkey."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Pertanyaan Crafty Controller",
+      "items": [
+        {
+          "q": "Bisakah saya memindahkan server Crafty saya ke Minecraft Server Manager?",
+          "a": "Ya. Buat server dengan tipe dan versi Minecraft yang sama, lalu unggah dunia sebagai zip di halaman Worlds dan instal ke server tersebut. Untuk server yang dimodifikasi, impor paket Anda atau zip jar mod saat Anda membuatnya."
+        },
+        {
+          "q": "Apakah Minecraft Server Manager berjalan di Raspberry Pi?",
+          "a": "Ya, pada OS 64-bit dengan Docker. Image panel dipublikasikan untuk arm64 serta amd64."
+        },
+        {
+          "q": "Mengapa Minecraft Server Manager memerlukan Docker?",
+          "a": "Setiap server berjalan dalam kontainernya sendiri, yang merupakan cara ia mendapatkan batasan sumber daya, pembangunan ulang yang bersih, dan versi Java yang tepat untuk setiap versi Minecraft."
+        }
+      ]
+    },
+    "related": ["compareHub", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Lihat Sendiri dengan Server Anda",
+      "body": "Instal panel dalam tiga langkah, lalu buat server dari modpack di wizard."
+    }
+  },
+  "compareAmp": {
+    "meta": {
+      "title": "Alternatif AMP Gratis untuk Server Minecraft",
+      "description": "Minecraft Server Manager dibandingkan dengan AMP dari CubeCoders: panel Minecraft gratis berlisensi MIT tanpa batasan instance, dibandingkan dengan panel multi-game komersial."
+    },
+    "eyebrow": "Alternatif AMP",
+    "title": "Alternatif AMP Gratis untuk Minecraft",
+    "intro": "AMP dari CubeCoders adalah panel komersial untuk banyak sekali game, dijual dalam tingkatan lisensi. Minecraft Server Manager gratis dan sumber terbuka, hanya menjalankan Minecraft, dan tidak memiliki batasan berapa banyak server yang dapat Anda buat.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Perbandingan Langsung",
+      "columns": ["", "Minecraft Server Manager", "AMP"],
+      "rows": [
+        {
+          "label": "Harga",
+          "values": [
+            "Gratis. Tanpa tingkatan.",
+            "Standard £7.50 / $10, Professional £15 / $30, Advanced £30 / $40, Enterprise dengan langganan variabel."
+          ]
+        },
+        {
+          "label": "Lisensi dan sumber",
+          "values": [
+            "MIT, sumber di GitHub.",
+            "Komersial dan sumber tertutup. Repositori GitHub publiknya berisi isu dan dokumentasi."
+          ]
+        },
+        {
+          "label": "Server yang dapat Anda buat",
+          "values": [
+            "Tidak ada batasan selain perangkat keras Anda.",
+            "5 instance pada Standard, 15 pada Professional, 50 pada Advanced."
+          ]
+        },
+        {
+          "label": "Pengguna panel",
+          "values": [
+            "Tidak terbatas, dengan peran admin, operator, dan penampil.",
+            "3 pada Standard, tidak terbatas mulai dari Professional."
+          ]
+        },
+        {
+          "label": "Penggunaan komersial",
+          "values": ["Diizinkan oleh lisensi MIT.", "Hanya lisensi Enterprise."]
+        },
+        {
+          "label": "Beberapa mesin",
+          "values": ["Satu mesin per panel.", "Professional ke atas."]
+        },
+        {
+          "label": "Sistem host",
+          "values": ["Linux, Windows, dan macOS. Image dibuat untuk amd64 dan arm64.", "Windows dan Linux."]
+        },
+        {
+          "label": "Game",
+          "values": [
+            "Minecraft Java Edition. Pemain Bedrock dapat bergabung melalui Geyser.",
+            "Lebih dari 200 game dan aplikasi dalam daftar kompatibilitasnya, termasuk Minecraft Java dan Bedrock."
+          ]
+        }
+      ],
+      "note": "Fakta diperiksa Oktober 2026 terhadap dokumentasi masing-masing proyek. Harga AMP berasal dari lembar perbandingan edisi CubeCoders dan dapat berubah."
+    },
+    "sections": [
+      {
+        "title": "Tanpa Lisensi, Tanpa Batasan Jumlah Instance",
+        "body": "Tingkatan AMP menentukan berapa banyak instance dan pengguna panel yang Anda dapatkan, dan hanya tingkatan Enterprise yang mengizinkan penggunaan komersial. Minecraft Server Manager tidak memiliki tingkatan: setiap fitur, setiap server, dan setiap akun pengguna gratis di bawah lisensi MIT, dan tidak menggunakan layanan berbayar. Unduhan CurseForge memerlukan kunci API CurseForge, yang Anda tambatkan di Pengaturan.",
+        "points": [
+          "Buat server sebanyak yang dapat ditampung oleh mesin Anda.",
+          "Undang seluruh tim Anda dengan izin per server dan login dua faktor.",
+          "Sumbernya publik, jadi Anda dapat membaca, melakukan fork, dan berkontribusi padanya."
+        ]
+      },
+      {
+        "title": "Di Mana Minecraft Server Manager Lebih Unggul untuk Minecraft",
+        "body": "Panel untuk satu game dapat mendalaminya. Setiap pengaturan yang didukung oleh image Minecraft itzg ada di wizard dengan bantuan bahasa Inggris yang lugas, dan alur kerja Minecraft sudah terpasang.",
+        "points": [
+          "Modpack CurseForge, Modrinth, FTB, dan GT New Horizons, disematkan dengan rollback satu klik.",
+          "Satu pencarian mod di lima registri, dengan unduhan yang diverifikasi checksum.",
+          "Pemeriksaan kompatibilitas versi sebelum pembaruan Minecraft ditawarkan.",
+          "Forensik crash dengan berbagi mclo.gs, dan peta langsung BlueMap satu klik.",
+          "Analitik pemain, forensik inventaris, dan analitik penyimpanan dengan kuota disk."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "bluemap", "mclogs"],
+        "shot": "wizard"
+      },
+      {
+        "title": "Kapan AMP Menjadi Pilihan yang Lebih Baik",
+        "body": "AMP mencakup cakupan yang jauh lebih luas daripada panel khusus Minecraft, dan dilengkapi dengan dukungan komersial.",
+        "points": [
+          "Anda menghosting banyak game berbeda dari satu panel.",
+          "Anda memerlukan login tunggal melalui OIDC, branding kustom, atau templat deployment, yang termasuk dalam tingkatan Advanced-nya.",
+          "Anda menjalankan bisnis hosting dan menginginkan lisensi komersial dengan dukungan vendor.",
+          "Anda ingin menjalankan Bedrock Dedicated Server itu sendiri."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Pertanyaan AMP",
+      "items": [
+        {
+          "q": "Apakah Minecraft Server Manager gratis untuk penggunaan komersial?",
+          "a": "Lisensi MIT mengizinkan penggunaan komersial. Panel ini dibuat untuk pemilik dan tim kecil di satu mesin, jadi periksa apakah sesuai dengan cara Anda menghosting sebelum Anda mengandalkannya untuk pelanggan."
+        },
+        {
+          "q": "Apakah Minecraft Server Manager mendukung game selain Minecraft?",
+          "a": "Tidak. Panel ini hanya menjalankan server Minecraft Java Edition, itulah sebabnya panel ini dapat mendalam pada modpack, mod, dan laporan crash."
+        },
+        {
+          "q": "Bisakah saya memindahkan instance Minecraft AMP?",
+          "a": "Ya. Buat server dengan tipe dan versi Minecraft yang sama, lalu unggah dunia instance sebagai zip di halaman Dunia dan instal ke server tersebut. Server yang dimodifikasi dapat dimulai dari modpack, ekspor pack, atau zip file jar mod."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideHosting"],
+    "cta": {
+      "title": "Semua Fitur, Gratis",
+      "body": "Instal Minecraft Server Manager dalam tiga langkah. Tidak ada yang perlu dibeli dan tidak ada yang perlu dibuka."
+    }
+  },
+  "compareMcsm": {
+    "meta": {
+      "title": "Alternatif MCSManager untuk Server Minecraft",
+      "description": "Perbandingan MCSManager dan Minecraft Server Manager: panel terdistribusi untuk game Minecraft dan Steam, di samping panel khusus Minecraft dengan modpack bawaan."
+    },
+    "eyebrow": "Alternatif MCSManager",
+    "title": "Alternatif MCSManager yang Berfokus pada Minecraft",
+    "intro": "MCSManager adalah panel gratis dan sumber terbuka untuk game Minecraft dan Steam yang dapat mengelola beberapa mesin. Minecraft Server Manager hanya menjalankan Minecraft di satu mesin, dengan setiap server dalam kontainer Docker dan alat Minecraft bawaan.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Perbandingan Langsung",
+      "columns": ["", "Minecraft Server Manager", "MCSManager"],
+      "rows": [
+        {
+          "label": "Harga dan lisensi",
+          "values": ["Gratis, MIT.", "Gratis, Apache-2.0."]
+        },
+        {
+          "label": "Ditulis dalam",
+          "values": ["Node.js 24.", "TypeScript di Node.js."]
+        },
+        {
+          "label": "Apa yang Anda instal",
+          "values": ["Satu proses, atau satu kontainer Docker.", "Dua layanan: panel web dan daemon."]
+        },
+        {
+          "label": "Basis data",
+          "values": ["File SQLite bawaan di dalam folder data.", "Tidak diperlukan."]
+        },
+        {
+          "label": "Server game berjalan sebagai",
+          "values": [
+            "Kontainer Docker dengan batasan sumber daya.",
+            "Kontainer Docker atau proses biasa, pilihan Anda."
+          ]
+        },
+        {
+          "label": "Sistem host",
+          "values": [
+            "Linux, Windows, dan macOS. Image dibuat untuk amd64 dan arm64.",
+            "Windows, Linux, dan macOS, dengan skrip instalasi satu baris untuk Linux."
+          ]
+        },
+        {
+          "label": "Mesin yang dikelola",
+          "values": ["Satu. Panel dan Docker berjalan di host yang sama.", "Banyak, melalui daemon terdistribusi."]
+        },
+        {
+          "label": "Game",
+          "values": [
+            "Minecraft Java Edition. Pemain Bedrock dapat bergabung melalui Geyser.",
+            "Game Minecraft dan Steam seperti Palworld dan Terraria, dari marketplace bawaan."
+          ]
+        }
+      ],
+      "note": "Fakta diperiksa Oktober 2026 berdasarkan dokumentasi masing-masing proyek."
+    },
+    "sections": [
+      {
+        "title": "Kelebihan Minecraft Server Manager untuk Minecraft",
+        "body": "MCSManager menyebarkan banyak jenis server game. Minecraft Server Manager berfokus pada satu game, sehingga wizard, alat mod, dan riwayat semuanya berbicara tentang Minecraft.",
+        "points": [
+          "Setiap pengaturan image Minecraft itzg, dijelaskan dalam bahasa yang mudah dipahami di wizard.",
+          "Modpack CurseForge, Modrinth, FTB, dan GT New Horizons, disematkan dengan rollback satu klik.",
+          "Satu pencarian mod di lima registri, dengan unduhan yang diverifikasi checksum.",
+          "Forensik crash dengan nama tersangka, dan berbagi mclo.gs satu klik.",
+          "Peta langsung BlueMap satu klik, analitik pemain, dan blueprint portabel.",
+          "Seluruh panel, termasuk basis data, adalah satu folder yang dapat Anda salin untuk migrasi."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "console"
+      },
+      {
+        "title": "Kontainer Secara Default",
+        "body": "Setiap server di Minecraft Server Manager adalah kontainer Docker dengan batas memori dan CPU sendiri, ditambah kuota disk yang diberlakukan oleh panel. Java dipilih per server, sehingga modpack 1.12 dan rilis Paper terbaru berjalan berdampingan tanpa perlu mengelola instalasi Java. MCSManager memungkinkan Anda memilih antara kontainer dan proses biasa, yang lebih fleksibel ketika Docker bukan pilihan.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "title": "Kapan MCSManager Menjadi Pilihan yang Lebih Baik",
+        "body": "MCSManager dikembangkan secara aktif dan mencakup lebih dari sekadar Minecraft.",
+        "points": [
+          "Anda mengelola server di beberapa mesin dari satu panel.",
+          "Anda juga menghosting game Steam seperti Palworld atau Terraria.",
+          "Anda ingin menjalankan server sebagai proses biasa, tanpa Docker.",
+          "Anda menginginkan dasbor drag-and-drop dan marketplace penyebaran game siap pakai."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Pertanyaan MCSManager",
+      "items": [
+        {
+          "q": "Bisakah saya memindahkan server Minecraft dari MCSManager?",
+          "a": "Ya. Buat server dengan tipe dan versi Minecraft yang sama di Minecraft Server Manager, lalu unggah dunia sebagai zip di halaman Dunia dan instal ke server tersebut. Server yang dimodifikasi dapat dimulai dari modpack, ekspor pack, atau zip jar mod."
+        },
+        {
+          "q": "Apakah saya memerlukan Docker untuk Minecraft Server Manager?",
+          "a": "Ya. Docker menjalankan setiap server. Di Linux, skrip penginstal akan menginstal Docker untuk Anda jika belum ada."
+        },
+        {
+          "q": "Bisakah beberapa orang berbagi satu panel Minecraft Server Manager?",
+          "a": "Ya. Ada peran admin, operator, dan penampil, izin per server, dan masuk dua faktor opsional untuk setiap akun."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideMulti", "comparePuffer"],
+    "cta": {
+      "title": "Minecraft, Dibuat Secara Mendalam",
+      "body": "Instal panel dalam tiga langkah dan buat server pertama Anda dari wizard."
+    }
+  },
+  "comparePuffer": {
+    "meta": {
+      "title": "Alternatif PufferPanel untuk Server Minecraft",
+      "description": "Minecraft Server Manager dibandingkan dengan PufferPanel: setiap server dalam kontainer Docker-nya sendiri dan alat Minecraft bawaan, dibandingkan dengan panel multi-game, multi-node yang ringan."
+    },
+    "eyebrow": "Alternatif PufferPanel",
+    "title": "Alternatif PufferPanel Dibuat Khusus untuk Minecraft",
+    "intro": "PufferPanel adalah panel gratis, open-source untuk banyak game di satu atau banyak mesin. Minecraft Server Manager hanya menjalankan Minecraft di satu mesin, selalu di Docker, dengan alat Minecraft bawaan.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Perbandingan Langsung",
+      "columns": ["", "Minecraft Server Manager", "PufferPanel"],
+      "rows": [
+        {
+          "label": "Harga dan lisensi",
+          "values": ["Gratis, MIT.", "Gratis, Apache-2.0."]
+        },
+        {
+          "label": "Ditulis dalam",
+          "values": ["Node.js 24.", "Go."]
+        },
+        {
+          "label": "Apa yang Anda instal",
+          "values": [
+            "Satu proses, atau satu kontainer Docker.",
+            "Satu layanan dari repositori apt atau yum-nya, atau gambar Docker-nya. Sebuah node di mesin lain menjalankan paket yang sama."
+          ]
+        },
+        {
+          "label": "Database",
+          "values": [
+            "File SQLite bawaan di dalam folder data.",
+            "Tidak ada yang perlu diatur untuk instalasi dasar. Panduan mencakup penggunaan database eksternal."
+          ]
+        },
+        {
+          "label": "Server game berjalan sebagai",
+          "values": [
+            "Kontainer Docker dengan batasan sumber daya, selalu.",
+            "Proses di host (dokumentasinya menyatakan lingkungan ini tidak memiliki fitur keamanan) atau kontainer Docker."
+          ]
+        },
+        {
+          "label": "Sistem host",
+          "values": [
+            "Linux, Windows, dan macOS. Gambar dibuat untuk amd64 dan arm64.",
+            "Linux: paket untuk Ubuntu 22.04 dan 24.04 serta Debian 10 dan 11 pada amd64 dan arm64, Raspbian pada arm64, dan repositori yum. 32-bit tidak didukung."
+          ]
+        },
+        {
+          "label": "Mesin yang dikelola",
+          "values": [
+            "Satu. Panel dan Docker berjalan di host yang sama.",
+            "Banyak. Node di mesin lain menjalankan server untuk satu panel."
+          ]
+        },
+        {
+          "label": "Minecraft",
+          "values": [
+            "Java Edition, setiap jenis server dari gambar itzg, dan paket CurseForge, Modrinth, FTB, dan GT New Horizons. Pemain Bedrock bergabung melalui Geyser.",
+            "Template untuk server Java dan Bedrock, paket CurseForge dan FTB, serta proxy BungeeCord, Velocity, dan Waterfall."
+          ]
+        }
+      ],
+      "note": "Fakta diperiksa November 2026 terhadap dokumentasi PufferPanel, repositori-nya, dan repositori templatenya."
+    },
+    "sections": [
+      {
+        "title": "Isolasi Tanpa Pengaturan yang Perlu Diingat",
+        "body": "PufferPanel memungkinkan Anda memilih lingkungan per server. Standarnya menjalankan server sebagai proses di host, sebagai pengguna yang sama dengan panel, dan dokumentasinya sendiri menyatakan tidak memiliki fitur keamanan; yang Docker mengisolasinya. Minecraft Server Manager hanya memiliki jenis kedua. Setiap server adalah kontainer tersendiri dengan batasan memori dan CPU, kuota disk yang diberlakukan oleh panel, dan tidak ada yang dibagikan dengan yang lain kecuali pustaka mod.",
+        "points": [
+          "Satu kontainer per server, diberi label dan dibatasi.",
+          "Kuota disk diberlakukan oleh panel.",
+          "Server yang crash atau kehabisan memori terdeteksi dan dicatat."
+        ],
+        "pills": ["docker"]
+      },
+      {
+        "title": "Di Mana Minecraft Server Manager Lebih Mendalam pada Minecraft",
+        "body": "Sebuah template memulai server; pekerjaan datang setelahnya. Mod yang dicari dan diperbarui, paket yang terus berkembang, crash yang dibaca, dunia yang dicadangkan. Itu semua dibangun ke dalam panel di sini.",
+        "points": [
+          "Modpack disematkan ke versi yang tepat. Peningkatan dan penurunan versi melakukan pencadangan terlebih dahulu dan kembali dalam satu klik.",
+          "Satu pencarian di lima registri, difilter ke loader server dan versi Minecraft.",
+          "Setiap unduhan diverifikasi checksum-nya sebelum mencapai server.",
+          "Pemeriksaan versi menunjukkan versi Minecraft mendatang mana yang sudah didukung oleh setiap mod yang terinstal.",
+          "Laporan crash terdeteksi, diurai, dan dapat dibagikan ke mclo.gs dalam satu klik.",
+          "Peta langsung BlueMap satu klik, di belakang login panel itu sendiri."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Kapan PufferPanel Menjadi Pilihan yang Lebih Baik",
+        "body": "PufferPanel ringan, gratis, dan sudah ada selama bertahun-tahun. Jika salah satu dari ini menggambarkan Anda, pilih itu.",
+        "points": [
+          "Anda menghosting game selain Minecraft.",
+          "Anda menjalankan server di beberapa mesin dan menginginkan satu panel untuk semuanya.",
+          "Anda menginginkan server Bedrock asli, atau jaringan proxy BungeeCord, Velocity, atau Waterfall.",
+          "Anda lebih memilih untuk tidak menjalankan Docker sama sekali.",
+          "Anda ingin akses SFTP ke file server."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Pertanyaan PufferPanel",
+      "items": [
+        {
+          "q": "Bisakah saya memindahkan server Minecraft dari PufferPanel ke Minecraft Server Manager?",
+          "a": "Ya. Unduh folder dunia server, buat server dengan jenis dan versi Minecraft yang sama, lalu unggah dunia di halaman Dunia dan instal ke server tersebut. Untuk server yang dimodifikasi, impor paket atau zip file mod-nya saat Anda membuatnya."
+        },
+        {
+          "q": "Apakah Minecraft Server Manager memerlukan Docker?",
+          "a": "Ya. Setiap server Minecraft berjalan sebagai kontainer Docker, yang merupakan cara ia membatasi memori, CPU, dan disk per server. Panel itu sendiri dapat berjalan di Docker atau langsung dari Node.js."
+        },
+        {
+          "q": "Bisakah ia menjalankan server di mesin kedua?",
+          "a": "Tidak. Ia mengelola daemon Docker di mesin tempat ia berjalan. Untuk dua mesin, jalankan satu panel di masing-masing, atau pilih panel dengan node seperti PufferPanel."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareCrafty", "compareMcsm"],
+    "cta": {
+      "title": "Setiap Server dalam Kontainer Sendiri",
+      "body": "Instal panel dalam tiga langkah dan buat server pertama Anda di wizard."
+    }
   }
 }

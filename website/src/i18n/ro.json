@@ -8,25 +8,29 @@
     "home": "Acasă",
     "features": "Funcționalități",
     "screenshots": "Capturi de ecran",
+    "servers": "Servere",
+    "guides": "Ghiduri",
     "install": "Instalare",
     "docs": "Documentație",
     "faq": "Întrebări frecvente",
+    "compare": "Comparație",
     "changelog": "Jurnal modificări",
     "github": "GitHub",
     "discord": "Discord",
     "menu": "Meniu",
     "language": "Limbă",
-    "theme": "Comută tema pe lumină sau întuneric",
+    "theme": "Comutare temă deschisă sau închisă",
     "skip": "Treci la conținut"
   },
   "hero": {
-    "eyebrow": "Gratuit și open source. Rulează pe propria mașină.",
-    "title": "Rulează serverele tale Minecraft dintr-un singur panou prietenos.",
-    "subtitle": "Minecraft Server Manager transformă Docker într-o casă confortabilă pentru serverele tale: modpack-uri care rămân fixate, backup-uri cu un singur clic, programări, o hartă live, statistici ale jucătorilor și o consolă care vorbește pe înțelesul tuturor. Fără facturi, fără blocaje, tot panoul tău într-un singur folder.",
-    "primary": "Începe în 3 pași",
+    "eyebrow": "Gratuit și open source. Rulează pe propria ta mașină.",
+    "title": "Rulează serverele tale de Minecraft dintr-un singur panou prietenos.",
+    "subtitle": "Minecraft Server Manager transformă Docker într-o casă primitoare pentru serverele tale: modpack-uri care rămân fixate, backup-uri cu un singur clic, programări, o hartă live, statistici despre jucători și o consolă care vorbește pe înțelesul tuturor. Fără facturi, fără restricții, tot panoul tău într-un singur folder.",
+    "primary": "Începe în câteva minute",
     "secondary": "Explorează funcționalitățile",
     "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
-    "scroll": "Vezi tutorialul"
+    "scroll": "Vezi tutorialul",
+    "shotCaption": "Panoul real: dashboard-ul său cu șase servere exemplu, în tema întunecată."
   },
   "pillars": {
     "title": "Creat pentru cei care rulează servere, nu tichete",
@@ -51,8 +55,8 @@
     ]
   },
   "features": {
-    "title": "Totul la îndemâna proprietarului unui server",
-    "intro": "Turul complet al funcționalităților, de la crearea unui server la partajarea hărții sale live.",
+    "title": "Tot ce își dorește proprietarul unui server",
+    "intro": "Prezentarea completă a funcționalităților, de la crearea unui server la partajarea hărții sale live.",
     "cta": "Citește documentația",
     "groups": [
       {
@@ -66,7 +70,7 @@
           },
           {
             "title": "Asistent de creare ghidat",
-            "body": "Mod Simplu sau Avansat, cu fiecare setare a imaginii explicată în limba engleză simplă înainte de a o alege.",
+            "body": "Mod Simplu sau Avansat, cu fiecare setare de imagine explicată în limba engleză simplă înainte de a o alege.",
             "icon": "wand"
           },
           {
@@ -76,13 +80,13 @@
           },
           {
             "title": "Moderare jucători",
-            "body": "Whitelist, ops, banări, banări IP și teleportări, online prin RCON și offline prin fișierele JSON.",
+            "body": "Liste albe, administratori, interdicții, interdicții IP și teleportări, online prin RCON și offline prin fișierele JSON.",
             "icon": "users"
           }
         ]
       },
       {
-        "title": "Moduri și pachete de moduri",
+        "title": "Moduri și modpack-uri",
         "items": [
           {
             "title": "Cinci registre într-un singur browser",
@@ -103,19 +107,24 @@
           },
           {
             "title": "Descărcări verificate prin sumă de control",
-            "body": "Verificate înainte ca un fișier să ajungă la server, cu cel mai puternic hash primul. O nepotrivire nu este niciodată livrată.",
+            "body": "Verificate înainte ca un fișier să ajungă pe server, cu cel mai puternic hash primul. O nepotrivire nu este niciodată livrată.",
             "icon": "shield",
             "pills": ["sha512", "sha256", "sha1", "md5"]
           },
           {
             "title": "Bibliotecă de moduri partajată",
-            "body": "Deduplicată prin sha256 și legată simbolic în servere, astfel încât modurile personalizate să supraviețuiască actualizărilor pachetelor.",
+            "body": "Deduplicată prin sha256 și legată simbolic în servere, astfel încât modurile personalizate să supraviețuiască actualizărilor de pachete.",
             "icon": "library"
           },
           {
-            "title": "Rezolvator „alege modurile mai întâi”",
-            "body": "Alege modurile pe care le dorești și obține cea mai recentă versiune complet compatibilă de loader și Minecraft.",
+            "title": "Rezolvator \"alege modurile mai întâi\"",
+            "body": "Alege modurile dorite și obține cel mai nou loader și versiunea Minecraft complet compatibile.",
             "icon": "sparkles"
+          },
+          {
+            "title": "Orice versiune de pachet, orice build de loader",
+            "body": "Mută un modpack la orice versiune publicată, mai nouă sau mai veche, sau schimbă build-ul loader-ului de moduri. O copie de rezervă vine mai întâi, iar o pornire eșuată revine la starea anterioară.",
+            "icon": "refresh"
           }
         ]
       },
@@ -123,17 +132,17 @@
         "title": "Protecție și automatizare",
         "items": [
           {
-            "title": "Backup-uri sigure",
+            "title": "Copii de rezervă sigure",
             "body": "Snapshot-uri cu clase de retenție, restaurare la fața locului și micșorare opțională a lumii pentru recuperarea spațiului pe disc.",
             "icon": "archive"
           },
           {
             "title": "Programări Cron",
-            "body": "Reporniri, backup-uri și comenzi RCON programate, cu următoarea execuție afișată în față.",
+            "body": "Reporniri, copii de rezervă și comenzi RCON programate, cu următoarea rulare afișată în față.",
             "icon": "clock"
           },
           {
-            "title": "Blueprints",
+            "title": "Scheme",
             "body": "Exportă un server ca o rețetă portabilă, importă-l oriunde și obține același server înapoi.",
             "icon": "blueprint"
           },
@@ -145,7 +154,7 @@
           },
           {
             "title": "Urmărire actualizări",
-            "body": "Sunt urmărite versiunile noi de server, pachete, imagini și moduri, cu backup-uri pre-actualizare și rollback cu un singur clic.",
+            "body": "Sunt urmărite versiunile noi de server, pachet, imagine și moduri, cu copii de rezervă înainte de actualizare și revenire cu un singur clic.",
             "icon": "refresh"
           }
         ]
@@ -155,29 +164,35 @@
         "items": [
           {
             "title": "Hartă live",
-            "body": "Un clic către o hartă live, servită prin proxy-ul autentificat al panoului.",
+            "body": "Un clic pentru o hartă live, servită prin proxy-ul autentificat al panoului.",
             "icon": "map",
             "pills": ["bluemap"]
           },
           {
             "title": "Analize și stocare",
-            "body": "Tabele de scor pentru timp de joc, decese și minare, diagnosticare inventar, utilizare disc per server și cote impuse.",
+            "body": "Tabele de scor pentru timp de joc, decese și minerit, diagnosticarea inventarului, utilizarea discului per server și cote impuse.",
             "icon": "chart"
           },
           {
             "title": "Discord și chatbot",
-            "body": "Webhooks cu comutatoare per eveniment, plus un chatbot opțional per server cu puteri limitate în joc.",
+            "body": "Webhooks cu comutatoare per eveniment, plus un chatbot opțional per server cu puteri restrânse în joc.",
             "icon": "message",
             "pills": ["discord"]
           },
           {
             "title": "Pagină de stare publică și API",
-            "body": "Pagini de stare opționale, blocuri de invitație, un fișier .mrpack generat pentru client și un API doar pentru citire autentificat prin token.",
+            "body": "Pagini de stare opționale, blocuri de invitație, un client .mrpack generat și un API doar pentru citire autentificat cu token.",
             "icon": "globe"
           },
           {
+            "title": "Invită prieteni",
+            "body": "Copiază o invitație cu adresa și versiunea. Pentru un server creat din moduri alese de tine, oferă prietenilor un client .mrpack care le instalează și adaugă serverul în lista lor.",
+            "icon": "users",
+            "pills": ["mrpack"]
+          },
+          {
             "title": "Utilizatori, roluri și 2FA",
-            "body": "Roluri de administrator, operator și vizualizator cu autentificare duală TOTP.",
+            "body": "Roluri de administrator, operator și vizualizator cu autentificare în doi factori TOTP.",
             "icon": "lock"
           }
         ]
@@ -186,20 +201,21 @@
   },
   "screenshots": {
     "title": "Un panou plăcut de utilizat",
-    "intro": "Desktop și telefon. Panoul este proiectat mai întâi pentru spații înguste, astfel încât fiecare pagină funcționează pe telefon.",
+    "intro": "Desktop și telefon. Panoul este conceput mai întâi pentru ecrane înguste, astfel încât fiecare pagină funcționează pe telefon.",
     "desktop": "Desktop",
     "mobile": "Pe telefon",
     "items": {
-      "dashboard": "Panoul de bord: fiecare server, numărul de jucători și activitatea recentă dintr-o privire.",
-      "wizard": "Asistentul de creare explică fiecare setare înainte de a o alege.",
+      "dashboard": "Tabloul de bord: fiecare server, numărul de jucători și activitatea recentă dintr-o privire.",
+      "wizard": "Expertul de creare explică fiecare setare înainte de a o alege.",
       "overview": "Prezentarea generală a unui server cu contoare de resurse și acțiuni rapide.",
       "console": "Consola live cu o bară de comenzi RCON și filtre de jurnal.",
       "mods": "Moduri din cinci registre, filtrate pentru loader-ul și versiunea serverului.",
-      "worlds": "Schimbați lumi și gestionați fișiere din browser.",
+      "modpacks": "Modpack-uri: caută pe CurseForge și Modrinth, iar fiecare pachet se instalează fixat la o versiune exactă.",
+      "worlds": "Schimbă lumi și gestionează fișiere din browser.",
       "backups": "Backup-uri cu clase de retenție și restaurare la fața locului.",
       "schedules": "Programări cron pentru reporniri, backup-uri și comenzi.",
-      "blueprints": "Scheme: rețete portabile de server.",
-      "storage": "Analiza stocării și cote impuse."
+      "blueprints": "Rețete de server portabile: Blueprints.",
+      "storage": "Analize de stocare și cote impuse."
     }
   },
   "install": {
@@ -213,9 +229,9 @@
     ],
     "docker": {
       "title": "Opțiunea 1: Docker",
-      "body": "O imagine multi-arhitectură precompilată este publicată pe GHCR la fiecare lansare. Descarcă fișierul compose, setează o variabilă și pornește.",
-      "after": "Apoi deschide http://your-host:25564. În Portainer sau Dockge, lipește fișierul compose ca un stack și setează DATA_DIR_HOST în mediul de configurare al stack-ului.",
-      "warning": "Panoul controlează daemon-ul Docker al gazdei prin socket-ul montat, care este echivalent cu root-ul pe gazdă. Tratează autentificarea de administrator în consecință și nu expune niciodată panoul direct pe internet."
+      "body": "O imagine multi-arhitectură pre-compilată este publicată pe GHCR la fiecare lansare. Descarcă fișierul compose, setează o variabilă și pornește.",
+      "after": "Apoi deschide http://your-host:25564. În Portainer sau Dockge, lipește fișierul compose ca stack și setează DATA_DIR_HOST în mediul stack-ului.",
+      "warning": "Panoul controlează daemon-ul Docker al sistemului gazdă prin socket-ul montat, care este echivalent cu root pe gazdă. Tratează autentificarea de administrator în consecință și nu expune niciodată panoul direct pe internet."
     },
     "source": {
       "title": "Opțiunea 2: Din sursă",
@@ -223,32 +239,44 @@
       "after": "Deschide http://localhost:25564. Prima rulare te ghidează printr-o verificare a sistemului, fusul tău orar și crearea contului de administrator."
     },
     "next": "Pașii următori",
-    "nextBody": "Ghidul de pornire acoperă configurarea inițială, crearea primului tău server și unde se găsesc toate fișierele.",
+    "nextBody": "Ghidul de pornire acoperă configurarea inițială, crearea primului server și unde se găsesc toate fișierele.",
     "nextCta": "Citește ghidul de pornire",
     "compose": "Descarcă docker-compose.yml",
     "windows": "Note pentru Windows",
     "windowsItems": [
       "Docker Desktop trebuie să ruleze înainte de a porni sau crea servere.",
       "Partajează unitatea de proiect cu Docker Desktop (Settings, Resources, File sharing) pentru ca montările de tip bind să funcționeze.",
-      "Imaginea Docker vizează gazde Linux; pe Windows și macOS rulează panoul din sursă."
+      "Imaginea Docker vizează sisteme gazdă Linux; pe Windows și macOS rulează panoul din sursă."
     ],
-    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []],
+    "options": {
+      "title": "Opțiuni de instalare",
+      "intro": "Instalatorul pentru Linux preia opțiunile după bash -s --, astfel încât acestea funcționează și prin pipe. Rulează-l din nou cu aceleași opțiuni pentru a face upgrade; folderul tău de date, fișierul .env și modificările compose sunt păstrate.",
+      "items": {
+        "port": "Rulează panoul pe un alt port.",
+        "proxy": "Ascultă doar pe 127.0.0.1, pentru un reverse proxy cu TLS în față.",
+        "tag": "Fixează o versiune în loc să urmezi cea mai recentă.",
+        "dir": "Instalează într-o altă locație decât /opt/msm.",
+        "uninstall": "Dezinstalează panoul și păstrează datele. Prin pipe nu există tastatură pentru a răspunde la întrebare, așa că adaugă --yes; adaugă și --purge pentru a șterge folderul de date.",
+        "help": "Fiecare opțiune, cu valoarea sa implicită."
+      }
+    }
   },
   "faq": {
     "title": "Întrebări frecvente",
     "items": [
       {
         "q": "Este cu adevărat gratuit?",
-        "a": "Da. Panoul are licență MIT și nu folosește servicii plătite. Totul rulează pe mașina dumneavoastră."
+        "a": "Da. Panoul are licență MIT și nu folosește servicii plătite. Totul rulează pe mașina ta."
       },
       {
         "q": "Funcționează pe un Raspberry Pi sau pe altă mașină ARM?",
-        "a": "Da. Imaginea Docker este publicată pentru ambele arhitecturi, iar instalarea din sursă rulează oriunde Node.js 24 și Docker funcționează.",
+        "a": "Da. Imaginea Docker este publicată pentru ambele arhitecturi, iar instalarea din sursă rulează oriunde rulează Node.js 24 și Docker.",
         "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
       },
       {
         "q": "Ce tipuri de servere sunt suportate?",
-        "a": "Tot ce suportă imaginea itzg, plus modpack-uri din cele patru surse mari.",
+        "a": "Tot ce suportă imaginea itzg, plus modpack-uri de la cei patru mari furnizori.",
         "pills": [
           "vanilla",
           "paper",
@@ -269,11 +297,15 @@
       },
       {
         "q": "Pot mai multe persoane să gestioneze servere?",
-        "a": "Da. Panoul are roluri de administrator, operator și vizualizator, iar fiecare cont poate activa autentificarea în doi factori."
+        "a": "Da. Panoul are roluri de administrator, operator și vizualizator, iar fiecare cont poate activa autentificarea în doi pași."
+      },
+      {
+        "q": "Cum se conectează prietenii din afara casei mele?",
+        "a": "Redirecționați portul de joc al serverului, de la 25565 în sus, pe routerul dvs. către mașina care îl rulează, sau folosiți un tunel dacă furnizorul dvs. de internet nu permite redirecționarea porturilor. Tab-ul Invites al serverului afișează adresa de partajat și scrie textul invitației pentru dvs. Păstrați portul panoului închis."
       },
       {
         "q": "Trebuie expus la internet?",
-        "a": "Nu. Jucătorii se conectează la porturile jocului, nu la panou. Păstrați panoul în rețeaua locală (LAN) sau în spatele unui VPN sau proxy invers cu autentificare."
+        "a": "Nu. Jucătorii se conectează la porturile de joc, nu la panou. Păstrați panoul în rețeaua dvs. locală (LAN) sau în spatele unui VPN sau proxy invers cu autentificare."
       },
       {
         "q": "Ce se întâmplă cu jucătorii Bedrock?",
@@ -281,15 +313,20 @@
         "pills": ["geyser", "floodgate"]
       },
       {
-        "q": "Unde pot obține ajutor?",
+        "q": "Este creat cu AI?",
+        "a": "Parțial și deschis. Majoritatea codului este scris cu Claude Code, iar menținătorul proiectează, revizuiește și testează fiecare funcționalitate. Declarația AI din depozit descrie cum."
+      },
+      {
+        "q": "Unde pot cere ajutor?",
         "a": "Serverul Discord are un forum de suport și oameni reali. Bug-urile și cererile de funcționalități se trimit la problemele de pe GitHub."
       }
     ]
   },
   "changelog": {
     "title": "Jurnal de modificări",
-    "intro": "Fiecare lansare, cele mai noi primele. Notele de lansare sunt publicate în engleză.",
-    "releases": "Toate lansările pe GitHub"
+    "intro": "Fiecare versiune, cea mai nouă prima. Notele versiunii sunt publicate în engleză.",
+    "releases": "Toate versiunile pe GitHub",
+    "feed": "Flux de versiuni (Atom)"
   },
   "community": {
     "title": "Vino să ne saluți",
@@ -306,32 +343,38 @@
     "releases": "Versiuni",
     "contributing": "Contribuții",
     "license": "Licență",
-    "notAffiliated": "Nu este un produs oficial Minecraft. Nu este aprobat de sau asociat cu Mojang sau Microsoft."
+    "notAffiliated": "Nu este un produs oficial Minecraft. Nu este aprobat de sau asociat cu Mojang sau Microsoft.",
+    "serverTypes": "Tipuri de servere",
+    "guides": "Ghiduri",
+    "compare": "Comparație",
+    "roadmap": "Plan de dezvoltare",
+    "ai": "Cum este utilizat AI-ul",
+    "conduct": "Cod de conduită"
   },
   "meta": {
     "home": {
-      "title": "Panou de control gratuit pentru servere Minecraft, auto-găzduit",
-      "description": "Rulează servere Minecraft vanilla și modificate din browserul tău. Bazat pe Docker, modpack-uri fixate la versiuni exacte, backup-uri, programări, hartă live, analize ale jucătorilor. Gratuit, open source, funcțional în trei pași."
+      "title": "Panou gratuit pentru servere Minecraft self-hosted",
+      "description": "Rulează servere Minecraft vanilla și modificate din browserul tău cu un panou Docker gratuit, self-hosted: modpack-uri fixate, backup-uri, programări și o hartă live."
     },
     "features": {
-      "title": "Funcționalități",
-      "description": "Fiecare funcționalitate a Minecraft Server Manager: servere containerizate, cinci registre de moduri, descărcări verificate prin checksum, backup-uri sigure, programări, blueprint-uri, diagnosticare crash-uri, hartă live, roluri și autentificare în doi factori."
+      "title": "Funcționalități ale panoului pentru servere Minecraft",
+      "description": "Toate funcționalitățile Minecraft Server Manager: servere Docker, cinci registre de moduri, descărcări verificate, backup-uri, programări, analiză a erorilor, o hartă live și autentificare în doi factori (2FA)."
     },
     "screenshots": {
-      "title": "Capturi de ecran",
+      "title": "Capturi de ecran ale panoului pentru servere Minecraft",
       "description": "Capturi de ecran ale panoului Minecraft Server Manager pe desktop și telefon: dashboard, wizard, consolă, moduri, lumi, backup-uri, programări și multe altele."
     },
     "install": {
-      "title": "Instalare",
+      "title": "Instalează un panou pentru servere Minecraft cu Docker",
       "description": "Instalează Minecraft Server Manager cu Docker în trei comenzi, sau din sursă pe Windows, macOS și Linux."
     },
     "faq": {
-      "title": "Întrebări frecvente",
-      "description": "Răspunsuri despre cost, tipuri de servere suportate, suport ARM, migrare, roluri și expunere la internet."
+      "title": "Întrebări frecvente despre panoul pentru servere Minecraft",
+      "description": "Răspunsuri despre costuri, tipuri de servere suportate, Raspberry Pi și ARM, mutarea pe un nou computer, roluri, jucători Bedrock și expunerea panoului la internet."
     },
     "changelog": {
-      "title": "Jurnal de modificări",
-      "description": "Note de lansare pentru fiecare versiune a Minecraft Server Manager."
+      "title": "Jurnal de modificări și note de lansare",
+      "description": "Note de lansare pentru fiecare versiune a Minecraft Server Manager, panoul gratuit pentru servere Minecraft self-hosted."
     },
     "notFound": {
       "title": "Pagina nu a fost găsită",
@@ -345,30 +388,84 @@
   },
   "langNotice": "Această pagină este afișată în engleză până la finalizarea traducerii sale.",
   "tutorial": {
-    "title": "Funcțional în trei pași",
-    "intro": "Alege cum vrei să rulezi panoul. Completează cele două câmpuri și fiecare comandă de mai jos se va rescrie pentru mașina ta.",
+    "title": "Funcțional în câteva minute",
+    "intro": "Alegeți mașina și copiați comenzile. Avansat oferă toate celelalte modalități de a rula panoul, cu comenzile rescries pentru propriul folder și adresă.",
+    "modes": {
+      "simple": "Simplu",
+      "advanced": "Avansat"
+    },
+    "simple": {
+      "linux": {
+        "label": "Linux",
+        "steps": [
+          {
+            "title": "Rulați instalatorul",
+            "body": "Funcționează pe orice mașină Linux cu un sistem de operare pe 64 de biți, de la un VPS la un Raspberry Pi 4 sau 5. Instalează Docker dacă lipsește, configurează panoul în /opt/msm și îl pornește. Rulați-l din nou mai târziu pentru a face upgrade."
+          },
+          {
+            "title": "Deschideți panoul",
+            "body": "Instalatorul afișează adresa și un PIN de configurare unic. Deschideți adresa într-un browser, introduceți PIN-ul și creați contul de administrator."
+          }
+        ]
+      },
+      "windows": {
+        "label": "Windows",
+        "steps": [
+          {
+            "title": "Instalați Docker Desktop, Node.js, Git și pnpm",
+            "body": "O linie pentru fiecare în PowerShell. Porniți Docker Desktop odată ce este instalat și lăsați-l să ruleze."
+          },
+          {
+            "title": "Obțineți panoul și porniți-l",
+            "body": "Deschideți un nou terminal pentru a găsi instrumentele pe care tocmai le-ați instalat."
+          },
+          {
+            "title": "Deschideți panoul",
+            "body": "Prima rulare vă ghidează printr-o verificare a sistemului, fusul orar și crearea contului de administrator."
+          }
+        ]
+      },
+      "macos": {
+        "label": "macOS",
+        "steps": [
+          {
+            "title": "Instalați Docker Desktop, Node.js, Git și pnpm",
+            "body": "Cu Homebrew. Porniți Docker Desktop odată ce este instalat și lăsați-l să ruleze."
+          },
+          {
+            "title": "Obțineți panoul și porniți-l",
+            "body": "Pasul de instalare construiește și panoul. Nu există nimic de compilat."
+          },
+          {
+            "title": "Deschideți panoul",
+            "body": "Prima rulare vă ghidează printr-o verificare a sistemului, fusul orar și crearea contului de administrator."
+          }
+        ]
+      }
+    },
+    "advancedIntro": "Completați cele două câmpuri și fiecare comandă de mai jos se rescrie pentru mașina dvs.",
     "dataDir": "Directorul de date pe gazdă",
     "dataDirHint": "Cale absolută. Lumile, backup-urile, modurile și baza de date se află aici.",
-    "host": "Nume gazdă sau IP",
-    "hostHint": "De unde vei accesa panoul dintr-un browser.",
-    "then": "Apoi deschide panoul",
-    "copy": "Copiază",
+    "host": "Numele gazdei sau IP-ul",
+    "hostHint": "De unde veți deschide panoul dintr-un browser.",
+    "then": "Apoi deschideți panoul",
+    "copy": "Copiere",
     "copied": "Copiat!",
-    "firstRun": "Prima rulare te ghidează printr-o verificare a sistemului, fusul tău orar și crearea contului de administrator.",
+    "firstRun": "Prima rulare vă ghidează printr-o verificare a sistemului, fusul orar și crearea contului de administrator.",
     "tabs": {
       "compose": {
         "label": "Docker Compose",
         "steps": [
           {
-            "title": "Creează directorul de date",
-            "body": "Un singur director deține tot ce aparține panoului."
+            "title": "Creați directorul de date",
+            "body": "Un singur director deține tot ce deține panoul."
           },
           {
-            "title": "Descarcă fișierul compose și indică-l spre acel director",
+            "title": "Descărcați fișierul compose și indicați-l spre acel director",
             "body": "DATA_DIR_HOST trebuie să fie calea absolută pe gazdă, deoarece Docker o montează din perspectiva gazdei."
           },
           {
-            "title": "Pornește panoul",
+            "title": "Porniți panoul",
             "body": "Imaginea este multi-arhitectură (amd64 și arm64) și se actualizează la fiecare lansare."
           }
         ]
@@ -377,16 +474,16 @@
         "label": "Portainer / Dockge",
         "steps": [
           {
-            "title": "Creează directorul de date pe gazdă",
+            "title": "Creați directorul de date pe gazdă",
             "body": "Aceeași regulă pentru director: cale absolută, pe mașina care rulează Docker."
           },
           {
-            "title": "Adaugă un stack din fișierul compose",
-            "body": "Copiază conținutul fișierului compose într-un stack nou. Fișierul brut este aici:"
+            "title": "Adăugați un stack din fișierul compose",
+            "body": "Copiați conținutul fișierului compose într-un nou stack. Fișierul brut este aici:"
           },
           {
-            "title": "Setează variabila de mediu și implementează",
-            "body": "Adaug-o în secțiunea de mediu a stack-ului, apoi implementează."
+            "title": "Setați variabila de mediu și implementați",
+            "body": "Adăugați-o în secțiunea de mediu a stack-ului, apoi implementați."
           }
         ]
       },
@@ -394,16 +491,16 @@
         "label": "Din sursă",
         "steps": [
           {
-            "title": "Verifică cerințele",
+            "title": "Verificați cerințele",
             "body": "Node.js 24 sau mai nou, pnpm și Docker rulând (Docker Desktop pe Windows și macOS)."
           },
           {
-            "title": "Clonează și instalează",
+            "title": "Clonați și instalați",
             "body": "Pasul de instalare construiește și CSS-ul panoului. Nu există module native de compilat."
           },
           {
-            "title": "Pornește panoul",
-            "body": "Implicit, ascultă doar pe localhost. Setează PANEL_HOST=0.0.0.0 pentru a-l accesa de pe alte mașini din rețeaua ta."
+            "title": "Porniți panoul",
+            "body": "Implicit, ascultă doar pe localhost. Setați PANEL_HOST=0.0.0.0 pentru a-l accesa de pe alte mașini din rețeaua dvs."
           }
         ]
       },
@@ -411,16 +508,16 @@
         "label": "PM2 / systemd",
         "steps": [
           {
-            "title": "Pornește dintr-o instalare din sursă",
-            "body": "Rulează aceasta din directorul clonat. PM2 lansează aplicații cu versiunea Node care a pornit daemon-ul său, așa că fixează interpretorul."
+            "title": "Porniți dintr-o instalare din sursă",
+            "body": "Rulați aceasta din directorul clonat. PM2 lansează aplicații cu versiunea Node care a pornit daemon-ul său, deci fixați interpretorul."
           },
           {
-            "title": "Salvează lista de procese și activează pornirea automată",
-            "body": "pm2 startup afișează o comandă de rulat cu sudo; ruleaz-o o singură dată."
+            "title": "Salvați lista de procese și activați pornirea automată",
+            "body": "pm2 startup afișează o comandă de rulat cu sudo; rulați-o o dată."
           },
           {
-            "title": "Preferi systemd?",
-            "body": "O unitate care rulează node src/server.js din directorul clonat, cu WorkingDirectory setat, funcționează la fel. Panoul nu necesită flag-uri suplimentare."
+            "title": "Preferați systemd?",
+            "body": "O unitate care rulează node src/server.js din directorul clonat cu WorkingDirectory setat funcționează în același mod. Panoul nu necesită flag-uri suplimentare."
           }
         ]
       }
@@ -436,5 +533,1647 @@
     "checksums": "Sumări de verificare",
     "integrations": "Integrări",
     "keyless": "fără cheie"
+  },
+  "landing": {
+    "breadcrumb": "Navigare",
+    "install": "Instalează Panoul",
+    "docs": "Citește Documentația",
+    "related": "Continuă lectura",
+    "open": "Deschide",
+    "docsGuides": "Mai multe ghiduri în documentație",
+    "docsGuidesIntro": "Răspunsuri scurte și practice la cele mai frecvente întrebări ale administratorilor de servere, disponibile alături de documentație."
+  },
+  "serversHub": {
+    "meta": {
+      "title": "Tipuri de servere Minecraft: Paper, Fabric, Forge",
+      "description": "Rulează Paper, Purpur, Fabric, Quilt, Forge, NeoForge, vanilla sau un modpack complet dintr-un singur panou auto-găzduit. Alege tipul de server și vezi ce primești."
+    },
+    "eyebrow": "Fiecare tip de server",
+    "title": "Un singur panou pentru orice fel de server Minecraft",
+    "intro": "Pluginuri, moduri, jocul neschimbat sau un întreg modpack. Alege ce vrei să rulezi, iar panoul se ocupă de versiunea Java, descărcări și fixarea acestora pentru tine.",
+    "pills": [
+      "vanilla",
+      "paper",
+      "purpur",
+      "fabric",
+      "quilt",
+      "forge",
+      "neoforge",
+      "packs-curseforge",
+      "packs-modrinth",
+      "ftb",
+      "gtnh"
+    ],
+    "cards": {
+      "serverPaper": "Servere cu pluginuri Paper și Purpur, cu pluginuri din patru registre și jucători care se conectează cu un client nemodificat.",
+      "serverFabric": "Servere Fabric și Quilt pentru moduri ușoare, cu actualizări rapide, cu o verificare a versiunii înainte de fiecare actualizare Minecraft.",
+      "serverForge": "Forge și NeoForge pentru moduri complexe, de la clasicele 1.7.10 la pachete actuale, cu versiunea Java potrivită aleasă pentru tine.",
+      "serverVanilla": "Jocul neschimbat, de la snapshot-uri la versiuni beta vechi, cu controale pentru lume, backup-uri și statistici ale jucătorilor în jur.",
+      "serverModpacks": "Pachete CurseForge, Modrinth, FTB și GT New Horizons fixate la o versiune exactă, plus propriul tău fișier zip sau .mrpack."
+    },
+    "sections": [
+      {
+        "title": "Nu ești sigur pe care să-l alegi?",
+        "body": "Alege în funcție de ce ar trebui să instaleze jucătorii tăi, nu după ce sună cel mai rapid. Dacă nimeni nu ar trebui să instaleze nimic, rulează vanilla sau Paper. Dacă instalezi un pachet publicat, pachetul decide loader-ul și versiunea Minecraft pentru tine. Dacă îți construiești singur un server modat, Fabric și NeoForge acoperă majoritatea modurilor moderne, iar Forge acoperă erele mai vechi.",
+        "points": [
+          "Supraviețuire cu prietenii, nimic neobișnuit: vanilla.",
+          "Un server public cu ranguri, revendicări și moderare: Paper.",
+          "Un pachet specific de pe CurseForge sau Modrinth: orice spune pachetul.",
+          "Un pachet modern pe care îl asamblezi singur: Fabric sau NeoForge.",
+          "Un pachet vechi din era 1.7 până la 1.12: Forge."
+        ]
+      }
+    ],
+    "related": ["guidesHub", "serverModpacks"],
+    "cta": {
+      "title": "Pornește Primul Tău Server",
+      "body": "Instalează panoul, deschide expertul de creare și alege un tip de server. Fiecare tip este gratuit și rulează pe propria ta mașină."
+    }
+  },
+  "serverPaper": {
+    "meta": {
+      "title": "Panou server Paper: pluginuri, auto-găzduit",
+      "description": "Un panou de server Paper și Purpur gratuit, auto-găzduit. Căutați în Hangar, SpigotMC și Modrinth pluginuri, verificați fiecare descărcare și mențineți-le actualizate."
+    },
+    "eyebrow": "Paper și Purpur",
+    "title": "Un panou server Paper auto-găzduit cu un browser real de pluginuri",
+    "intro": "Rulați Paper sau Purpur în propriul container Docker, găsiți pluginuri din patru registre fără a părăsi panoul și permiteți jucătorilor să se conecteze cu jocul pe care îl au deja.",
+    "pills": ["paper", "purpur", "hangar", "spigotmc", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "De ce Paper pentru un Server Public",
+        "body": "Pluginurile rulează doar pe server, astfel încât jucătorii se conectează cu un client obișnuit, nemodificat și nu trebuie niciodată să instaleze nimic. Orice ține de reguli, permisiuni, economii, revendicări de teren, minijocuri sau moderare este un plugin, și de aceea aproape fiecare server public rulează Paper. Are ani de muncă de optimizare în spate și o setare pentru aproape fiecare comportament care a deranjat vreodată un administrator. Purpur este un fork al Paper cu și mai multe comutatoare, inclusiv cele de gameplay. Ambele se află pe fila Vanilla a vrăjitorului de creare.",
+        "points": [
+          "Jucătorii se conectează cu jocul normal. Fără moduri, fără configurare de lansator.",
+          "Majoritatea pluginurilor din era Bukkit încă funcționează.",
+          "Alegeți Purpur doar dacă doriți comutatoarele sale suplimentare; altfel, Paper."
+        ]
+      },
+      {
+        "title": "Patru Registre de Pluginuri într-o Singură Căutare",
+        "body": "Fila Mods a unui server de pluginuri caută în Hangar (propriul registru de pluginuri al PaperMC), SpigotMC, Modrinth și CurseForge, filtrate după versiunea Minecraft a serverului. Doar CurseForge necesită o cheie API. Puteți, de asemenea, să lipiți o pagină de proiect, un depozit sau o lansare GitHub sau un link direct jar, iar panoul găsește versiunea corectă. Fiecare descărcare din registru este verificată împotriva celui mai puternic checksum publicat de registru înainte de a ajunge pe server, astfel încât un fișier corupt sau manipulat nu ajunge niciodată.",
+        "pills": ["hangar", "spigotmc", "modrinth", "curseforge", "github-releases", "sha512", "sha256"],
+        "points": [
+          "Rezultatele deja pe server afișează un indicator Installed.",
+          "Dacă o resursă SpigotMC este găzduită în altă parte, panoul o spune clar și oferă deschiderea paginii și preluarea jar-ului ca încărcare în schimb.",
+          "Jar-urile încărcate sunt identificate, astfel încât își păstrează numele real și rămân verificabile pentru actualizări."
+        ],
+        "shot": "mods"
+      },
+      {
+        "title": "Actualizări de Pluginuri Fără Ghicire",
+        "body": "Fiecare plugin pe care îl adăugați este verificat în raport cu sursa sa zilnic și la cerere. Actualizați un plugin, ignorați o versiune pe care nu o doriți sau apăsați Update All pentru a aplica totul cu o singură repornire. Dacă o actualizare se dovedește proastă, reveniți la versiunea anterioară din biblioteca partajată. Activați Notify Me în politica de actualizare a serverului și actualizările în așteptare apar ca un indicator și pe pagina Updates.",
+        "points": [
+          "Verificări zilnice împotriva Hangar, SpigotMC, Modrinth, CurseForge și GitHub Releases.",
+          "O revenire pune versiunea anterioară înapoi din bibliotecă.",
+          "Dacă fixați o versiune Paper, pagina Updates vă spune când apare una mai nouă."
+        ]
+      },
+      {
+        "title": "Rulați-l Ca un Server Comunitar",
+        "body": "Serverele Paper primesc aceleași instrumente ca orice alt server din panou: o consolă live cu o bară de comenzi RCON, listă albă, operatori, interdicții și interdicții IP, teleportări și comenzi de chat personalizate cu perioade de răcire. Oferiți personalului conturi cu permisiuni per server, astfel încât un moderator să poată rula consola fără a atinge backup-uri sau fișiere. Un clic adaugă o hartă live BlueMap, servită doar prin propria autentificare a panoului, iar alertele Discord vă spun când ceva are nevoie de dvs.",
+        "pills": ["bluemap", "discord"],
+        "shot": "console"
+      }
+    ],
+    "steps": {
+      "title": "Porniți un Server Paper în Trei Pași",
+      "items": [
+        {
+          "title": "Alegeți Paper în Vrăjitor",
+          "body": "Deschideți Create a Server, rămâneți pe fila Vanilla, alegeți Paper sau Purpur și selectați o versiune Minecraft. Un port gratuit pentru joc și o memorie rezonabilă sunt completate automat pentru dvs."
+        },
+        {
+          "title": "Adăugați Pluginurile",
+          "body": "Pe fila Mods a serverului, căutați în Hangar, SpigotMC, Modrinth sau CurseForge, sau lipiți un link. Instalațiile sunt verificate pe măsură ce se descarcă."
+        },
+        {
+          "title": "Partajați Adresa",
+          "body": "Fila Overview afișează adresa de oferit jucătorilor. Aceștia se conectează cu jocul pe care îl au deja."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Întrebări despre Serverul Paper",
+      "items": [
+        {
+          "q": "Pot adăuga moduri la un server Paper?",
+          "a": "Nu. Paper încarcă pluginuri, care rulează doar pe server. Modurile modifică jocul în sine și necesită un încărcător de moduri precum Fabric sau NeoForge atât pe server, cât și pe fiecare client. Dacă doriți ambele, rulați un server modat și un server de pluginuri unul lângă altul, mai degrabă decât un singur hibrid."
+        },
+        {
+          "q": "Am nevoie de un cont SpigotMC sau de o cheie API pentru a instala pluginuri?",
+          "a": "Nu. SpigotMC, Hangar și Modrinth funcționează toate fără o cheie. Doar CurseForge cere o cheie API, pe care o adăugați o dată în Settings, API Keys."
+        },
+        {
+          "q": "O fermă de redstone dintr-un videoclip nu funcționează pe serverul meu. De ce?",
+          "a": "Paper modifică unele comportamente vanilla implicit, în numele performanței. Acesta este de obicei motivul, și este de obicei o setare în configurația Paper, pe care o puteți edita în managerul de fișiere al serverului."
+        },
+        {
+          "q": "Pluginurile mele vechi Bukkit și Spigot vor funcționa în continuare?",
+          "a": "Majoritatea, da. Paper este un fork al Spigot și păstrează API-ul pluginurilor, astfel încât pluginurile scrise pentru Bukkit și Spigot funcționează în mare parte neschimbate. Verificați pagina fiecărui plugin pentru versiunile Minecraft pe care le suportă."
+        }
+      ]
+    },
+    "related": ["serverFabric", "serverVanilla", "guideMulti"],
+    "cta": {
+      "title": "Rulați Serverul Dvs. Paper Acasă",
+      "body": "Instalați panoul pe orice mașină cu Docker, apoi creați un server Paper din vrăjitor. Gratuit, open source și al dvs."
+    }
+  },
+  "serverFabric": {
+    "meta": {
+      "title": "Server Fabric auto-găzduit cu browser de moduri",
+      "description": "Găzduiește-ți propriul server Fabric sau Quilt pentru Minecraft. Caută pe Modrinth și CurseForge, fixează versiunea loader-ului și verifică fiecare mod înainte de a face upgrade."
+    },
+    "eyebrow": "Fabric și Quilt",
+    "title": "Un server Fabric auto-găzduit care știe ce moduri suportă",
+    "intro": "Creează un server Fabric sau Quilt din modurile dorite, păstrează versiunea loader-ului unde ai pus-o și treci la o nouă versiune Minecraft doar atunci când fiecare mod poate fi actualizat.",
+    "pills": ["fabric", "quilt", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "De ce Fabric",
+        "body": "Fabric este mic, urmărește rapid noile versiuni Minecraft și include majoritatea modurilor moderne de performanță. Dacă scopul tău este un server rapid cu câteva moduri de calitate a vieții, acesta este loader-ul de ales. Aproape fiecare mod Fabric necesită și Fabric API, care este un fișier separat pe care îl adaugi ca pe orice alt mod. Quilt este un fork al Fabric care rulează majoritatea modurilor Fabric; alege-l dacă ai un motiv specific, altfel alege Fabric.",
+        "points": [
+          "Urmărește rapid noile versiuni Minecraft.",
+          "Găzduiește majoritatea modurilor moderne de performanță.",
+          "Serverele Quilt văd automat versiunile Fabric, deoarece Quilt rulează moduri Fabric."
+        ]
+      },
+      {
+        "title": "Începe cu Modurile Dorite",
+        "body": "Fila „From Mods” din vrăjitor selectează loader-ul, versiunea Minecraft și o versiune a loader-ului: cea mai recentă sau una specifică pe care o fixezi. Poți face și invers. Alege mai întâi modurile, iar rezolvitorul propune cea mai recentă versiune a loader-ului și Minecraft pe care toate o suportă, apoi instalează setul la crearea serverului.",
+        "points": [
+          "Fixează o versiune a loader-ului Fabric sau Quilt în loc să urmărești cea mai recentă.",
+          "Pagina „Updates” oferă versiuni mai noi pentru un loader fixat.",
+          "Browserul de moduri filtrează după loader, astfel încât un fișier Forge nu poate ajunge din greșeală pe un server Fabric."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "O Verificare a Versiunilor Înainte de Fiecare Upgrade",
+        "body": "Fila „Mods” a unui server Fabric are o sub-fereastră „Versions”. Aceasta verifică fiecare mod instalat în raport cu Modrinth și CurseForge și raportează cea mai înaltă versiune Minecraft pentru care există o versiune pentru toate, plus o detaliere a ceea ce ar fi lăsat în urmă fiecare versiune mai nouă. O versiune Minecraft mai nouă este oferită doar atunci când verificarea o susține și niciodată atunci când un fișier nu poate fi identificat.",
+        "pills": ["modrinth", "curseforge"]
+      },
+      {
+        "title": "Moduri în Care Poți Avea Încredere și Pe Care Le Poți Anula",
+        "body": "Fiecare descărcare din registru este verificată împotriva celei mai puternice sume de control publicate de registru înainte de a ajunge pe server. Modurile pe care le adaugi locuiesc într-o bibliotecă partajată, deduplicată prin sha256, astfel încât zece servere care rulează același mod îl stochează o singură dată. Actualizează un mod, ignoră o versiune sau revino la versiunea anterioară atunci când o actualizare eșuează. Importă un .mrpack Modrinth sau un zip de fișiere și fiecare fișier este identificat și verificat împotriva serverului înainte de a instala orice.",
+        "pills": ["mrpack", "zip", "sha512", "sha256"],
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Pornește un Server Fabric în Trei Pași",
+      "items": [
+        {
+          "title": "Alege Fabric în Fila „From Mods”",
+          "body": "Alege Fabric sau Quilt, o versiune Minecraft și cea mai recentă versiune a loader-ului sau una fixată."
+        },
+        {
+          "title": "Caută și Adaugă Moduri",
+          "body": "Caută pe Modrinth sau CurseForge, adaugă Fabric API și restul. Fiecare descărcare este verificată."
+        },
+        {
+          "title": "Invitați Jucătorii",
+          "body": "Fila „Invites” creează o invitație gata de copiat și un .mrpack pentru client al modurilor adăugate, cu serverul tău deja în lista de servere din joc."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Întrebări despre Serverele Fabric",
+      "items": [
+        {
+          "q": "Jucătorii trebuie să instaleze aceleași moduri?",
+          "a": "Da, pentru orice mod care adaugă conținut. Modurile modifică jocul în sine, deci clientul trebuie să încarce aceleași moduri. Fila „Invites” creează un .mrpack pentru client al modurilor adăugate, cu serverul tău deja în lista de servere din joc, pe care jucătorii îl importă într-un launcher precum Prism sau Modrinth App."
+        },
+        {
+          "q": "Chiar am nevoie de Fabric API?",
+          "a": "Aproape întotdeauna. Aproape fiecare mod Fabric depinde de el și este un fișier separat. Adaugă-l din browserul de moduri ca pe orice alt mod."
+        },
+        {
+          "q": "Cum știu dacă modurile mele vor funcționa pe următoarea versiune Minecraft?",
+          "a": "Deschide fila „Mods” a serverului și apoi „Versions”. Aceasta arată cea mai înaltă versiune Minecraft pentru care fiecare mod instalat are o versiune și ce ar fi lăsat în urmă o versiune mai nouă."
+        },
+        {
+          "q": "O actualizare de mod a stricat serverul. Pot să mă întorc?",
+          "a": "Da. Revino la mod din rândul său din fila „Mods” și versiunea anterioară revine din biblioteca partajată."
+        }
+      ]
+    },
+    "related": ["serverForge", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Găzduiește-ți Propriul Server Fabric",
+      "body": "Instalează panoul, deschide fila „From Mods” și alege-ți modurile. Fără abonament și fără limite la câte servere rulezi."
+    }
+  },
+  "serverForge": {
+    "meta": {
+      "title": "Panou pentru servere modificate Forge și NeoForge",
+      "description": "Rulează propriul tău server Minecraft modificat Forge sau NeoForge. Java potrivită este selectată pentru tine, versiunile loader-ului pot fi fixate, iar erorile își numesc suspecții."
+    },
+    "eyebrow": "Forge și NeoForge",
+    "title": "Un panou pentru servere Forge care selectează Java potrivită pentru tine",
+    "intro": "De la clasicele 1.7.10 la pachetele NeoForge actuale, creează serverul, ajustează memoria și găsește mod-ul din spatele unei erori fără a citi o linie de stack trace.",
+    "pills": ["forge", "neoforge", "curseforge", "modrinth"],
+    "sections": [
+      {
+        "title": "Forge sau NeoForge?",
+        "body": "NeoForge este unde vechiul ecosistem Forge își desfășoară acum activitatea pentru versiunile actuale. S-a separat de Forge în timpul versiunii 1.20.1, iar majoritatea pachetelor mari construite pentru 1.20.2 și versiunile ulterioare vizează NeoForge, așa că pornește un nou server greu pe NeoForge. Forge încă deține trecutul: orice de la erele 1.7.10, 1.12.2 și 1.16.5 este Forge, iar acestea reprezintă o mare parte din pachetele cele mai iubite. Mod-urile pentru un loader nu rulează pe celălalt, iar un pachet NeoForge 1.20.1 nu rulează pe Forge 1.20.1.",
+        "points": [
+          "Server nou greu: NeoForge.",
+          "Era 1.7.10, 1.12.2 sau 1.16.5: Forge.",
+          "Un pachet publicat: exact ce listează pachetul."
+        ]
+      },
+      {
+        "title": "Java Potrivită, De Fiecare Dată",
+        "body": "Cerința Java a Minecraft evoluează odată cu jocul, iar cea greșită îți oferă un mesaj inutil de UnsupportedClassVersionError în loc de unul clar. Pachetele vechi au cu adevărat nevoie de Java 8, iar versiunile actuale necesită 21 sau mai noi. Asistentul de creare citește versiunea Minecraft pe care o alegi și alege singur runtime-ul, astfel încât nepotrivirea să nu se întâmple niciodată din greșeală. Actualizarea unui pachet re-rezolvă Java dacă noua versiune necesită una diferită.",
+        "points": ["1.16.5 și anterioare: Java 8.", "1.18 până la 1.20.4: Java 17.", "1.20.5 până la 1.21: Java 21."]
+      },
+      {
+        "title": "Memorie Ajustată pentru Mod-uri",
+        "body": "Fiecare server are două numere: heap-ul Java și limita de memorie a containerului. Java necesită memorie dincolo de heap, aproximativ 1,5 până la 2 GB pe un pachet mare de mod-uri, iar un container fără spațiu liber este oprit în momentul în care Java încearcă să acceseze acea memorie. Asistentul setează limita cu 50% peste heap, iar panoul refuză o limită de container care nu este peste heap. Un pachet complex cu 150 până la 300 de mod-uri necesită un heap de 6 până la 8 GB.",
+        "points": [
+          "Un server oprit din cauza lipsei de memorie este înregistrat exact așa în istoricul său.",
+          "Setează un heap inițial mai mic pentru a vedea memoria urmând utilizarea reală."
+        ]
+      },
+      {
+        "title": "Erori Care Își Numesc Suspecții",
+        "body": "Rapoartele de eroare sunt preluate automat și analizate într-un rezumat de o singură linie cu excepția și mod-urile cele mai probabile din spatele ei. Deschide vizualizatorul încorporat, copiază stack trace-ul sau, după o confirmare explicită, partajează-l pe mclo.gs și obține analizele automate: probleme cunoscute cu soluții sugerate, afișate chiar în panou. Repornirea automată la eroare încearcă din nou cu întârzieri crescătoare și sare peste erorile care necesită o remediere mai întâi, cum ar fi Java greșită sau lipsa de memorie.",
+        "pills": ["mclogs"],
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Pornește un Server Forge în Trei Pași",
+      "items": [
+        {
+          "title": "Alege Loader-ul și Versiunea",
+          "body": "Pe fila \"From Mods\" a asistentului, alege Forge sau NeoForge, versiunea Minecraft și cea mai recentă versiune a loader-ului sau una fixată."
+        },
+        {
+          "title": "Oferă-i Suficientă Memorie",
+          "body": "Setează heap-ul Java pentru dimensiunea listei tale de mod-uri. Limita containerului urmează, cu 50% peste aceasta."
+        },
+        {
+          "title": "Adaugă Mod-uri sau Importă un Zip",
+          "body": "Caută pe CurseForge și Modrinth sau importă un export CurseForge sau un zip de fișiere jar. Fiecare fișier jar este identificat și verificat mai întâi în raport cu serverul."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Întrebări despre Serverele Forge",
+      "items": [
+        {
+          "q": "Pot rula în continuare un pachet 1.12.2 sau 1.7.10?",
+          "a": "Da. Alege versiunea și Forge în asistent, iar panoul îl va rula pe Java 8, de care au nevoie acele versiuni. GT New Horizons, pachetul expert 1.7.10, se instalează de pe pagina Modpacks cu propria sa alegere de Java."
+        },
+        {
+          "q": "Câtă memorie necesită un server Forge?",
+          "a": "Un pachet ușor de 40 până la 80 de mod-uri rulează bine pe un heap de 4 GB într-un container de 6 GB. Un pachet de 150 până la 300 de mod-uri necesită 6 până la 8 GB de heap și aproximativ 10 GB pentru container."
+        },
+        {
+          "q": "Pot fixa o versiune specifică de Forge?",
+          "a": "Da. Selectorul de versiuni ale loader-ului din asistent acceptă cea mai recentă versiune sau o versiune specifică, iar pagina Updates oferă versiuni mai noi pentru una fixată fără a le aplica automat."
+        },
+        {
+          "q": "Serverul meu a crăpat la pornire. Unde să mă uit?",
+          "a": "Deschide Monitoring și apoi History. Cardul raportului de eroare listează excepția și mod-urile suspectate, iar Analyze rulează analizele mclo.gs pentru probleme și soluții cunoscute."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "serverFabric", "guideHome"],
+    "cta": {
+      "title": "Rulează-ți Propriul Server Modificat",
+      "body": "Instalează panoul pe o mașină cu suficientă memorie, apoi creează un server Forge sau NeoForge din asistent."
+    }
+  },
+  "serverVanilla": {
+    "meta": {
+      "title": "Panou de server Minecraft Vanilla, auto-găzduit",
+      "description": "Găzduiește-ți propriul server Minecraft Vanilla: orice versiune de la beta vechi la cel mai recent snapshot, cu control asupra lumii, backup-uri zilnice și statistici ale jucătorilor."
+    },
+    "eyebrow": "Jocul neschimbat",
+    "title": "Un server Minecraft Vanilla cu tot ce ține de el gestionat",
+    "intro": "Păstrează jocul exact așa cum îl oferă Mojang și obține backup-uri, unelte pentru lume, moderare și statistici ale jucătorilor direct din panou, în loc de plugin-uri.",
+    "pills": ["vanilla", "docker"],
+    "sections": [
+      {
+        "title": "Orice Versiune Dorești",
+        "body": "Alege cea mai recentă versiune, un snapshot sau o versiune specifică, inclusiv beta și alpha vechi. Panoul alege runtime-ul Java necesar acelei versiuni, descarcă imaginea și pornește serverul. Nimeni nu trebuie să instaleze nimic pentru a se conecta: jucătorii se conectează cu jocul pe care îl au deja.",
+        "points": [
+          "Ultima versiune, snapshot-uri sau o versiune specifică.",
+          "Beta și alpha vechi pentru un server nostalgic.",
+          "Java corectă aleasă pentru fiecare versiune."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Controlul Lumii Fără Comenzi",
+        "body": "Controlul lumii este disponibil pe fiecare tab al serverului: ceasul din joc, vremea și gamerule-urile comune ca butoane de comutare, cu fiecare altă regulă la un clic distanță. Tab-ul Lumi resetează lumea activă cu un seed nou, păstrat sau personalizat, oferind mai întâi un backup de siguranță. Duplică o lume, păstrează-le pe cele finalizate în biblioteca de lumi sau încarcă o lume pe care o ai deja ca arhivă .zip sau .tar.",
+        "points": [
+          "Resetează cu un seed nou, același seed sau unul introdus de tine.",
+          "O bibliotecă de lumi partajată de fiecare server.",
+          "Editează server.properties în browser; valoarea de pe disc primează."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Backup-uri de Ziua Unu",
+        "body": "Fiecare server nou primește automat un program de backup zilnic. Backup-urile sunt sigure: panoul oprește salvarea, golește memoria lumii, o arhivează și verifică dacă arhiva se deschide înainte de a o înregistra. Restaurarea readuce serverul exact la starea anterioară și face mai întâi un backup de siguranță al datelor curente.",
+        "shot": "backups"
+      },
+      {
+        "title": "Moderare și Statistici Fără Plugin-uri",
+        "body": "Vanilla nu are sistem de permisiuni, așa că panoul îți oferă uneltele de moderare: whitelist, operatori la fiecare nivel, banări și banări IP, și teleportări, live cât timp serverul rulează și direct în fișiere cât timp este oprit. Statisticile proprii ale jocului sunt citite periodic în profiluri de jucător și un clasament: timp de joc, decese, omoruri, blocuri și diamante minate, și distanță parcursă. O cronologie a activității păstrează chat-ul, intrările, decesele și avansările ca fiind căutabile."
+      }
+    ],
+    "faq": {
+      "title": "Întrebări despre Serverul Vanilla",
+      "items": [
+        {
+          "q": "Pot rula un server snapshot?",
+          "a": "Da. Alege un snapshot ca versiune Minecraft în wizard. Păstrează un backup înainte de fiecare snapshot nou, deoarece lumile snapshot nu pot fi deschise într-o versiune mai veche."
+        },
+        {
+          "q": "Un server vanilla poate avea o hartă live?",
+          "a": "Nu pe vanilla. BlueMap necesită un plugin sau un mod loader pentru a rula. Un server Paper îl obține cu un singur clic, iar jucătorii se conectează în continuare cu un client nemodificat."
+        },
+        {
+          "q": "Pot reseta lumea, dar păstra seed-ul?",
+          "a": "Da. Resetează lumea activă din tab-ul Lumi și alege să păstrezi seed-ul curent. Panoul oferă mai întâi un backup de siguranță al lumii vechi."
+        },
+        {
+          "q": "Câți jucători poate suporta un server vanilla?",
+          "a": "Vanilla este mai lent cu mulți jucători decât Paper. Pentru un grup de prieteni este în regulă. Pentru un server public aglomerat, Paper rulează același joc cu ani de muncă la performanță."
+        }
+      ]
+    },
+    "related": ["serverPaper", "guidePi", "guideHome"],
+    "cta": {
+      "title": "Pornește un Server Vanilla",
+      "body": "Instalează panoul, alege Vanilla în wizard și distribuie adresa. Gratuit și open source."
+    }
+  },
+  "serverModpacks": {
+    "meta": {
+      "title": "Server de modpack Minecraft: instalări cu un clic",
+      "description": "Rulează un server de modpack Minecraft de pe CurseForge, Modrinth, FTB sau GT New Horizons. Pachetul rămâne fixat, iar fiecare actualizare vine cu o copie de rezervă și o posibilitate de revenire."
+    },
+    "eyebrow": "Servere de modpack",
+    "title": "Un server de modpack Minecraft care nu se actualizează pe ascuns",
+    "intro": "Instalează un pachet după nume, fixează-l la o versiune exactă și actualizează-l doar când dorești, mai întâi cu o copie de rezervă și o revenire cu un clic dacă noua versiune nu pornește.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"],
+    "sections": [
+      {
+        "title": "Toate sursele majore de modpack-uri",
+        "body": "Pagina Modpacks și fila „Din Modpack” din expert instalează pachete de pe CurseForge și Modrinth căutând după nume, pachete FTB după ID-ul pachetului și al versiunii, și GT New Horizons din propriul index de lansări. Nu este un pachet publicat? Încarcă un fișier .mrpack de pe Modrinth, un export de modpack de pe CurseForge sau orice arhivă zip de fișiere jar cu moduri. Manifestul, sau un vot majoritar între fișierele jar identificate, completează loader-ul și versiunea Minecraft.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export", "zip"],
+        "points": [
+          "CurseForge necesită o cheie API, adăugată o singură dată la Settings, API Keys.",
+          "Modurile ale căror autori interzic descărcările automate sunt listate cu un link și un spațiu de încărcare în loc să eșueze instalarea.",
+          "GT New Horizons primește versiunea sa Java și limite minime rezonabile pentru memorie și spațiu de stocare setate pentru tine."
+        ]
+      },
+      {
+        "title": "Fixat la o versiune exactă",
+        "body": "Când alegi un pachet, panoul rezolvă versiunea exactă, o înregistrează și o instalează pe aceasta. O repornire nu poate actualiza pachetul pe ascuns. Tu alegi cum aude fiecare server despre versiunile noi: Manual Only îl lasă în pace complet, Notify Me afișează un indicator și îl listează pe pagina Updates, iar Auto-Update aplică actualizările pachetului după verificarea zilnică, prin același canal protejat. Actualizările care ar muta o lume la o versiune diferită de Minecraft sunt întotdeauna omise, deoarece conversia unei lumi este decizia ta.",
+        "points": [
+          "Manual Only este implicit.",
+          "Serverele care urmăresc lansările stabile nu primesc niciodată o versiune beta.",
+          "Auto-Update nu trece niciodată peste o versiune de Minecraft."
+        ]
+      },
+      {
+        "title": "Actualizări cu posibilitate de revenire",
+        "body": "Actualizarea unui pachet este o singură acțiune. Panoul face o copie de rezervă, oprește serverul grațios, schimbă versiunea fixată, reconstruiește serverul cu Java potrivită pentru noua versiune și monitorizează prima pornire, cu o fereastră generoasă pentru pachete mari care descarcă gigabytes la prima pornire. Dacă noua versiune nu pornește, revino cu un clic.",
+        "shot": "backups"
+      },
+      {
+        "title": "Propriile tale moduri deasupra",
+        "body": "Modurile pe care le adaugi la un server de modpack locuiesc într-o bibliotecă partajată și sunt legate în server, deci supraviețuiesc actualizărilor pachetului. Dezactivează un mod din pachet pe care nu îl dorești, adaugă un mod de performanță pe care pachetul îl duce lipsă și păstrează ambele prin următoarea actualizare. Jucătorii instalează același pachet la aceeași versiune de pe CurseForge sau Modrinth, iar fila Invites îți oferă o invitație gata de copiat, cu adresa și versiunea.",
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Pornește un server de modpack în trei pași",
+      "items": [
+        {
+          "title": "Găsește Pachetul",
+          "body": "Caută pe CurseForge sau Modrinth pe pagina Modpacks, sau încarcă un fișier .mrpack, un export CurseForge sau o arhivă zip de fișiere jar."
+        },
+        {
+          "title": "Alege Versiunea și Memoria",
+          "body": "Alege versiunea exactă a pachetului. Oferă memoriei Java spațiu suficient pentru numărul de moduri; limita containerului urmează."
+        },
+        {
+          "title": "Creează și Monitorizează Pornirea",
+          "body": "Panoul instalează pachetul, îl fixează și pornește serverul. Prima pornire a unui pachet mare durează ceva timp; consola afișează fiecare linie."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Întrebări despre serverele de modpack",
+      "items": [
+        {
+          "q": "Repornirea serverului îmi va actualiza modpack-ul?",
+          "a": "Nu. Pachetul este fixat la versiunea exactă pe care ai instalat-o. Se schimbă doar când îl actualizezi, sau după verificarea zilnică dacă ai setat serverul pe Auto-Update."
+        },
+        {
+          "q": "De ce necesită CurseForge o cheie API, când Modrinth nu?",
+          "a": "CurseForge răspunde doar la cererile care includ o cheie. Poți obține una din consola CurseForge și o poți adăuga o singură dată la Settings, API Keys. Modrinth funcționează fără una."
+        },
+        {
+          "q": "Unele moduri din pachetul meu nu au putut fi descărcate. Ce fac?",
+          "a": "Autorii lor interzic descărcările automate. Panoul listează fiecare mod cu un link către pagina sa și un spațiu de încărcare, astfel încât să descarci fișierul jar în browser și să-l plasezi acolo."
+        },
+        {
+          "q": "Pot instala un pachet FTB?",
+          "a": "Da, prin API-ul FTB cu ID-ul numeric al pachetului și un ID explicit de versiune. Panoul nu verifică încă actualizările pentru pachetele FTB."
+        }
+      ]
+    },
+    "related": ["guideFriends", "serverForge", "serverFabric"],
+    "cta": {
+      "title": "Rulează-ți serverul de modpack acasă",
+      "body": "Instalează panoul, deschide pagina Modpacks și alege un pachet. Acesta rămâne la versiunea pe care ai ales-o până când spui altfel."
+    }
+  },
+  "guidesHub": {
+    "meta": {
+      "title": "Ghiduri: găzduiește-ți propriul server Minecraft",
+      "description": "Ghiduri pentru găzduirea propriilor servere Minecraft: un server modpack pentru prieteni, un Raspberry Pi, un PC de acasă, părăsirea găzduirii plătite și multe servere pe o singură mașină."
+    },
+    "eyebrow": "Ghiduri",
+    "title": "Ghiduri pentru găzduirea propriilor servere Minecraft",
+    "intro": "Tutoriale practice pentru configurațiile pe care oamenii le folosesc de fapt, de la un Raspberry Pi pe un raft la o mașină plină de servere.",
+    "cards": {
+      "guideFriends": "Găzduiește un modpack CurseForge sau Modrinth pentru prietenii tăi, cu memoria potrivită și o invitație pe care o pot urma.",
+      "guidePi": "Transformă un Raspberry Pi 4 sau 5 într-un server Minecraft cu un panou web și dimensionează-l corect.",
+      "guideHome": "Găzduiește un server Minecraft acasă pe Windows, macOS sau Linux și lasă prietenii să se alăture în siguranță.",
+      "guideHosting": "Mută-ți lumea, pluginurile și modurile de pe un server găzduit plătit fără a pierde niciun inventar.",
+      "guideMulti": "Rulează mai multe servere Minecraft pe o singură mașină fără ca porturile, memoria sau discul să se interfereze."
+    },
+    "related": ["serversHub"],
+    "cta": {
+      "title": "Ai nevoie de ceva ce nu este acoperit aici?",
+      "body": "Documentația intră în detalii despre fiecare funcție, iar pe Discord sunt oameni reali care rulează servere."
+    }
+  },
+  "guideFriends": {
+    "meta": {
+      "title": "Găzduiește un server de modpack pentru prieteni",
+      "description": "Găzduiește un server de modpack CurseForge sau Modrinth pentru prietenii tăi pe propria mașină: alege pachetul, alocă-i suficientă memorie, invită prietenii și păstrează backup-uri."
+    },
+    "eyebrow": "Ghid server modpack",
+    "title": "Cum să găzduiești un server de modpack pentru prietenii tăi",
+    "intro": "Propria ta mașină poate găzdui pachetul pe care îl joci cu prietenii tăi. Instalează panoul, creează serverul din pachet, alocă-i memoria necesară și trimite prietenilor un link de invitație pe care îl pot urma.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "docker"],
+    "sections": [
+      {
+        "title": "Alege Pachetul din Vrăjitor",
+        "body": "Pagina Modpacks și fila From Modpack din vrăjitorul de creare caută CurseForge și Modrinth după nume; vrăjitorul acceptă și pachete FTB după ID sau un export de pachet pe care îl ai deja. Alege versiunea pe care o vor juca prietenii. Panoul instalează exact acea versiune și o păstrează acolo: o repornire nu actualizează niciodată pachetul pe ascuns. CurseForge necesită o cheie API gratuită, adăugată o dată în Settings, API Keys; Modrinth nu necesită nicio cheie.",
+        "points": [
+          "Caută în CurseForge și Modrinth sau încarcă un fișier .mrpack, un export CurseForge sau un zip de mod-uri.",
+          "Versiunea pachetului este fixată, astfel încât toată lumea joacă același pachet.",
+          "Java este selectată pentru versiunea Minecraft a pachetului."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "mrpack", "cf-export"],
+        "shot": "modpacks"
+      },
+      {
+        "title": "Alocă-i Suficientă Memorie",
+        "body": "Modpack-urile necesită mult mai multă memorie decât un server vanilla, iar un server are două valori: heap-ul Java și limita containerului din jurul său, care trebuie să fie mai mare deoarece Java utilizează memorie dincolo de heap-ul său. Un pachet ușor de 40 până la 80 de mod-uri dorește un heap de 4 GB într-un container de 6 GB; un pachet mare de tip „kitchen-sink” necesită 6 până la 8 GB heap într-un container de 10 GB. Panoul diferențiază un server oprit din cauza lipsei de memorie de o blocare, astfel încât știi ce setare să modifici.",
+        "points": [
+          "Setează memoria în vrăjitor și modific-o ulterior în setările serverului.",
+          "Lasă memorie pentru sistemul de operare și panou.",
+          "Fila Monitoring arată ce folosește serverul în realitate."
+        ]
+      },
+      {
+        "title": "Trimite Prietenilor un Link pe care îl pot Urma",
+        "body": "Prietenii instalează același pachet la aceeași versiune în lansatorul lor: aplicația CurseForge, aplicația Modrinth sau Prism Launcher. Fila Invites a serverului, sub Settings, copiază adresa de partajat și un text de invitație cu versiunea Minecraft. Prietenii din rețeaua ta folosesc adresa locală. Pentru prietenii din alte locații, redirecționează portul de joc pe routerul tău sau folosește un tunel atunci când furnizorul tău nu permite acest lucru.",
+        "points": [
+          "Fila Invites oferă adresa locală, adresa ta publică și una personalizată.",
+          "Dacă lista albă (whitelist) este activată, adaugă mai întâi fiecare prieten în fila Players.",
+          "Pentru un server creat din mod-uri alese de tine, fila Invites creează și un fișier .mrpack pentru client, care le instalează și adaugă serverul în lista multiplayer."
+        ],
+        "pills": ["mrpack"]
+      },
+      {
+        "title": "Păstrează Lumea în Siguranță",
+        "body": "Fiecare server nou primește un program zilnic de backup. Înainte de o actualizare a pachetului, panoul face un alt backup, reconstruiește serverul pe noua versiune și monitorizează prima pornire; dacă nu pornește, o singură clic îl readuce la starea anterioară. Mod-urile adăugate peste pachet rămân după actualizări.",
+        "points": [
+          "Backup-uri zilnice de la prima zi.",
+          "Actualizări și reveniri la versiuni anterioare ale pachetului cu backup și posibilitate de rollback.",
+          "Rapoarte de eroare detectate, explicate și partajabile."
+        ],
+        "shot": "backups"
+      }
+    ],
+    "steps": {
+      "title": "Găzduiește-ți Serverul de Modpack",
+      "items": [
+        {
+          "title": "Instalează Panoul",
+          "body": "Pe Linux, instalatorul dintr-o singură linie configurează Docker și panoul. Pe Windows și macOS, rulează panoul cu Node.js alături de Docker Desktop."
+        },
+        {
+          "title": "Adaugă o Cheie API CurseForge",
+          "body": "Doar pentru pachetele CurseForge: adaugă o cheie gratuită în Settings, API Keys."
+        },
+        {
+          "title": "Creează Serverul din Pachet",
+          "body": "Deschide fila From Modpack din vrăjitor, găsește pachetul, alege versiunea și memoria sa și creează serverul."
+        },
+        {
+          "title": "Invitați-vă Prietenii",
+          "body": "Pornește serverul, deschide Settings, Invites și trimite textul invitației. Prietenii instalează aceeași versiune de pachet în lansatorul lor și se conectează."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Întrebări despre Serverul de Modpack",
+      "items": [
+        {
+          "q": "Cât RAM necesită un server de modpack?",
+          "a": "Aproximativ 6 GB pentru un pachet ușor de 40 până la 80 de mod-uri și 10 GB pentru un pachet mare de 150 până la 300, fiecare cu un heap Java mai mic în interior. Pachetele avansate precum GregTech New Horizons necesită 16 GB. Lasă spațiu și pentru sistemul de operare."
+        },
+        {
+          "q": "Prietenii mei trebuie să aibă aceeași versiune de modpack?",
+          "a": "Da. Serverul rulează o singură versiune de pachet fixată, iar un client cu versiuni diferite ale mod-urilor este de obicei refuzat sau se blochează. Spune-le prietenilor versiunea afișată în fila Overview a serverului."
+        },
+        {
+          "q": "Pot prietenii să se conecteze fără port forwarding?",
+          "a": "Da, dacă sunt în rețeaua ta. Din alte locații, fie redirecționează portul de joc pe routerul tău, fie folosește un serviciu de tunelare, care funcționează și atunci când furnizorul tău blochează port forwarding-ul."
+        },
+        {
+          "q": "Ce se întâmplă când pachetul primește o actualizare?",
+          "a": "Cu politica Notify Me, pagina Updates o afișează. Aplicarea ei implică un backup, reconstruirea serverului și monitorizarea primei porniri, iar revenirea la starea anterioară este la un singur clic. Prietenii tăi actualizează apoi pachetul și în lansatorul lor."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "guideHome", "guidePi"],
+    "cta": {
+      "title": "Joacă Pachetul Tău pe Propriul Tău Server",
+      "body": "Gratuit, open source și fără conturi la nimeni. Instalează panoul și creează serverul din pachet în vrăjitor."
+    }
+  },
+  "guidePi": {
+    "meta": {
+      "title": "Server Minecraft pe Raspberry Pi cu panou web",
+      "description": "Configurați un server Minecraft pe Raspberry Pi cu un panou web gratuit. Ce hardware aveți nevoie, cum să-l instalați cu o singură comandă și cum să dimensionați memoria."
+    },
+    "eyebrow": "Ghid Raspberry Pi",
+    "title": "Rulați un server Minecraft pe Raspberry Pi cu un panou web real",
+    "intro": "Un Raspberry Pi 4 sau 5 reprezintă o gazdă silențioasă, cu consum redus de energie, pentru un server Minecraft mic. Iată ce să cumpărați, cum să instalați panoul cu o singură comandă și cât de mult să-l solicitați.",
+    "pills": ["arm64", "linux", "docker", "paper", "fabric"],
+    "sections": [
+      {
+        "title": "Ce aveți nevoie",
+        "body": "Panoul și imaginea serverului său sunt publicate pentru arm64, deci un Raspberry Pi pe 64 de biți le rulează ca orice altă mașină Linux. Memoria este limita cea mai importantă: un server vanilla sau Paper pentru până la zece jucători necesită o heap Java de 2 GB pe o mașină de 4 GB, iar un modpack ușor necesită o heap de 4 GB pe o mașină de 6 GB. Acest lucru plasează un Pi de 4 GB la limita inferioară și un Pi de 8 GB în zona confortabilă.",
+        "points": [
+          "Un Raspberry Pi 4 sau 5 cu 4 GB de memorie sau mai mult. 8 GB dacă doriți moduri.",
+          "Un sistem de operare pe 64 de biți, cum ar fi Raspberry Pi OS pe 64 de biți.",
+          "Un SSD prin USB, mai degrabă decât cardul SD. Lumile sunt citite și scrise constant, iar o lume pe stocare lentă sacadează în timpul încărcării fragmentelor.",
+          "O conexiune de rețea prin fir, dacă este posibil."
+        ]
+      },
+      {
+        "title": "Alegeți un tip de server potrivit pentru Pi",
+        "body": "Minecraft acordă mult mai multă importanță vitezei unui singur nucleu decât numărului acestora, iar nucleele unui Pi sunt modeste. Paper rulează același joc ca vanilla, cu ani de optimizări de performanță, iar jucătorii se pot conecta în continuare cu un client nemodificat. Dacă doriți moduri, Fabric cu câteva moduri de performanță și de calitate a vieții este o opțiune mai bună decât un pachet Forge mare. Un pachet „kitchen-sink” cu 200 de moduri nu este o sarcină pentru un Pi.",
+        "pills": ["paper", "purpur", "fabric"],
+        "points": [
+          "Grup mic, joc neschimbat: Paper.",
+          "Câteva moduri: Fabric.",
+          "Reduceți distanța de vizualizare; scăderea de la 12 la 8 fragmente economisește multă memorie și este abia perceptibilă în joc."
+        ]
+      },
+      {
+        "title": "Țineți-l sub observație",
+        "body": "Fila Monitorizare a serverului afișează tick-uri pe secundă și milisecunde pe tick, astfel încât să puteți vedea când Pi-ul rămâne în urmă. Contorul de memorie arată ce folosește containerul în realitate. Java își alocă întreaga heap în avans implicit; dacă preferați să vedeți memoria urmând utilizarea reală, setați o heap inițială mai mică în cardul Resurse al serverului. Backup-urile zilnice sunt activate din prima zi.",
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Instalați panoul pe un Raspberry Pi",
+      "items": [
+        {
+          "title": "Flashează un sistem de operare pe 64 de biți",
+          "body": "Instalați Raspberry Pi OS pe 64 de biți (sau alt Linux pe 64 de biți), porniți de pe SSD dacă puteți și actualizați sistemul."
+        },
+        {
+          "title": "Rulați instalatorul cu o singură linie",
+          "body": "Instalatorul de pe pagina de Instalare instalează Docker dacă lipsește, configurează panoul în /opt/msm, îl pornește și așteaptă până când răspunde. Detectează arm64 automat."
+        },
+        {
+          "title": "Finalizați configurarea în browser",
+          "body": "Deschideți adresa Pi-ului pe portul 25564 de pe un alt computer. Deoarece panoul este accesibil din rețeaua dvs., configurarea solicită un PIN de 6 cifre, pe care instalatorul îl afișează pentru dvs."
+        },
+        {
+          "title": "Creați un server mic",
+          "body": "Alegeți Paper sau Fabric în expert. Memoria implicită se adaptează la RAM-ul Pi-ului; lăsați spațiu pentru sistem și alte servicii."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Întrebări despre Raspberry Pi",
+      "items": [
+        {
+          "q": "Va funcționa un Raspberry Pi 3?",
+          "a": "Nu este o opțiune bună. Un Pi 3 are 1 GB de memorie, în timp ce chiar și un server vanilla sau Paper mic necesită o heap de 2 GB pe o mașină de 4 GB. Folosiți un Pi 4 sau 5 cu 4 GB sau mai mult."
+        },
+        {
+          "q": "Am nevoie de un sistem de operare pe 64 de biți?",
+          "a": "Da. Imaginea panoului și instalatorul sunt construite pentru arm64 și amd64, iar instalatorul se oprește pe orice altă arhitectură."
+        },
+        {
+          "q": "Pot rula un modpack mare pe un Pi?",
+          "a": "Pachetele mari necesită 6 până la 8 GB de heap Java și aproximativ 10 GB de memorie în total, mai mult decât are orice Pi. Rămâneți la Paper sau la o configurație Fabric ușoară."
+        },
+        {
+          "q": "Cum se conectează jucătorii din afara casei mele?",
+          "a": "Redirecționați portul jocului, 25565 implicit peste TCP și UDP, de la routerul dvs. la Pi. Nu redirecționați niciodată portul panoului sau porturile RCON; accesați panoul printr-un VPN sau un proxy invers cu TLS în schimb."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverPaper", "serverFabric"],
+    "cta": {
+      "title": "Transformați-vă Pi-ul într-un server",
+      "body": "O singură comandă instalează totul. Panoul este gratuit, open source și rulează în întregime pe Pi."
+    }
+  },
+  "guideHome": {
+    "meta": {
+      "title": "Găzduiește un server Minecraft acasă, pas cu pas",
+      "description": "Găzduiește un server Minecraft acasă pe Windows, macOS sau Linux cu un panou web gratuit. Instalează-l, păstrează panoul privat și lasă prietenii să se alăture în siguranță."
+    },
+    "eyebrow": "Ghid server acasă",
+    "title": "Găzduiește un server Minecraft acasă pe Windows, macOS sau Linux",
+    "intro": "Orice computer care poate rula Docker îți poate găzdui serverele. Instalează panoul, păstrează-l privat, deschide doar portul jocului și prietenii tăi se pot alătura de oriunde.",
+    "pills": ["windows", "macos", "linux", "docker", "nodejs"],
+    "sections": [
+      {
+        "title": "Două moduri de instalare",
+        "body": "Pe o mașină Linux, instalatorul dintr-o singură linie face totul: instalează Docker dacă lipsește, rulează panoul ca un container și îl repornește după o repornire. Pe Windows și macOS, rulează panoul direct cu Node.js 24 alături de Docker Desktop. Panoul afișează un mesaj clar și se oprește dacă Node.js este prea vechi, iar dacă Docker nu rulează încă, primești în continuare panoul complet; serverele pornesc imediat ce Docker este activ.",
+        "pills": ["linux", "docker", "windows", "macos", "nodejs"],
+        "points": [
+          "Linux: instalatorul sau fișierul compose din Portainer sau Dockge.",
+          "Windows: Docker Desktop cu backend WSL2, apoi panoul din sursă.",
+          "macOS: Docker Desktop, apoi panoul din sursă.",
+          "Sub PM2 sau systemd, panoul supraviețuiește repornirilor."
+        ]
+      },
+      {
+        "title": "Păstrează panoul privat",
+        "body": "Jucătorii nu comunică niciodată cu panoul. Ei se conectează la portul jocului. O instalare nouă din sursă răspunde doar pe mașina pe care rulează, la portul localhost 25564. Pentru a ajunge la el de pe alt computer din rețeaua ta, setează-l să asculte pe rețeaua ta; configurarea cere apoi un PIN unic, astfel încât un străin care ajunge primul la port nu poate revendica contul de administrator. Nu redirecționa niciodată portul panoului către internet. Pentru a gestiona serverele din afara casei, folosește un VPN, un tunel SSH sau un reverse proxy cu TLS.",
+        "points": [
+          "Doar localhost din start.",
+          "Un PIN de configurare atunci când panoul este accesibil din rețea.",
+          "Autentificare cu doi factori pentru fiecare cont."
+        ]
+      },
+      {
+        "title": "Lasă prietenii să se alăture",
+        "body": "Fiecare server primește un port de joc, începând cu 25565 și crescând. Pe routerul tău, redirecționează acel port, atât prin TCP cât și UDP, către computerul care rulează serverele. Lasă porturile consolei de la distanță, cu 1000 mai sus decât fiecare port de joc, închise: panoul ajunge la ele din interiorul containerului și nu are nevoie niciodată de ele deschise. Oferă jucătorilor un nume de gazdă pe care îl controlezi în loc de adresa ta de acasă, astfel încât o schimbare de adresă să fie o modificare DNS și nu un mesaj către fiecare jucător.",
+        "points": [
+          "Redirecționează doar porturile de joc, TCP și UDP.",
+          "Păstrează RCON și portul panoului închise.",
+          "Fila Overview afișează adresa de partajat."
+        ],
+        "shot": "overview"
+      },
+      {
+        "title": "Fă-l să se comporte ca un server",
+        "body": "Un computer de acasă care intră în sleep duce și serverul cu el, așa că dezactivează sleep-ul pe mașina care îl găzduiește. Bifează Start on Panel Boot în setările unui server și acesta va reveni odată cu panoul. Repornirea automată la crash readuce un server defect cu timpi de așteptare crescători între încercări. Backup-urile zilnice sunt programate pentru fiecare server nou, iar programările pot reporni serverele în ore liniștite.",
+        "shot": "schedules"
+      }
+    ],
+    "steps": {
+      "title": "Găzduiește primul tău server acasă",
+      "items": [
+        {
+          "title": "Instalează Docker",
+          "body": "Docker Engine pe Linux sau Docker Desktop pe Windows și macOS. Pe Windows, partajează unitatea care conține panoul cu Docker Desktop."
+        },
+        {
+          "title": "Instalează și deschide panoul",
+          "body": "Urmează pagina de Instalare pentru sistemul tău, apoi deschide panoul într-un browser. Configurația verifică Docker, creează contul tău de administrator și îți cere fusul orar."
+        },
+        {
+          "title": "Creează un server",
+          "body": "Asistentul sugerează un port liber și memorie potrivită pentru mașina ta. Alege un tip de server și apasă creează."
+        },
+        {
+          "title": "Redirecționează portul de joc",
+          "body": "Redirecționează portul de joc al serverului pe routerul tău, TCP și UDP, și trimite prietenilor adresa din fila Overview."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Întrebări despre găzduirea acasă",
+      "items": [
+        {
+          "q": "Pot găzdui pe același PC pe care joc?",
+          "a": "Da, atâta timp cât are memorie pentru ambele. Oferă serverului heap-ul său plus spațiu suplimentar pentru Java și lasă suficient pentru clientul de joc. Un server vanilla pentru câțiva prieteni necesită aproximativ 4 GB pentru el."
+        },
+        {
+          "q": "De ce se pot alătura prietenii de pe Wi-Fi, dar cei din exterior nu?",
+          "a": "Portul de joc nu este redirecționat pe routerul tău sau un firewall îl blochează. Redirecționează portul de joc al serverului prin TCP și UDP către mașina de găzduire și permite-l în firewall-ul mașinii."
+        },
+        {
+          "q": "Pot rula imaginea Docker a panoului pe Windows sau macOS?",
+          "a": "Instalarea containerului vizează gazde Linux. Pe Windows și macOS, rulează panoul din sursă cu Node.js 24 alături de Docker Desktop, care funcționează la fel odată ce este pornit."
+        }
+      ]
+    },
+    "related": ["guidePi", "guideMulti", "serverVanilla"],
+    "cta": {
+      "title": "Începe să găzduiești acasă",
+      "body": "Gratuit, open source și fără conturi la nimeni. Serverele tale trăiesc într-un singur folder pe propria ta mașină."
+    }
+  },
+  "guideHosting": {
+    "meta": {
+      "title": "Părăsește găzduirea Minecraft plătită: mută-ți lumea",
+      "description": "Mută un server Minecraft de la o gazdă plătită: ia fișierele corecte, adu lumea și pluginurile în propriul panou, păstrează fiecare inventar și păstrează adresa."
+    },
+    "eyebrow": "Ghid de migrare",
+    "title": "Mută-ți serverul Minecraft de la găzduirea plătită",
+    "intro": "Adu-ți lumea, pluginurile și modurile acasă, cu fiecare inventar intact. Evaluează mai întâi, copiază întregul folder al serverului, reconstruiește-l în propriul panou și abia apoi direcționează jucătorii către el.",
+    "pills": ["docker", "paper", "fabric", "forge", "packs-curseforge", "packs-modrinth"],
+    "sections": [
+      {
+        "title": "Evaluează înainte de a descărca",
+        "body": "Notează acestea cât timp serverul vechi încă rulează. Fiecare dintre ele a dus la un eșec al migrării, deoarece a fost presupus în loc să fie verificat. Modul online contează cel mai mult: dacă serverul vechi a rulat cu el dezactivat și cel nou rulează cu el activat, sau invers, fiecare jucător va primi o identitate diferită și un inventar nou, gol.",
+        "points": [
+          "Versiunea exactă de Minecraft și loader-ul. 1.20.1 NeoForge nu este 1.20.1 Forge.",
+          "Lista de moduri sau pluginuri, cu versiuni.",
+          "Nivelul-name din server.properties. Folderul lumii nu este adesea numit world.",
+          "Modul online, activat sau dezactivat.",
+          "Orice lucru care trăiește în afara folderului serverului, cum ar fi baza de date a unui plugin."
+        ]
+      },
+      {
+        "title": "Ia întregul folder, nu doar lumea",
+        "body": "Folosește managerul de fișiere al gazdei sau opțiunea de descărcare și ia întregul director al serverului. Obține fișierele jar ale pluginurilor și modurilor în sine, nu o listă de nume: versiunile contează, iar „latest” este un fișier diferit luna viitoare. Descarcă și backup-urile tale. Un backup care există doar în interiorul panoului pe care îl părăsești nu este un backup pe care îl deții. Oprește serverul corect înainte de descărcarea finală, astfel încât jocul să salveze lumea pe disc."
+      },
+      {
+        "title": "Reconstruiește-l în propriul panou",
+        "body": "Creează un server de același tip și de aceeași versiune exactă. Apoi adu piesele. Pagina Lumilor preia lumea ta ca o arhivă .zip sau .tar, găsește lumea din interiorul ei automat și o instalează pe server, salvând o copie de rezervă a celei curente mai întâi. Pe un server de pluginuri sau moduri, importă un zip al fișierelor tale jar: fiecare este identificat, judecat în raport cu serverul și instalat dacă se potrivește. Configurațiile și restul se introduc prin managerul de fișiere, care editează și încarcă direct în browser. Dacă serverul vechi rula un pachet publicat, instalează același pachet la aceeași versiune în schimb.",
+        "pills": ["zip", "mrpack", "cf-export"],
+        "points": [
+          "Upload World găsește lumea din arhiva ta.",
+          "Import Zip identifică fiecare fișier jar și îl verifică în raport cu serverul.",
+          "Managerul de fișiere gestionează fișierele de configurare, lista albă și operatorii."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Păstrează adresa, păstrează jucătorii",
+        "body": "Dacă jucătorii se conectează la o adresă IP simplă, fiecare mutare îi face să-și editeze lista de servere, iar unii nu o fac niciodată. Folosește un nume de gazdă pe care îl controlezi și direcționează-l către noua ta mașină. Mutarea devine apoi o schimbare DNS. Scade timpul de viață al înregistrării la o zi înainte de comutare, astfel încât schimbarea să se răspândească rapid. O înregistrare SRV permite jucătorilor să tasteze un domeniu simplu chiar și atunci când serverul rulează pe un port diferit, același lucru pe care îl fac gazdele pentru a oferi o adresă de joc."
+      }
+    ],
+    "steps": {
+      "title": "Comutarea, în ordine",
+      "items": [
+        {
+          "title": "Testează pe un port privat",
+          "body": "Pornește noul server pe un port pe care jucătorii nu îl cunosc, conectează-te tu însuți și verifică o bază pe care o cunoști, inventarul tău și că fiecare plugin sau mod s-a încărcat."
+        },
+        {
+          "title": "Copie finală",
+          "body": "Anunță o repornire, oprește serverul vechi corect, descarcă lumea încă o dată și instalează acea copie, astfel încât cele mai recente modificări să fie incluse."
+        },
+        {
+          "title": "Schimbă portul și adresa",
+          "body": "Mută serverul pe portul său public cu cardul Game Port, apoi direcționează numele gazdei tale către noua mașină."
+        },
+        {
+          "title": "Păstrează-l pe cel vechi pentru o vreme",
+          "body": "Anulează planul vechi doar după câteva zile. Menține-l oprit, astfel încât nimeni să nu construiască pe copia abandonată."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Întrebări despre migrare",
+      "items": [
+        {
+          "q": "Vor păstra jucătorii inventarele lor?",
+          "a": "Da, atâta timp cât modul online este același pe ambele servere și ai mutat întregul folder al lumii. Datele jucătorilor se află în interiorul lumii, indexate după identitatea fiecărui jucător, iar acea identitate se schimbă dacă modul online se schimbă."
+        },
+        {
+          "q": "Gazda mea îmi permite doar să descarc lumea. Este suficient?",
+          "a": "Pentru vanilla, în mare parte. Pentru un server de pluginuri sau moduri, ai nevoie și de fișierele jar la versiunile lor exacte, deoarece lumea nu se va încărca corect fără modurile care au creat-o. Cere gazdei tale directorul complet al serverului."
+        },
+        {
+          "q": "Ce înlocuiește panoul din panoul de control al gazdei mele?",
+          "a": "Consola, managerul de fișiere, backup-urile, programările, gestionarea jucătorilor, instalările de pluginuri și moduri, și instalările de modpack-uri, plus lucruri pentru care gazdele percep adesea taxe suplimentare, cum ar fi mai multe servere sau mai multe sloturi de backup. Limita este propriul tău hardware."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverModpacks", "guideMulti"],
+    "cta": {
+      "title": "Adu-ți serverul acasă",
+      "body": "Instalează panoul, creează un server care se potrivește cu cel vechi și încarcă-ți lumea. Gratuit, open source și al tău de păstrat."
+    }
+  },
+  "guideMulti": {
+    "meta": {
+      "title": "Rulați mai multe servere Minecraft pe o singură mașină",
+      "description": "Rulați mai multe servere Minecraft pe o singură mașină: porturi automate, memorie per server, limite CPU și disc, moduri partajate și un singur panou de control pentru întreaga flotă."
+    },
+    "eyebrow": "Ghid multi-server",
+    "title": "Rulați mai multe servere Minecraft pe o singură mașină, curat",
+    "intro": "O lume survival, un server creativ pentru construcții și un modpack pentru weekend, toate pe aceeași mașină. Fiecare primește propriul container, propriul port și propriile limite, iar tu le vezi pe toate într-un singur panou de control.",
+    "pills": ["docker", "paper", "fabric", "forge", "vanilla"],
+    "sections": [
+      {
+        "title": "Porturi Aranjate Pentru Dvs.",
+        "body": "Porturile de joc sunt alocate în ordinea primului liber, crescând de la 25565, cu consola de la distanță (RCON) la 1000 deasupra fiecăruia. Zece servere folosesc porturile de joc 25565 până la 25574 și păstrează RCON-ul într-un bloc propriu, astfel încât puteți deschide o gamă contiguă de porturi de joc în firewall-ul dvs. fără a expune vreodată RCON-ul. Un port este considerat ocupat dacă alt server îl folosește, orice container Docker de pe mașină îl publică sau sistemul îl raportează ca fiind ocupat. Mutați un server mai târziu cu cardul Game Port, iar panoul verifică noul port înainte de a salva.",
+        "points": [
+          "O pereche joc și RCON per server, alocată automat.",
+          "Next Free Port alege cel mai mic port liber.",
+          "Deschideți doar gama de joc. RCON rămâne închis."
+        ]
+      },
+      {
+        "title": "Limite Pentru Ca Un Server Să Nu Le Afecteze Pe Celelalte",
+        "body": "Fiecare server este propriul său container Docker cu o limită CPU, o memorie Java (heap) și o limită maximă de memorie deasupra acesteia. Docker nu poate limita utilizarea discului unui folder, așa că panoul o face: fiecare server are o cotă de disc, iar o acțiune care ar împinge un server peste ea, cum ar fi instalarea unui mod sau încărcarea unei lumi, este blocată până când spațiul este eliberat. Activați Stop the Server When Over Quota și un server care crește cu mai mult de 10% peste cota sa este oprit și notat în istoricul său.",
+        "points": [
+          "Limită per server pentru CPU, heap și memorie.",
+          "Quote de disc impuse de panou.",
+          "Valorile implicite pentru serverele noi se adaptează la memoria mașinii."
+        ],
+        "shot": "storage"
+      },
+      {
+        "title": "Partajați Ce Poate Fi Partajat",
+        "body": "Modurile pe care le adăugați sunt stocate o singură dată într-o bibliotecă partajată, deduplicate prin sha256 și legate în fiecare server care le folosește, astfel încât zece servere care rulează același mod nu îl stochează de zece ori. Lumile intră într-o bibliotecă de lumi din care orice server se poate instala. Un blueprint capturează întreaga rețetă a unui server ca un singur fișier .mcserver.zip, iar Clone îl folosește pentru a crea un server identic cu porturi noi.",
+        "shot": "blueprints"
+      },
+      {
+        "title": "O Singură Vizualizare a Flotei",
+        "body": "Panoul de control afișează fiecare server dintr-o privire: stare, memorie, jucători online, actualizări în așteptare și activitate recentă. Etichetele organizează lista de servere. Programări globale rulează reporniri, backup-uri sau comenzi pe mai multe servere, iar pagina Updates colectează ce este învechit în întreaga flotă. Permisiunile per server permit unui prieten să-și ruleze propriul server în panou fără a-l vedea pe al dvs.",
+        "shot": "dashboard"
+      }
+    ],
+    "steps": {
+      "title": "Planificați o Mașină Multi-Server",
+      "items": [
+        {
+          "title": "Adunați Memoria",
+          "body": "Sumați memoria Java (heap) a fiecărui server și spațiul de rezervă (headroom), apoi lăsați loc pentru sistem. Serverele care sunt oprite nu folosesc memorie, deci un pachet de weekend nu costă nimic în zilele lucrătoare."
+        },
+        {
+          "title": "Stabiliți Valori Implicite Rezonabile",
+          "body": "Un administrator setează memoria heap, cota de disc și limita CPU cu care începe fiecare server nou, la Settings, Defaults for New Servers."
+        },
+        {
+          "title": "Deschideți O Singură Gamă de Porturi",
+          "body": "Deschideți o gamă de porturi de joc dimensionată pentru serverele pe care intenționați să le rulați, peste TCP și UDP. Lăsați blocul RCON închis."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Întrebări Multi-Server",
+      "items": [
+        {
+          "q": "Câte servere poate rula o singură mașină?",
+          "a": "Memoria decide mai întâi. Adunați memoria heap a fiecărui server care rulează și spațiul de rezervă: un server mic vanilla sau Paper necesită aproximativ 4 GB în total, un modpack ușor aproximativ 6 GB. Serverele oprite nu costă nimic."
+        },
+        {
+          "q": "Fiecare server poate avea proprii administratori?",
+          "a": "Da. Permisiunile per server acordă vizualizare, putere, consolă, jucători, conținut, backup-uri, fișiere, setări și ștergere separat pentru fiecare server, iar un server poate fi ascuns complet unui utilizator."
+        },
+        {
+          "q": "Pot jucătorii să treacă între serverele mele în joc?",
+          "a": "Nu prin intermediul panoului în sine. Fiecare server are propria adresă și port. Conectarea serverelor astfel încât jucătorii să treacă între ele în joc necesită un server proxy, pe care l-ați rula alături de ele."
+        }
+      ]
+    },
+    "related": ["guideHome", "serversHub", "guideHosting"],
+    "cta": {
+      "title": "Rulați Întreaga Flotă Dintr-un Singur Loc",
+      "body": "Instalați panoul o singură dată și adăugați servere pe măsură ce aveți nevoie de ele. Fără taxe per server și fără limite de instanțe."
+    }
+  },
+  "compareHub": {
+    "meta": {
+      "title": "Comparație Panouri Server Minecraft: Pterodactyl, AMP, Crafty",
+      "description": "O comparație corectă a panourilor gratuite și plătite pentru servere Minecraft: Pterodactyl, Crafty Controller, AMP, MCSManager și PufferPanel, alături de Minecraft Server Manager."
+    },
+    "eyebrow": "Compară panouri",
+    "title": "Comparație Panouri Server Minecraft",
+    "intro": "Mai multe panouri bune pot rula un server Minecraft. Iată cum se diferențiază Minecraft Server Manager de fiecare dintre ele, cu cazurile în care un alt panou este alegerea mai bună.",
+    "cards": {
+      "comparePtero": "Un panou multi-joc gratuit, construit pentru companii de hosting, cu un daemon separat pe fiecare mașină. Compară efortul de configurare și funcționalitățile Minecraft.",
+      "compareCrafty": "Un panou Minecraft gratuit scris în Python, care rulează serverele ca procese simple. Compară modul în care serverele sunt izolate și cum se integrează modpack-urile.",
+      "compareAmp": "Un panou comercial pentru sute de jocuri, vândut pe niveluri de licență. Compară prețul, limitele de instanțe și profunzimea funcționalităților Minecraft.",
+      "compareMcsm": "Un panou gratuit, distribuit, pentru jocuri Minecraft și Steam. Compară arhitectura, utilizarea Docker și gestionarea modpack-urilor.",
+      "comparePuffer": "Un panou gratuit, ușor, pentru multe jocuri și multe mașini, cu servere ca procese sau containere. Compară izolarea, nodurile și profunzimea funcționalităților Minecraft."
+    },
+    "sections": [
+      {
+        "title": "Cum Sunt Realizate Aceste Comparații",
+        "body": "Fiecare faptă despre un alt panou provine de pe site-ul propriu al proiectului, din documentație sau din repository, iar fiecare pagină indică data verificării. Unde nu am putut confirma ceva, am omis în loc să ghicim. Dacă o informație s-a schimbat, anunță-ne pe Discord sau GitHub și vom corecta pagina.",
+        "points": [
+          "Fiecare pagină listează ce face mai bine celălalt panou.",
+          "Prețurile și versiunile sunt cotate cu data verificării lor.",
+          "Minecraft Server Manager nu este afiliat cu niciunul dintre aceste proiecte. Numele lor aparțin proprietarilor."
+        ]
+      },
+      {
+        "title": "Pentru Ce Este Construit Minecraft Server Manager",
+        "body": "Un singur proprietar, sau o echipă mică, care rulează servere Minecraft Java pe propria mașină. Fiecare server este un container Docker cu resurse limitate, întregul panou se află într-un singur folder, iar părțile de Minecraft care sunt complicate în alte părți sunt integrate: modpack-uri fixate cu rollback, cinci registre de moduri într-o singură căutare, diagnosticarea erorilor de crash, o hartă live cu un singur clic și șabloane portabile.",
+        "pills": ["paper", "purpur", "fabric", "forge", "neoforge", "quilt", "vanilla"]
+      }
+    ],
+    "faq": {
+      "title": "Întrebări Despre Alegerea unui Panou",
+      "items": [
+        {
+          "q": "Ce panou ar trebui să aleg pentru un singur server Minecraft acasă?",
+          "a": "Dacă rulezi doar Minecraft Java și dorești modpack-uri, backup-uri și o hartă live fără a le asambla singur, Minecraft Server Manager este creat pentru asta. Dacă găzduiești și alte jocuri sau gestionezi multe mașini, un panou multi-joc precum Pterodactyl, MCSManager sau AMP se potrivește mai bine."
+        },
+        {
+          "q": "Este Minecraft Server Manager cu adevărat gratuit?",
+          "a": "Da. Este licențiat MIT, nu are nivel plătit și nu folosește servicii plătite. Descărcările CurseForge necesită o cheie API CurseForge, pe care o adaugi în Setări."
+        },
+        {
+          "q": "Pot muta lumea mea existentă în Minecraft Server Manager?",
+          "a": "Da. Încarcă lumea pe pagina Lumilor și instaleaz-o pe un server nou, sau importă un export de modpack sau un zip de fișiere jar de moduri atunci când creezi serverul."
+        }
+      ]
+    },
+    "related": ["serversHub", "guideHosting"],
+    "cta": {
+      "title": "Încearcă-l pe Propria Ta Mașină",
+      "body": "Instalează panoul în trei pași și creează-ți primul server din expert. Întregul tău panou rămâne într-un singur folder pe care îl poți copia oriunde."
+    },
+    "table": {
+      "title": "Toate Panourile Dintr-o Privire",
+      "columns": [
+        "",
+        "Minecraft Server Manager",
+        "Pterodactyl",
+        "Crafty Controller",
+        "AMP",
+        "MCSManager",
+        "PufferPanel"
+      ],
+      "rows": [
+        {
+          "label": "Preț",
+          "values": ["Gratuit.", "Gratuit.", "Gratuit.", "Niveluri de licență plătite.", "Gratuit.", "Gratuit."]
+        },
+        {
+          "label": "Licență",
+          "values": ["MIT.", "MIT.", "GPL-3.0.", "Comercial, sursă închisă.", "Apache-2.0.", "Apache-2.0."]
+        },
+        {
+          "label": "Jocuri",
+          "values": [
+            "Minecraft Java Edition.",
+            "Multe, prin ouă (eggs).",
+            "Minecraft Java și Bedrock.",
+            "Peste 200.",
+            "Jocuri Minecraft și Steam.",
+            "Multe, prin șabloane."
+          ]
+        },
+        {
+          "label": "Serverele de joc rulează ca",
+          "values": [
+            "Containere Docker.",
+            "Containere Docker.",
+            "Procese pe gazdă.",
+            "Procese sau containere Docker odată activate.",
+            "Containere sau procese.",
+            "Procese sau containere."
+          ]
+        },
+        {
+          "label": "Mai multe mașini",
+          "values": [
+            "Nu. Un panou per mașină.",
+            "Da, cu noduri Wings.",
+            "Nu există noduri remote în documentația sa.",
+            "Licență Profesională și superioare.",
+            "Da, cu daemon-uri.",
+            "Da, cu noduri."
+          ]
+        },
+        {
+          "label": "Sisteme gazdă",
+          "values": [
+            "Linux, Windows, macOS.",
+            "Linux.",
+            "Linux, Windows, macOS.",
+            "Linux, Windows.",
+            "Linux, Windows, macOS.",
+            "Linux."
+          ]
+        }
+      ],
+      "note": "Fapte verificate în raport cu documentația fiecărui proiect, octombrie și noiembrie 2026. Fiecare pagină de comparație conține detaliile."
+    }
+  },
+  "comparePtero": {
+    "meta": {
+      "title": "Alternativă Pterodactyl pentru servere Minecraft",
+      "description": "Minecraft Server Manager comparat cu Pterodactyl: un proces și un folder în loc de un panou, daemon, bază de date și Redis, cu funcționalități Minecraft integrate."
+    },
+    "eyebrow": "Alternativă Pterodactyl",
+    "title": "O alternativă Pterodactyl construită doar pentru Minecraft",
+    "intro": "Pterodactyl este un panou gratuit, open-source, care rulează multe jocuri pe multe mașini. Minecraft Server Manager rulează un singur joc pe o singură mașină, deci necesită mult mai puțin pentru configurare și include instrumentele Minecraft integrate.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Comparație",
+      "columns": ["", "Minecraft Server Manager", "Pterodactyl"],
+      "rows": [
+        {
+          "label": "Preț și licență",
+          "values": ["Gratuit, MIT.", "Gratuit, MIT."]
+        },
+        {
+          "label": "Ce instalezi",
+          "values": [
+            "Un proces Node.js sau un container Docker.",
+            "Un panou PHP (Laravel) cu frontend React, plus daemonul Wings scris în Go pe fiecare nod."
+          ]
+        },
+        {
+          "label": "Bază de date și cache",
+          "values": [
+            "Fișier SQLite integrat în folderul de date. Nimic altceva de rulat.",
+            "MySQL 5.7.22+ sau MariaDB 10.2+, Redis, un server web și Composer."
+          ]
+        },
+        {
+          "label": "Serverele de joc rulează ca",
+          "values": ["Containere Docker cu resurse limitate.", "Containere Docker izolate (Docker este necesar)."]
+        },
+        {
+          "label": "Sisteme gazdă",
+          "values": [
+            "Linux, Windows și macOS. Imaginea este construită pentru amd64 și arm64.",
+            "Doar Linux: Ubuntu, Debian și distribuții din familia RHEL. Wings nu rulează pe Windows."
+          ]
+        },
+        {
+          "label": "Mașini gestionate",
+          "values": [
+            "Una. Panoul și Docker rulează pe același gazdă.",
+            "Multe. Un panou controlează noduri Wings pe mai multe mașini."
+          ]
+        },
+        {
+          "label": "Jocuri",
+          "values": [
+            "Minecraft Java Edition. Jucătorii Bedrock se pot conecta prin Geyser.",
+            "Multe jocuri prin \"eggs\", inclusiv Minecraft, Rust, Terraria și ARK."
+          ]
+        }
+      ],
+      "note": "Informații verificate în octombrie 2026 conform documentației fiecărui proiect."
+    },
+    "sections": [
+      {
+        "title": "Configurare fără un ansamblu de componente",
+        "body": "Documentația Pterodactyl îl descrie ca un sistem complex cu multiple dependențe: PHP, un server de baze de date, Redis, un server web, un worker pentru coadă și Wings pe fiecare nod. Acest design îi permite să deservească companii de hosting. Minecraft Server Manager este un singur proces care comunică cu socket-ul Docker și păstrează totul, inclusiv baza de date, într-un singur folder. Pe Linux, un script de instalare îl configurează și instalează Docker dacă lipsește.",
+        "points": [
+          "Fără daemon separat, server de baze de date sau cache de menținut activ.",
+          "Copiază folderul de date pentru a muta întregul panou pe o nouă mașină.",
+          "Rulează nativ pe Windows și macOS alături de Docker Desktop."
+        ],
+        "pills": ["docker", "portainer", "dockge", "pm2"]
+      },
+      {
+        "title": "Unde Minecraft Server Manager excelează pentru Minecraft",
+        "body": "Deoarece rulează doar Minecraft, panoul știe ce sunt un modpack, un fișier jar de mod și un raport de crash. Instrumentele la care apelează un proprietar de Minecraft fac parte din panou, nu ceva de găsit și integrat.",
+        "points": [
+          "Modpack-urile sunt fixate la o versiune exactă, iar upgrade-urile fac o copie de rezervă mai întâi și revin la versiunea anterioară printr-un singur clic.",
+          "O singură căutare în cinci registre, filtrată după loader-ul serverului și versiunea Minecraft.",
+          "Fiecare descărcare este verificată prin checksum înainte de a ajunge pe server.",
+          "Crash-urile sunt detectate, analizate și pot fi partajate pe mclo.gs printr-un singur clic.",
+          "O hartă live BlueMap cu un singur clic, protejată de autentificarea panoului.",
+          "Fiecare setare a imaginii itzg este explicată în limbaj simplu în wizard."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Când Pterodactyl este alegerea mai bună",
+        "body": "Pterodactyl este matur, activ întreținut și susținut de companii de hosting. Dacă oricare dintre acestea te descrie, este alegerea mai potrivită.",
+        "points": [
+          "Rulezi servere pe mai multe mașini și dorești un singur panou pentru toate.",
+          "Oferi hosting pentru jocuri altele decât Minecraft.",
+          "Vinzi sau partajezi hosting cu mulți clienți separați și ai nevoie de acea scalabilitate.",
+          "Rulezi deja Pterodactyl și ouăle sale acoperă nevoile tale."
+        ]
+      },
+      {
+        "title": "O notă despre Pelican",
+        "body": "Pelican Panel este un fork al Pterodactyl, licențiat AGPL-3.0 și încă în stadiul de release candidate la momentul verificării acestei pagini. Păstrează designul panou + Wings, adaugă SQLite și PostgreSQL ca opțiuni de bază de date și are un hub de pluginuri unde un plugin terț caută modpack-uri pe CurseForge și Modrinth."
+      }
+    ],
+    "faq": {
+      "title": "Întrebări despre Pterodactyl",
+      "items": [
+        {
+          "q": "Pot muta un server de pe Pterodactyl pe Minecraft Server Manager?",
+          "a": "Da. Descarcă lumea serverului de pe Pterodactyl, creează un server de același tip și cu aceeași versiune Minecraft în Minecraft Server Manager, apoi încarcă lumea pe pagina Lumilor și instaleaz-o pe acel server. Pentru servere modificate, importă pachetul sau arhivele tale de mod-uri când îl creezi."
+        },
+        {
+          "q": "Minecraft Server Manager necesită un server de baze de date precum MySQL?",
+          "a": "Nu. Utilizează motorul SQLite integrat în Node.js 24 și stochează fișierul bazei de date în folderul de date, împreună cu tot restul."
+        },
+        {
+          "q": "Poate Minecraft Server Manager să gestioneze mai multe mașini precum nodurile Wings?",
+          "a": "Nu. Gestionează daemonul Docker de pe mașina pe care rulează. Pentru mai multe mașini, rulează câte un panou pe fiecare, sau alege un panou multi-nod."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareMcsm", "guideMulti"],
+    "cta": {
+      "title": "Rulează Minecraft fără componente suplimentare",
+      "body": "Instalează Minecraft Server Manager în trei pași și creează primul tău server în wizard."
+    }
+  },
+  "compareCrafty": {
+    "meta": {
+      "title": "Crafty Controller vs Minecraft Server Manager",
+      "description": "Crafty Controller și Minecraft Server Manager sunt ambele panouri gratuite pentru Minecraft. Comparați cum sunt izolate serverele, cum se instalează modpack-urile și unde se potrivește fiecare."
+    },
+    "eyebrow": "Alternativă la Crafty Controller",
+    "title": "Crafty Controller vs Minecraft Server Manager",
+    "intro": "Ambele sunt panouri gratuite, auto-găzduite, create pentru Minecraft. Crafty rulează fiecare server ca un proces pe gazdă, scris în Python. Minecraft Server Manager rulează fiecare server în propriul său container Docker și integrează în panou modpack-uri, căutare de moduri și instrumente de depanare a erorilor.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Comparație",
+      "columns": ["", "Minecraft Server Manager", "Crafty Controller"],
+      "rows": [
+        {
+          "label": "Preț și licență",
+          "values": ["Gratuit, MIT.", "Gratuit, GPL-3.0."]
+        },
+        {
+          "label": "Scris în",
+          "values": ["Node.js 24.", "Python 3.10 până la 3.12."]
+        },
+        {
+          "label": "Serverele de joc rulează ca",
+          "values": [
+            "Containere Docker cu resurse limitate.",
+            "Procese pe gazdă. Panoul în sine poate rula și în Docker."
+          ]
+        },
+        {
+          "label": "Docker",
+          "values": ["Necesar pe gazdă.", "Opțional."]
+        },
+        {
+          "label": "Sisteme gazdă",
+          "values": [
+            "Linux, Windows și macOS. Imaginea este construită pentru amd64 și arm64.",
+            "Ghiduri pentru Linux, Windows, macOS și Raspberry Pi OS, plus Docker, UnRAID și CasaOS. Imaginea sa acoperă amd64 și arm64."
+          ]
+        },
+        {
+          "label": "Ediții",
+          "values": [
+            "Java Edition. Jucătorii Bedrock se pot conecta prin Geyser.",
+            "Java Edition de la 1.8 la cea mai recentă și Bedrock."
+          ]
+        },
+        {
+          "label": "Modpack-uri",
+          "values": [
+            "Pachete CurseForge, Modrinth, FTB și GT New Horizons din vrăjitor, fixate la o versiune exactă.",
+            "Secțiunea FAQ descrie importarea unui pachet ca fișier zip sau pachete Modrinth prin mrpack-install."
+          ]
+        },
+        {
+          "label": "Backup-uri, programări, roluri, 2FA",
+          "values": [
+            "Da: retenție per server, programări cron, trei roluri cu permisiuni per server, TOTP.",
+            "Da: un manager de backup, un planificator de sarcini, roluri de utilizator și TOTP plus passkeys."
+          ]
+        }
+      ],
+      "note": "Date verificate în octombrie 2026 conform documentației fiecărui proiect."
+    },
+    "sections": [
+      {
+        "title": "Containere în loc de procese pe gazdă",
+        "body": "În Minecraft Server Manager, fiecare server este propriul său container Docker pe imaginea cunoscută itzg Minecraft, cu propriile limite de memorie și CPU și o cotă de disc pe care panoul o aplică. Un server nu poate consuma memoria mașinii sau umple discul, iar reconstruirea unui server nu afectează pe celelalte. Dezavantajul este că Docker trebuie instalat pe gazdă.",
+        "points": [
+          "Limite de memorie, CPU și disc per server.",
+          "Oprire RCON elegantă înainte ca containerul să se oprească și detectarea erorilor cu backoff.",
+          "Java este selectată per server de către imagine, astfel încât versiunile mixte de Minecraft funcționează."
+        ],
+        "pills": ["docker", "amd64", "arm64"],
+        "shot": "overview"
+      },
+      {
+        "title": "Unde Minecraft Server Manager excelează",
+        "body": "Vrăjitorul instalează modpack-uri și moduri pentru tine și le menține fixate, astfel încât o repornire să nu actualizeze niciodată silențios un pachet.",
+        "points": [
+          "Instalează pachete CurseForge, Modrinth, FTB și GT New Horizons din vrăjitor.",
+          "Importă un Modrinth .mrpack, un export CurseForge sau propriul tău fișier zip de jar-uri, cu fiecare jar identificat.",
+          "Caută simultan în cinci registre, filtrate după loader-ul și versiunea serverului.",
+          "Actualizările fac mai întâi un backup și revin la o versiune anterioară cu un singur clic.",
+          "BlueMap live map și partajare de erori mclo.gs cu un singur clic.",
+          "Scheme portabile: exportă rețeta unui server și obține același server oriunde."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"]
+      },
+      {
+        "title": "Când Crafty Controller este alegerea mai bună",
+        "body": "Crafty este matur, activ întreținut și rulează în mai multe locuri fără Docker.",
+        "points": [
+          "Dorești să rulezi servere fără a instala Docker, de exemplu direct pe Windows, macOS sau un Raspberry Pi.",
+          "Rulezi Bedrock Dedicated Server în sine, nu doar Java cu Geyser.",
+          "Dorești autentificare prin passkey."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Întrebări despre Crafty Controller",
+      "items": [
+        {
+          "q": "Pot muta serverul meu Crafty în Minecraft Server Manager?",
+          "a": "Da. Creează un server cu același tip și versiune Minecraft, apoi încarcă lumea ca fișier zip pe pagina Worlds și instaleaz-o pe acel server. Pentru un server modificat, importă pachetul tău sau un fișier zip de jar-uri de moduri când îl creezi."
+        },
+        {
+          "q": "Rulează Minecraft Server Manager pe un Raspberry Pi?",
+          "a": "Da, pe un sistem de operare pe 64 de biți cu Docker. Imaginea panoului este publicată pentru arm64, precum și pentru amd64."
+        },
+        {
+          "q": "De ce are nevoie Minecraft Server Manager de Docker?",
+          "a": "Fiecare server rulează în propriul său container, ceea ce îi permite să aibă limite de resurse, o reconstrucție curată și versiunea Java corectă pentru fiecare versiune Minecraft."
+        }
+      ]
+    },
+    "related": ["compareHub", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Vezi-l cu propriul tău server",
+      "body": "Instalează panoul în trei pași, apoi creează un server dintr-un modpack în vrăjitor."
+    }
+  },
+  "compareAmp": {
+    "meta": {
+      "title": "Alternativă gratuită la AMP pentru servere Minecraft",
+      "description": "Minecraft Server Manager comparat cu AMP de la CubeCoders: un panou gratuit pentru Minecraft sub licență MIT, fără limite de instanțe, alături de un panou comercial multi-joc."
+    },
+    "eyebrow": "Alternativă la AMP",
+    "title": "O alternativă gratuită la AMP pentru Minecraft",
+    "intro": "AMP de la CubeCoders este un panou comercial pentru o listă foarte lungă de jocuri, vândut pe niveluri de licență. Minecraft Server Manager este gratuit și open source, rulează doar Minecraft și nu are limită la câte servere puteți crea.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Comparație",
+      "columns": ["", "Minecraft Server Manager", "AMP"],
+      "rows": [
+        {
+          "label": "Preț",
+          "values": [
+            "Gratuit. Fără niveluri.",
+            "Standard 7,50 £ / 10 $, Professional 15 £ / 30 $, Advanced 30 £ / 40 $, Enterprise pe bază de abonament variabil."
+          ]
+        },
+        {
+          "label": "Licență și sursă",
+          "values": [
+            "MIT, sursă pe GitHub.",
+            "Comercial și cu sursă închisă. Repozitoriul său public GitHub conține probleme și documentație."
+          ]
+        },
+        {
+          "label": "Servere pe care le puteți crea",
+          "values": [
+            "Nicio limită dincolo de hardware-ul dvs.",
+            "5 instanțe pe Standard, 15 pe Professional, 50 pe Advanced."
+          ]
+        },
+        {
+          "label": "Utilizatori ai panoului",
+          "values": [
+            "Nelimitat, cu roluri de administrator, operator și vizualizator.",
+            "3 pe Standard, nelimitat de la Professional."
+          ]
+        },
+        {
+          "label": "Utilizare comercială",
+          "values": ["Permisă de licența MIT.", "Doar licența Enterprise."]
+        },
+        {
+          "label": "Mai multe mașini",
+          "values": ["O mașină per panou.", "Professional și mai sus."]
+        },
+        {
+          "label": "Sisteme gazdă",
+          "values": ["Linux, Windows și macOS. Imaginea este construită pentru amd64 și arm64.", "Windows și Linux."]
+        },
+        {
+          "label": "Jocuri",
+          "values": [
+            "Minecraft Java Edition. Jucătorii Bedrock se pot conecta prin Geyser.",
+            "Peste 200 de jocuri și aplicații pe lista sa de compatibilitate, inclusiv Minecraft Java și Bedrock."
+          ]
+        }
+      ],
+      "note": "Date verificate în octombrie 2026 conform documentației fiecărui proiect. Prețurile AMP provin din foaia de comparație a edițiilor CubeCoders și se pot modifica."
+    },
+    "sections": [
+      {
+        "title": "Fără licență, fără număr de instanțe",
+        "body": "Nivelurile AMP decid câte instanțe și utilizatori ai panoului primești, iar doar nivelul Enterprise permite utilizarea comercială. Minecraft Server Manager nu are niveluri: fiecare funcție, fiecare server și fiecare cont de utilizator este gratuit sub licența MIT și nu folosește servicii plătite. Descărcările CurseForge necesită o cheie API CurseForge, pe care o adăugați în Setări.",
+        "points": [
+          "Creați câte servere poate susține mașina dvs.",
+          "Invitați întreaga echipă cu permisiuni per server și autentificare în doi pași.",
+          "Sursa este publică, deci o puteți citi, fork-a și contribui la ea."
+        ]
+      },
+      {
+        "title": "Unde Minecraft Server Manager excelează pentru Minecraft",
+        "body": "Un panou pentru un singur joc poate aprofunda în acesta. Fiecare setare pe care imaginea itzg Minecraft o suportă este în vrăjitor cu ajutor în limbaj simplu, iar fluxurile de lucru Minecraft sunt integrate.",
+        "points": [
+          "Modpack-uri CurseForge, Modrinth, FTB și GT New Horizons, fixate cu rollback printr-un singur clic.",
+          "O singură căutare de moduri pe cinci registre, cu descărcări verificate prin sumă de control.",
+          "Verificări de compatibilitate a versiunilor înainte ca un upgrade Minecraft să fie oferit.",
+          "Analiză a blocărilor cu partajare mclo.gs și o hartă live BlueMap printr-un singur clic.",
+          "Analiză a jucătorilor, analiză a inventarului și analiză a stocării cu cote de disc."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "bluemap", "mclogs"],
+        "shot": "wizard"
+      },
+      {
+        "title": "Când AMP este alegerea mai bună",
+        "body": "AMP acoperă mult mai mult teren decât un panou dedicat doar Minecraft și vine cu suport comercial.",
+        "points": [
+          "Găzduiți multe jocuri diferite dintr-un singur panou.",
+          "Aveți nevoie de autentificare unică prin OIDC, branding personalizat sau șabloane de implementare, pe care nivelul său Advanced le include.",
+          "Rulați o afacere de hosting și doriți o licență comercială cu suport de la furnizor.",
+          "Doriți să rulați direct Bedrock Dedicated Server."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Întrebări despre AMP",
+      "items": [
+        {
+          "q": "Este Minecraft Server Manager gratuit pentru uz comercial?",
+          "a": "Licența MIT permite utilizarea comercială. Panoul este construit pentru proprietari și echipe mici pe o singură mașină, deci verificați dacă se potrivește modului în care găzduiți înainte de a vă baza pe el pentru clienți."
+        },
+        {
+          "q": "Suportă Minecraft Server Manager jocuri altele decât Minecraft?",
+          "a": "Nu. Rulează doar servere Minecraft Java Edition, motiv pentru care poate aprofunda în modpack-uri, moduri și rapoarte de blocare."
+        },
+        {
+          "q": "Pot muta o instanță Minecraft de pe AMP?",
+          "a": "Da. Creați un server cu același tip și versiune Minecraft, apoi încărcați lumea instanței ca fișier zip pe pagina Lumilor și instalați-o pe acel server. Serverele modificate pot porni de la un modpack, un export de pachet sau un fișier zip de jar-uri de moduri."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideHosting"],
+    "cta": {
+      "title": "Toate funcțiile, gratuit",
+      "body": "Instalați Minecraft Server Manager în trei pași. Nu este nimic de cumpărat și nimic de deblocat."
+    }
+  },
+  "compareMcsm": {
+    "meta": {
+      "title": "Alternativă la MCSManager pentru servere Minecraft",
+      "description": "MCSManager și Minecraft Server Manager comparate: un panou distribuit pentru jocuri Minecraft și Steam, alături de un panou dedicat Minecraft cu modpack-uri integrate."
+    },
+    "eyebrow": "Alternativă la MCSManager",
+    "title": "O alternativă la MCSManager axată pe Minecraft",
+    "intro": "MCSManager este un panou gratuit, open-source, pentru jocuri Minecraft și Steam, capabil să gestioneze mai multe mașini. Minecraft Server Manager rulează doar Minecraft pe o singură mașină, fiecare server fiind într-un container Docker și având instrumentele Minecraft integrate.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Comparație directă",
+      "columns": ["", "Minecraft Server Manager", "MCSManager"],
+      "rows": [
+        {
+          "label": "Preț și licență",
+          "values": ["Gratuit, MIT.", "Gratuit, Apache-2.0."]
+        },
+        {
+          "label": "Scris în",
+          "values": ["Node.js 24.", "TypeScript pe Node.js."]
+        },
+        {
+          "label": "Ce se instalează",
+          "values": ["Un proces sau un container Docker.", "Două servicii: un panou web și un daemon."]
+        },
+        {
+          "label": "Bază de date",
+          "values": ["Fișier SQLite integrat în folderul de date.", "Nu este necesară."]
+        },
+        {
+          "label": "Serverele de joc rulează ca",
+          "values": ["Containere Docker cu resurse limitate.", "Containere Docker sau procese simple, la alegere."]
+        },
+        {
+          "label": "Sisteme gazdă",
+          "values": [
+            "Linux, Windows și macOS. Imaginea este construită pentru amd64 și arm64.",
+            "Windows, Linux și macOS, cu un script de instalare pe o singură linie pentru Linux."
+          ]
+        },
+        {
+          "label": "Mașini gestionate",
+          "values": ["Una. Panoul și Docker rulează pe același host.", "Multe, prin daemon-uri distribuiți."]
+        },
+        {
+          "label": "Jocuri",
+          "values": [
+            "Minecraft Java Edition. Jucătorii Bedrock pot intra prin Geyser.",
+            "Jocuri Minecraft și Steam precum Palworld și Terraria, dintr-un marketplace integrat."
+          ]
+        }
+      ],
+      "note": "Date verificate în octombrie 2026 pe baza documentației fiecărui proiect."
+    },
+    "sections": [
+      {
+        "title": "Unde Minecraft Server Manager excelează pentru Minecraft",
+        "body": "MCSManager implementează multe tipuri de servere de joc. Minecraft Server Manager se concentrează pe un singur joc, astfel încât wizard-ul, instrumentele de modding și istoricul vorbesc despre Minecraft.",
+        "points": [
+          "Toate setările imaginii itzg Minecraft, explicate în limbaj simplu în wizard.",
+          "Modpack-uri CurseForge, Modrinth, FTB și GT New Horizons, fixate cu rollback printr-un singur clic.",
+          "O singură căutare de moduri pe cinci registre, cu descărcări verificate prin checksum.",
+          "Analiză a erorilor de crash cu suspecți numiți și partajare mclo.gs printr-un singur clic.",
+          "O hartă live BlueMap printr-un singur clic, analize ale jucătorilor și planuri portabile.",
+          "Întregul panou, inclusiv baza de date, este un singur folder pe care îl puteți copia pentru migrare."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "console"
+      },
+      {
+        "title": "Containere implicit",
+        "body": "Fiecare server în Minecraft Server Manager este un container Docker cu propriile limite de memorie și CPU, plus o cotă de disc impusă de panou. Java este aleasă per server, astfel încât un modpack 1.12 și cea mai recentă versiune Paper să ruleze una lângă alta fără a jongla cu instalările Java. MCSManager vă permite să alegeți între containere și procese simple, ceea ce este mai flexibil atunci când Docker nu este o opțiune.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "title": "Când MCSManager este alegerea mai bună",
+        "body": "MCSManager este dezvoltat foarte activ și acoperă mai mult decât Minecraft.",
+        "points": [
+          "Gestionați servere pe mai multe mașini dintr-un singur panou.",
+          "Găzduiți și jocuri Steam precum Palworld sau Terraria.",
+          "Doriți să rulați servere ca procese simple, fără Docker.",
+          "Doriți un dashboard drag-and-drop și un marketplace de implementări de jocuri gata făcute."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Întrebări despre MCSManager",
+      "items": [
+        {
+          "q": "Pot muta un server Minecraft din MCSManager?",
+          "a": "Da. Creați un server cu același tip și versiune Minecraft în Minecraft Server Manager, apoi încărcați lumea ca un fișier zip pe pagina Lumilor și instalați-o pe acel server. Serverele modate pot porni dintr-un modpack, un export de pachet sau un zip de fișiere jar cu moduri."
+        },
+        {
+          "q": "Am nevoie de Docker pentru Minecraft Server Manager?",
+          "a": "Da. Docker rulează fiecare server. Pe Linux, scriptul de instalare instalează Docker pentru dvs. dacă lipsește."
+        },
+        {
+          "q": "Pot mai multe persoane să folosească același panou Minecraft Server Manager?",
+          "a": "Da. Există roluri de administrator, operator și vizualizator, permisiuni per server și autentificare opțională în doi pași pentru fiecare cont."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideMulti", "comparePuffer"],
+    "cta": {
+      "title": "Minecraft, realizat în profunzime",
+      "body": "Instalați panoul în trei pași și creați primul server din wizard."
+    }
+  },
+  "comparePuffer": {
+    "meta": {
+      "title": "Alternativă PufferPanel pentru servere Minecraft",
+      "description": "Minecraft Server Manager comparat cu PufferPanel: fiecare server într-un container Docker propriu și unelte Minecraft integrate, versus un panou ușor multi-joc, multi-nod."
+    },
+    "eyebrow": "Alternativă PufferPanel",
+    "title": "O alternativă PufferPanel creată doar pentru Minecraft",
+    "intro": "PufferPanel este un panou gratuit, open-source, pentru multe jocuri pe una sau mai multe mașini. Minecraft Server Manager rulează doar Minecraft pe o singură mașină, întotdeauna în Docker, cu uneltele Minecraft integrate.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Comparație directă",
+      "columns": ["", "Minecraft Server Manager", "PufferPanel"],
+      "rows": [
+        {
+          "label": "Preț și licență",
+          "values": ["Gratuit, MIT.", "Gratuit, Apache-2.0."]
+        },
+        {
+          "label": "Scris în",
+          "values": ["Node.js 24.", "Go."]
+        },
+        {
+          "label": "Ce instalezi",
+          "values": [
+            "Un proces, sau un container Docker.",
+            "Un serviciu din repository-ul său apt sau yum, sau imaginea sa Docker. Un nod pe o altă mașină rulează același pachet."
+          ]
+        },
+        {
+          "label": "Bază de date",
+          "values": [
+            "Fișier SQLite integrat în folderul de date.",
+            "Niciuna de configurat pentru o instalare de bază. Un ghid acoperă utilizarea unei baze de date externe."
+          ]
+        },
+        {
+          "label": "Serverele de joc rulează ca",
+          "values": [
+            "Containere Docker cu resurse limitate, întotdeauna.",
+            "Procese pe host (documentația sa afirmă că acest mediu nu are funcții de securitate) sau containere Docker."
+          ]
+        },
+        {
+          "label": "Sisteme gazdă",
+          "values": [
+            "Linux, Windows și macOS. Imaginea este construită pentru amd64 și arm64.",
+            "Linux: pachete pentru Ubuntu 22.04 și 24.04 și Debian 10 și 11 pe amd64 și arm64, Raspbian pe arm64, și un repository yum. 32-bit nu este suportat."
+          ]
+        },
+        {
+          "label": "Mașini gestionate",
+          "values": [
+            "Una. Panoul și Docker rulează pe același host.",
+            "Multe. Nodurile de pe alte mașini rulează servere pentru un singur panou."
+          ]
+        },
+        {
+          "label": "Minecraft",
+          "values": [
+            "Java Edition, fiecare tip de server din imaginea itzg, și pachete CurseForge, Modrinth, FTB și GT New Horizons. Jucătorii Bedrock se conectează prin Geyser.",
+            "Șabloane pentru servere Java și Bedrock, pachete CurseForge și FTB, și proxy-uri BungeeCord, Velocity și Waterfall."
+          ]
+        }
+      ],
+      "note": "Date verificate în noiembrie 2026 conform documentației PufferPanel, repository-ului său și repository-ului său de șabloane."
+    },
+    "sections": [
+      {
+        "title": "Izolare fără setări de reținut",
+        "body": "PufferPanel îți permite să alegi un mediu per server. Cel standard rulează serverul ca un proces pe host, sub același utilizator ca panoul, iar documentația sa proprie afirmă că nu are funcții de securitate; cel Docker îl izolează. Minecraft Server Manager are doar al doilea tip. Fiecare server este propriul său container cu o limită de memorie și CPU, o cotă de disc impusă de panou și nimic partajat cu celelalte, cu excepția bibliotecii de moduri.",
+        "points": [
+          "Un container per server, etichetat și limitat.",
+          "Quote de disc impuse de panou.",
+          "Un server care se blochează sau rămâne fără memorie este detectat și înregistrat."
+        ],
+        "pills": ["docker"]
+      },
+      {
+        "title": "Unde Minecraft Server Manager aprofundează pe Minecraft",
+        "body": "Un șablon pornește un server; munca vine după. Moduri de găsit și actualizat, pachete care evoluează, erori de citit, lumi de salvat. Acestea sunt integrate în panoul de aici.",
+        "points": [
+          "Modpack-urile sunt fixate la o versiune exactă. Actualizările și retrogradările fac o copie de rezervă mai întâi și revin la versiunea anterioară printr-un singur clic.",
+          "O singură căutare în cinci registre, filtrată după loader-ul serverului și versiunea Minecraft.",
+          "Fiecare descărcare este verificată prin checksum înainte de a ajunge la server.",
+          "O verificare a versiunii arată pentru ce viitoare versiuni Minecraft se potrivesc deja modurile instalate.",
+          "Rapoartele de eroare sunt detectate, analizate și pot fi partajate pe mclo.gs printr-un singur clic.",
+          "O hartă live BlueMap printr-un singur clic, în spatele autentificării proprii a panoului."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Când PufferPanel este alegerea mai bună",
+        "body": "PufferPanel este ușor, gratuit și există de ani de zile. Dacă oricare dintre acestea te descrie, alege-l.",
+        "points": [
+          "Rulezi jocuri altele decât Minecraft.",
+          "Rulezi servere pe mai multe mașini și vrei un singur panou pentru toate.",
+          "Vrei un server Bedrock nativ sau o rețea de proxy-uri BungeeCord, Velocity sau Waterfall.",
+          "Preferi să nu rulezi deloc Docker.",
+          "Vrei acces SFTP la fișierele serverului."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Întrebări PufferPanel",
+      "items": [
+        {
+          "q": "Pot muta un server Minecraft din PufferPanel în Minecraft Server Manager?",
+          "a": "Da. Descarcă folderul lumii serverului, creează un server de același tip și versiune Minecraft, apoi încarcă lumea pe pagina Lumilor și instaleaz-o pe acel server. Pentru un server cu moduri, importă pachetul sau un zip al fișierelor sale de moduri când îl creezi."
+        },
+        {
+          "q": "Minecraft Server Manager necesită Docker?",
+          "a": "Da. Fiecare server Minecraft rulează ca un container Docker, ceea ce îi permite să limiteze memoria, CPU-ul și discul per server. Panoul în sine poate rula în Docker sau direct din Node.js."
+        },
+        {
+          "q": "Poate rula servere pe o a doua mașină?",
+          "a": "Nu. Gestionează daemon-ul Docker de pe mașina pe care rulează. Pentru două mașini, rulează câte un panou pe fiecare, sau alege un panou cu noduri precum PufferPanel."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareCrafty", "compareMcsm"],
+    "cta": {
+      "title": "Fiecare server în propriul său container",
+      "body": "Instalează panoul în trei pași și creează primul tău server în expert."
+    }
   }
 }

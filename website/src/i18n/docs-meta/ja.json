@@ -9,15 +9,15 @@
   },
   "backups": {
     "title": "バックアップ",
-    "description": "バックアップページには、サイズ、理由、経過時間とともに、フリート全体のすべてのスナップショットが表示されます。"
+    "description": "バックアップページには、サーバーと理由でフィルタリング可能な、フリート全体のすべてのスナップショットが、サイズ、理由、経過時間とともに表示されます。"
   },
   "blueprints": {
     "title": "ブループリント",
-    "description": "ブループリントは、サーバーの構成全体（タイプ、バージョン、リソース、環境、パックのピン留め、オプションで設定とワールド）を単一のファイルにキャプチャします。"
+    "description": "ブループリントは、Minecraftサーバーの構成全体を再利用可能なレシピとして保存し、新しいサーバーの作成に利用できます。シークレットは含まれません。"
   },
   "chatbot": {
     "title": "サーバーごとのMinecraftチャットボット",
-    "description": "このフォークは、管理者が設定したチャットボットを、管理対象の各Minecraftサーバーに追加します。"
+    "description": "このパネルは、管理対象の各Minecraftサーバーに、サーバーの「設定」→「チャットボット」タブで設定できる、管理者設定済みのチャットボットを提供します。"
   },
   "console-and-chat": {
     "title": "コンソールとチャットコマンド",
@@ -29,7 +29,7 @@
   },
   "getting-started": {
     "title": "はじめに",
-    "description": "初めてパネルを開くと、管理者アカウントの作成を求められます。"
+    "description": "Minecraft Server Manager をインストールし、初回セットアップ（システムチェック、タイムゾーン、管理者アカウントの設定）を完了します。"
   },
   "index": {
     "title": "ドキュメント",
@@ -37,27 +37,27 @@
   },
   "integrations": {
     "title": "連携機能",
-    "description": "各サーバーは、設定グループの下に連携機能を保持しています。Discord、公開ステータスページ、ワンクリック招待、およびオプションのチャットボットタブです。"
+    "description": "各サーバーの連携機能は、設定グループの下にまとめられています。Discord、公開ステータスページ、ワンクリック招待、そしてオプションのチャットボットタブ（管理者のみ）が含まれます。"
   },
   "modpacks": {
     "title": "Modpacks",
-    "description": "Modpacksページ（および作成ウィザードの「Modpackから」タブ）は、Modpackをサーバーとしてインストールします。常に正確なパックバージョンにピン留めされるため、再起動で"
+    "description": "CurseForge、Modrinth、FTB、GT New HorizonsのModpackをサーバーとしてインストールし、常に正確なパックバージョンに固定します。"
   },
   "public-api": {
     "title": "公開API",
-    "description": "パネル外からサーバーのステータスを取得するための、小さく読み取り専用のHTTP APIです。"
+    "description": "パネル外からサーバーのステータスを取得するための、小さくて読み取り専用のHTTP APIです。ステータスダッシュボード、アップタイムモニター、Discordボット、ホームオートメーションルールなどに利用できます。"
   },
   "schedules": {
     "title": "スケジュール",
-    "description": "スケジュールページは、cron式を使用して定期的なタスクを自動化します。"
+    "description": "スケジュールページは、cron式を使用して定期的なタスクを自動化します。外部のcronやスクリプトは不要です。"
   },
   "servers": {
     "title": "サーバーの作成と管理",
-    "description": "ウィザードを開くには、トップバーの「サーバーを作成」をクリックするか、「サーバーを作成」カードをクリックしてください。"
+    "description": "パネル内でMinecraftサーバーを作成、起動、停止、再構築、設定します。作成ウィザード、設定、メモリ、ゲームポートなど。"
   },
   "storage": {
     "title": "ストレージ",
-    "description": "ストレージページでは、ディスクの使用状況をサーバーごと、および時間の経過に伴う傾向とともに表示します。"
+    "description": "ディスク容量の使用状況を確認し、各サーバーフォルダにディスククォータを設定して、不要なものをクリーンアップできます。"
   },
   "two-factor-authentication": {
     "title": "二要素認証",
@@ -65,18 +65,46 @@
   },
   "updates": {
     "title": "アップデート",
-    "description": "アップデートページでは、フリート全体で何が最新でないかを一箇所で追跡します："
+    "description": "サーバーごとのポリシーに基づき、すべてのサーバーにわたるMinecraftバージョン、モッドパック、モッド、プラグインのアップデートを追跡し適用します。"
   },
   "users-and-roles": {
     "title": "ユーザーとロール",
-    "description": "このパネルはマルチユーザーに対応しています。"
+    "description": "Minecraft Server Manager のアカウント、管理者、オペレーター、ビューアーのロール、およびサーバーごとの権限。"
   },
   "world-shrink": {
     "title": "ワールドの縮小",
-    "description": "時間の経過とともにワールドは広がり続けます。プレイヤーが歩いたり、飛んだりした場所すべてが"
+    "description": "あまり訪問されないチャンクを削除してMinecraftワールドを縮小し、ディスク容量を回復してバックアップを高速化します。"
   },
   "worlds-and-files": {
     "title": "ワールドとファイル",
-    "description": "ワールドページでは、サーバーのワールドデータを管理します。アクティブなワールドの切り替え、ワールドのアップロード、ダウンロードが可能です。"
+    "description": "ワールドライブラリ、ワールドのアップロードと切り替え、MODとプラグインのタブ、ブラウザ内ファイルマネージャー。"
+  },
+  "guide-backups": {
+    "title": "Minecraftサーバーのバックアップを確実に復元する",
+    "description": "Minecraftサーバーのバックアップを確実に復元する方法：整合性の取れたコピーを作成し、別の場所に保管し、少なくとも一度はテストすること。"
+  },
+  "guide-choosing-a-loader": {
+    "title": "バニラ、Paper、Fabric、Forge、NeoForge、Quilt：どれを選ぶ？",
+    "description": "バニラ、Paper、Fabric、Forge、NeoForge、Quilt：プレイヤーが導入するものによって選ぶべきMinecraftサーバーの種類。"
+  },
+  "guide-moving-a-server": {
+    "title": "Minecraftサーバーを別のホストに移行する",
+    "description": "ワールドの移行は簡単です。しかし、プレイヤーがインベントリ、ホーム、権限をそのままにログインできるサーバーの移行は、うまくいかないことが多い部分です。"
+  },
+  "guide-server-memory": {
+    "title": "MinecraftサーバーにはどれくらいのRAMが必要ですか？",
+    "description": "バニラ、Paper、軽量MOD、大規模MODパックに必要なRAMの量と、マシン用に確保すべきRAMの量について説明します。"
+  },
+  "guide-server-wont-start": {
+    "title": "Minecraftサーバーが起動しない",
+    "description": "Minecraftサーバーが起動しない問題を、可能性の高い順に解決します：ログ、Javaバージョン、メモリ、EULAとポート、そしてMOD。"
+  },
+  "invites-and-status-page": {
+    "title": "招待とステータスページ",
+    "description": "サーバーのアドレス、バージョン、クライアントのmodパックと共に友達を招待し、選択した情報のみを表示する公開ステータスページを共有できます。"
+  },
+  "live-map": {
+    "title": "ライブマップ",
+    "description": "サーバーの世界のBlueMapライブ3Dマップをワンクリックで有効化。パネルへのサインインを通じてのみ提供されます。"
   }
 }

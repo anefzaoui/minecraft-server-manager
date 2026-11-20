@@ -8,21 +8,21 @@ editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/t
 
 Autentikasi dua faktor (2FA) menambahkan langkah kedua saat masuk: setelah kata sandi Anda, Anda memasukkan kode singkat dari aplikasi autentikator di ponsel Anda. Sekalipun seseorang mengetahui kata sandi Anda, mereka tidak dapat masuk tanpa perangkat Anda.
 
-Ini berfungsi dengan otentikator TOTP standar apa pun (Google Authenticator, Authy, 1Password, Microsoft Authenticator, dan lainnya), dan tersedia untuk **setiap** akun, bukan hanya admin. Melindungi login Anda sendiri bukanlah tindakan manajemen server, jadi penonton dan operator juga dapat mengaktifkannya.
+Ini berfungsi dengan autentikator TOTP standar apa pun (Google Authenticator, Authy, 1Password, Microsoft Authenticator, dan lainnya), dan tersedia untuk **setiap** akun, tidak hanya admin. Melindungi login Anda sendiri bukanlah tindakan manajemen server, jadi penonton dan operator juga dapat mengaktifkannya.
 
 ## Mengaktifkan 2FA
 
-Buka menu akun (inisial Anda, kanan atas) dan pilih **Autentikasi dua faktor**.
+Buka menu akun (inisial atau gambar profil Anda, kanan atas) dan pilih **2FA**.
 
 ![Menu akun](/docs/images/2fa-user-menu.png)
 
 Anda akan mendapatkan dialog pendaftaran:
 
-![Daftar](/docs/images/2fa-enroll.png)
+![Pendaftaran](/docs/images/2fa-enroll.png)
 
 1. **Pindai kode QR** dengan aplikasi autentikator Anda, atau ketuk **Salin** dan masukkan kunci manual secara manual.
 2. Ketik **kode 6 digit** yang sekarang ditampilkan oleh aplikasi Anda.
-3. **Konfirmasikan kata sandi Anda.** Mengaktifkan 2FA memeriksa ulang kata sandi Anda, jadi sesi terbuka yang tidak disengaja tidak dapat mengaktifkannya dengan perangkat orang lain.
+3. **Konfirmasikan kata sandi Anda.** Mengaktifkan 2FA memeriksa ulang kata sandi Anda, sehingga sesi terbuka yang tidak sengaja tidak dapat mengaktifkannya dengan perangkat orang lain.
 4. Klik **Aktifkan**.
 
 ### Simpan kode cadangan Anda
@@ -43,20 +43,20 @@ Masukkan kode 6 digit saat ini dari aplikasi Anda (atau salah satu kode cadangan
 
 ## Mengelola atau menonaktifkan 2FA
 
-Buka entri **Autentikasi dua faktor** yang sama di menu akun saat diaktifkan. Setelah mengonfirmasi kata sandi Anda, Anda dapat:
+Buka entri **2FA** yang sama di menu akun saat diaktifkan. Setelah mengonfirmasi kata sandi Anda, Anda dapat:
 
-- **Buat ulang kode cadangan** - menerbitkan set baru dan menghentikan yang lama.
-- **Nonaktifkan 2FA** - menghapusnya dari akun Anda.
+- **Buat Ulang Kode Cadangan** mengeluarkan set baru dan membatalkan yang lama.
+- **Nonaktifkan 2FA** menghapusnya dari akun Anda.
 
 Keduanya memeriksa ulang kata sandi Anda saat ini terlebih dahulu.
 
 ## Kehilangan ponsel _dan_ kode cadangan Anda?
 
-**Admin** dapat mengatur ulang 2FA pengguna lain dari **Pengaturan → Pengguna** (tombol **Atur Ulang** di kolom 2FA). Itu menghapus 2FA untuk akun sehingga pengguna dapat masuk hanya dengan kata sandi mereka dan mengaturnya kembali. Admin tidak dapat mengatur ulang 2FA _mereka sendiri_ tanpa kata sandi. Mereka melalui penonaktifan normal yang memerlukan kata sandi, sehingga sesi admin yang dibajak tidak dapat menghapus faktor kedua mereka sendiri.
+**Admin** dapat mengatur ulang 2FA pengguna lain dari **Pengaturan → Pengguna** (**Atur Ulang 2FA** di menu tindakan pengguna tersebut). Itu menghapus 2FA untuk akun sehingga pengguna dapat masuk hanya dengan kata sandi mereka dan mengaturnya kembali. Admin tidak dapat mengatur ulang 2FA _mereka sendiri_ tanpa kata sandi. Mereka melalui penonaktifan normal yang memerlukan kata sandi, sehingga sesi admin yang dibajak tidak dapat menghapus faktor kedua mereka sendiri.
 
 ## Baik untuk diketahui
 
 - Kode berbasis waktu dan berputar setiap 30 detik; panel menerima sedikit penyimpangan jam, dan diam-diam pulih jika jam server kemudian dikoreksi.
-- Kode tidak dapat diputar ulang - setelah digunakan untuk masuk, kode yang sama tidak akan berfungsi lagi dalam jendelanya.
+- Kode tidak dapat diputar ulang: setelah digunakan untuk masuk, kode yang sama tidak akan berfungsi lagi dalam jendelanya.
 - Kode yang salah dibatasi lajunya. Pembatas **dibagikan** dengan langkah kata sandi (penguncian per akun ditambah pembatas `RATE_LIMIT_AUTH_PER_15MIN` per IP), jadi memasukkan kata sandi yang benar tidak dapat mengatur ulang penghitung tepat sebelum menebak kode 6 digit.
 - Perubahan 2FA (mengaktifkan, menonaktifkan, mengatur ulang, penggunaan kode cadangan) semuanya dicatat dalam [Log Aktivitas](/docs/activity/).

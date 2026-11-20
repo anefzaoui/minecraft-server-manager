@@ -10,23 +10,25 @@ La dashboard è la tua base operativa: ogni server, il suo stato in tempo reale 
 
 ![Dashboard](/docs/images/dashboard.png)
 
-## Le tessere di riepilogo
+## Le tessere riassuntive
 
 In alto:
 
-- **Server online** - quanti dei tuoi server sono attualmente in esecuzione.
-- **Giocatori connessi** - il numero totale di giocatori su tutti i server in esecuzione.
-- **Aggiornamenti disponibili** - quanti server, pack o mod hanno una versione più recente ([vedi Aggiornamenti](/docs/updates/)).
-- **Docker** - se il pannello può raggiungere il demone Docker e la sua versione.
+- **Server online**: quanti dei tuoi server sono in esecuzione, sul totale.
+- **Giocatori connessi**: il numero totale di giocatori su tutti i server in esecuzione.
+- **Aggiornamenti disponibili**: quanti server, pack o mod hanno una versione più recente ([vedi Aggiornamenti](/docs/updates/)).
+- **Docker**: se il pannello può raggiungere il demone Docker e la sua versione.
+
+Una seconda riga aggiunge **Memoria allocata** (e quanta è in uso), **Spazio su disco utilizzato** in tutte le cartelle dei dati del server, **Stato · 24h** (crash, arresti per esaurimento memoria e riavvii automatici nell'ultimo giorno) e **Aggiornamenti** suddivisi tra aggiornamenti di mod e a livello di server. Sotto di essi, **Server per stato** conta i tuoi server in ogni stato, e **Panoramica risorse** mostra la quota di memoria e CPU di ogni server.
 
 ## Schede server
 
-Ogni server viene mostrato come una scheda con il suo stato (In esecuzione, Avvio, Fermo, Arrestato), il tipo e la versione di Minecraft, e la sua porta di gioco. Per i server in esecuzione ottieni anche l'utilizzo in tempo reale di **giocatori**, **CPU**, **memoria** e **disco**, aggiornato continuamente.
+Ogni server viene visualizzato come una scheda con il suo stato (In esecuzione, Avvio, Arrestato, Crashato e stati intermedi come Non integro o Bloccato), il tipo e la versione di Minecraft, la porta di gioco e i suoi tag. Ogni scheda mostra l'utilizzo di **giocatori** e **disco** rispetto alla quota; i server in esecuzione mostrano anche **CPU** e **memoria** in tempo reale, aggiornate continuamente.
 
-Fai clic su una scheda per aprire quel server. La scheda vuota **Crea un server** e il pulsante **Crea un Server** nella barra superiore avviano entrambi la [procedura guidata di creazione](/docs/servers/).
+Fai clic su una scheda per aprire quel server. La scheda vuota **Crea un server** e il pulsante **Crea un server** nella barra superiore avviano entrambi la [procedura guidata di creazione](/docs/servers/).
 
-Puoi cercare e ordinare i tuoi server, e passare dalla visualizzazione a griglia a quella a elenco con l'interruttore sulla destra.
+Puoi cercare i tuoi server (per nome, tipo, versione o tag), ordinarli per stato, nome, dimensione, ultimo avvio o data di creazione, e passare dalla visualizzazione a griglia a quella a elenco con l'interruttore a destra.
 
-## Attività recente
+## Attività recenti
 
-Il feed in basso è una cronologia di controllo in tempo reale e leggibile: accessi, backup, esportazioni di blueprint, controlli degli aggiornamenti, modifiche ai comandi della chat, avvii e arresti dei server e altro ancora. Ogni voce è contrassegnata con il server a cui appartiene (o il pannello stesso) e da quanto tempo è successo. La cronologia completa si trova sulla pagina [Attività](/docs/activity/).
+Il flusso in basso mostra le voci più recenti dal registro di controllo leggibile del pannello: accessi, backup, esportazioni di blueprint, controlli degli aggiornamenti, modifiche ai comandi della chat, avvii e arresti dei server e altro ancora. Ogni voce è contrassegnata dal server a cui appartiene (o dal pannello stesso) e da quanto tempo fa è avvenuta. **Visualizza tutto** apre la cronologia completa nella pagina [Attività](/docs/activity/).

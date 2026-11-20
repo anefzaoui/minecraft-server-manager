@@ -1,6 +1,6 @@
 ---
 title: '월드 크기 줄이기'
-description: '시간이 지남에 따라 월드는 확장됩니다. 플레이어가 걸었거나, 날았거나, 또는'
+description: '자주 방문하지 않는 청크를 삭제하여 Minecraft 월드 크기를 줄이고 디스크 공간을 확보하며 백업 속도를 높입니다.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

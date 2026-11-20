@@ -1,6 +1,6 @@
 ---
 title: '缩小世界'
-description: '随着时间的推移，世界会不断扩张：玩家曾经走过、飞过或'
+description: '通过删除很少访问的区块来缩小 Minecraft 世界，以回收磁盘空间并加快备份速度。'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

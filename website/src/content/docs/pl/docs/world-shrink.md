@@ -1,6 +1,6 @@
 ---
 title: 'Zmniejszanie świata'
-description: 'Z czasem świat się rozrasta: każde miejsce, w którym gracz kiedykolwiek chodził, latał lub'
+description: 'Zmniejsz świat Minecraft, usuwając rzadko odwiedzane fragmenty, aby odzyskać miejsce na dysku i przyspieszyć tworzenie kopii zapasowych.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

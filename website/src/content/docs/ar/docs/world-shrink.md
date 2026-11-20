@@ -1,6 +1,6 @@
 ---
 title: 'تصغير عالم'
-description: 'مع مرور الوقت، يتوسع العالم: كل مكان سار فيه لاعب أو طار به أو'
+description: 'صغّر عالم Minecraft عن طريق حذف الأجزاء التي نادرًا ما تتم زيارتها، لاستعادة مساحة القرص وتسريع النسخ الاحتياطي.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

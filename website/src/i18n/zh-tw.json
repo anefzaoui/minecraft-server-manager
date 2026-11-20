@@ -6,11 +6,14 @@
   },
   "nav": {
     "home": "首頁",
-    "features": "功能",
+    "features": "特色",
     "screenshots": "截圖",
+    "servers": "伺服器",
+    "guides": "指南",
     "install": "安裝",
     "docs": "文件",
     "faq": "常見問題",
+    "compare": "比較",
     "changelog": "變更日誌",
     "github": "GitHub",
     "discord": "Discord",
@@ -22,11 +25,12 @@
   "hero": {
     "eyebrow": "免費開源。可在您自己的機器上運行。",
     "title": "透過一個友善的面板管理您的 Minecraft 伺服器。",
-    "subtitle": "Minecraft Server Manager 將 Docker 變成您伺服器的舒適家園：可釘選的模組包、一鍵備份、排程、即時地圖、玩家統計資料，以及一個能說流暢英文的控制台。沒有帳單，沒有鎖定，整個面板都在一個資料夾中。",
-    "primary": "3 步驟開始",
+    "subtitle": "Minecraft Server Manager 將 Docker 變成您伺服器的溫馨家園：可釘選的模組包、一鍵備份、排程、即時地圖、玩家統計數據，以及一個易於理解的控制台。沒有帳單，沒有鎖定，整個面板都在一個資料夾中。",
+    "primary": "幾分鐘內開始使用",
     "secondary": "探索功能",
     "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
-    "scroll": "查看教學"
+    "scroll": "查看教學",
+    "shotCaption": "真實的面板：其儀表板，顯示六個範例伺服器，採用暗色主題。"
   },
   "pillars": {
     "title": "專為伺服器管理員打造，而非客服人員",
@@ -52,8 +56,8 @@
   },
   "features": {
     "title": "伺服器擁有者隨手可得的一切",
-    "intro": "從建立伺服器到分享即時地圖，完整的功能導覽。",
-    "cta": "閱讀文件",
+    "intro": "從建立伺服器到分享即時地圖，完整功能導覽。",
+    "cta": "閱讀說明文件",
     "groups": [
       {
         "title": "伺服器與生命週期",
@@ -66,17 +70,17 @@
           },
           {
             "title": "引導式建立精靈",
-            "body": "簡單或進階模式，在您選擇之前，所有映像檔設定都以淺顯易懂的英文說明。",
+            "body": "簡單或進階模式，所有映像檔設定在您選擇前都會以淺顯易懂的英文解釋。",
             "icon": "wand"
           },
           {
             "title": "即時主控台",
-            "body": "支援 WebSocket 的主控台，附有 RCON 指令列、日誌篩選器和一鍵玩家操作。",
+            "body": "具有 RCON 指令列、日誌篩選器和一鍵玩家操作的 WebSocket 主控台。",
             "icon": "terminal"
           },
           {
             "title": "玩家管理",
-            "body": "白名單、管理員、封鎖、IP 封鎖和傳送，可透過 RCON 線上操作，也可透過 JSON 檔案離線操作。",
+            "body": "白名單、管理員、封鎖、IP 封鎖和傳送，可透過 RCON 線上操作，或透過 JSON 檔案離線操作。",
             "icon": "users"
           }
         ]
@@ -85,7 +89,7 @@
         "title": "模組與模組包",
         "items": [
           {
-            "title": "五個註冊庫，一個瀏覽器",
+            "title": "五個登錄庫，一個瀏覽器",
             "body": "從一個地方搜尋所有五個。其中三個無需 API 金鑰。",
             "icon": "search",
             "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
@@ -97,25 +101,30 @@
           },
           {
             "title": "匯入任何內容",
-            "body": "所有 jar 在匯入時都會被識別並進行相容性檢查。",
+            "body": "所有 jar 在匯入時都會被識別並檢查相容性。",
             "icon": "upload",
             "pills": ["mrpack", "cf-export", "zip"]
           },
           {
             "title": "校驗和驗證下載",
-            "body": "在檔案傳送到伺服器之前進行驗證，優先使用最強的雜湊值。不匹配的檔案絕不會被傳送。",
+            "body": "在檔案到達伺服器之前進行驗證，優先使用最強的雜湊值。不匹配的檔案絕不會出貨。",
             "icon": "shield",
             "pills": ["sha512", "sha256", "sha1", "md5"]
           },
           {
             "title": "共用模組庫",
-            "body": "透過 sha256 去重複並硬連結到伺服器，因此自訂模組可以在模組包更新後保留。",
+            "body": "透過 sha256 去重複並硬連結到伺服器，因此自訂模組可以承受套件更新。",
             "icon": "library"
           },
           {
-            "title": "先選模組的求解器",
-            "body": "選擇您想要的模組，並取得最新且完全相容的載入器和 Minecraft 版本。",
+            "title": "選擇模組優先求解器",
+            "body": "選擇您想要的模組，並取得最新完全相容的載入器和 Minecraft 版本。",
             "icon": "sparkles"
+          },
+          {
+            "title": "任何套件版本，任何載入器建置",
+            "body": "將模組包移動到任何已發佈的版本，較新或較舊，或切換載入器建置。備份會優先執行，啟動失敗則會回滾。",
+            "icon": "refresh"
           }
         ]
       },
@@ -124,12 +133,12 @@
         "items": [
           {
             "title": "安全備份",
-            "body": "具有保留類別的快照，原地還原，以及可選的世界壓縮以回收磁碟空間。",
+            "body": "具有保留類別的快照，可原地還原，並可選擇性地縮減世界以回收磁碟空間。",
             "icon": "archive"
           },
           {
             "title": "Cron 排程",
-            "body": "按排程進行重啟、備份和 RCON 指令，並預先顯示下次執行時間。",
+            "body": "依排程進行重啟、備份和 RCON 指令，並預先顯示下次執行時間。",
             "icon": "clock"
           },
           {
@@ -139,13 +148,13 @@
           },
           {
             "title": "崩潰偵測",
-            "body": "偵測、解析崩潰並命名嫌疑者，提供一鍵分享和自動化洞察。",
+            "body": "偵測、解析崩潰並命名嫌疑者，支援一鍵分享和自動化洞察。",
             "icon": "flame",
             "pills": ["mclogs"]
           },
           {
             "title": "更新追蹤",
-            "body": "追蹤新的伺服器、模組包、映像檔和模組版本，提供更新前備份和一鍵回滾。",
+            "body": "追蹤新的伺服器、套件、映像檔和模組版本，提供更新前備份和一鍵回滾。",
             "icon": "refresh"
           }
         ]
@@ -155,29 +164,35 @@
         "items": [
           {
             "title": "即時地圖",
-            "body": "一鍵即可存取即時地圖，透過面板的驗證代理進行服務。",
+            "body": "一鍵即可存取即時地圖，透過面板的已驗證代理程式提供服務。",
             "icon": "map",
             "pills": ["bluemap"]
           },
           {
             "title": "分析與儲存",
-            "body": "遊戲時間、死亡次數和挖礦計分板、物品欄偵測、每個伺服器的磁碟使用量和強制配額。",
+            "body": "遊玩時間、死亡次數和挖礦計分板，物品欄偵測，每個伺服器的磁碟使用量，以及強制配額。",
             "icon": "chart"
           },
           {
             "title": "Discord 與聊天機器人",
-            "body": "支援每個事件開關的 Webhook，以及可選的每個伺服器的聊天機器人，具有受限的遊戲內權限。",
+            "body": "支援帶有事件開關的 Webhook，以及可選的伺服器專用聊天機器人，具有受限的遊戲內權限。",
             "icon": "message",
             "pills": ["discord"]
           },
           {
             "title": "公開狀態頁面與 API",
-            "body": "選擇加入的狀態頁面、邀請區塊、生成的客戶端 .mrpack，以及唯讀的 token 驗證 API。",
+            "body": "可選擇加入的狀態頁面、邀請區塊、生成的用戶端 .mrpack，以及唯讀的 token 驗證 API。",
             "icon": "globe"
           },
           {
+            "title": "邀請朋友",
+            "body": "複製包含位址和版本的邀請。對於您選擇的模組建立的伺服器，請將 .mrpack 用戶端交給朋友，該檔案會安裝模組並將伺服器加入他們的列表。",
+            "icon": "users",
+            "pills": ["mrpack"]
+          },
+          {
             "title": "使用者、角色與 2FA",
-            "body": "管理員、操作員和檢視者角色，支援 TOTP 雙因素驗證。",
+            "body": "管理員、操作員和檢視者角色，支援 TOTP 雙重驗證。",
             "icon": "lock"
           }
         ]
@@ -185,21 +200,22 @@
     ]
   },
   "screenshots": {
-    "title": "令人愉悅的使用介面",
+    "title": "令人愉悅的面板",
     "intro": "桌面與手機。此面板採用窄版優先設計，因此每個頁面都能在手機上正常顯示。",
     "desktop": "桌面",
     "mobile": "手機上",
     "items": {
-      "dashboard": "儀表板：一覽所有伺服器、玩家數量與近期活動。",
+      "dashboard": "儀表板：一覽所有伺服器、玩家數量和近期活動。",
       "wizard": "建立精靈會在您選擇設定前解釋所有選項。",
-      "overview": "伺服器概覽，包含資源計量器與快速操作。",
-      "console": "即時主控台，附有 RCON 指令列與日誌篩選器。",
-      "mods": "來自五個登錄庫的模組，可依伺服器的載入器與版本篩選。",
-      "worlds": "從瀏覽器交換世界與管理檔案。",
-      "backups": "備份功能，支援保留類別與就地還原。",
-      "schedules": "用於重啟、備份與執行指令的 Cron 排程。",
-      "blueprints": "藍圖：可攜式伺服器設定檔。",
-      "storage": "儲存空間分析與強制配額。"
+      "overview": "伺服器概覽，包含資源計量器和快速操作。",
+      "console": "即時主控台，附有 RCON 指令列和日誌篩選器。",
+      "mods": "來自五個登錄庫的模組，會根據伺服器的載入器和版本進行篩選。",
+      "modpacks": "模組包：搜尋 CurseForge 和 Modrinth，每個模組包都會安裝到確切的版本。",
+      "worlds": "從瀏覽器交換世界和管理檔案。",
+      "backups": "備份功能，包含保留類別和就地還原。",
+      "schedules": "用於重新啟動、備份和指令的 Cron 排程。",
+      "blueprints": "藍圖：可攜式伺服器配方。",
+      "storage": "儲存空間分析和強制配額。"
     }
   },
   "install": {
@@ -208,18 +224,18 @@
     "requirements": "需求",
     "reqItems": [
       "Docker Engine (Linux) 或 Docker Desktop (Windows, macOS)。",
-      "從原始碼安裝需要 Node.js 24 或更新版本。Docker 映像檔會內建自己的版本。",
+      "從原始碼安裝需要 Node.js 24 或更新版本。Docker 映像檔會內建其版本。",
       "幾 GB 的磁碟空間用於存放伺服器映像檔和世界。"
     ],
     "docker": {
       "title": "選項 1：Docker",
-      "body": "每次發佈時，都會在 GHCR 上發佈預先建置的多架構映像檔。取得 compose 檔案，設定一個變數，然後啟動。",
+      "body": "每個版本都會在 GHCR 上發佈預建的多架構映像檔。取得 compose 檔案，設定一個變數，然後啟動。",
       "after": "然後開啟 http://your-host:25564。在 Portainer 或 Dockge 中，將 compose 檔案貼上為堆疊，並在堆疊的環境變數中設定 DATA_DIR_HOST。",
-      "warning": "面板透過掛載的 socket 驅動主機的 Docker daemon，這在主機上等同於 root 權限。請相應地對待管理員登入，切勿將面板直接暴露於網際網路。"
+      "warning": "面板透過掛載的 socket 驅動主機的 Docker daemon，這在主機上相當於 root 權限。請妥善處理管理員登入，切勿將面板直接暴露於網際網路。"
     },
     "source": {
       "title": "選項 2：從原始碼",
-      "body": "任何作業系統，包括使用 Docker Desktop 的 Windows 和 macOS。",
+      "body": "任何作業系統，包括透過 Docker Desktop 的 Windows 和 macOS。",
       "after": "開啟 http://localhost:25564。首次執行會引導您完成系統檢查、設定時區以及建立管理員帳戶。"
     },
     "next": "後續步驟",
@@ -229,26 +245,38 @@
     "windows": "Windows 注意事項",
     "windowsItems": [
       "在啟動或建立伺服器之前，必須執行 Docker Desktop。",
-      "與 Docker Desktop 分享您的專案磁碟機 (設定、資源、檔案共用)，以便 bind mounts 能正常運作。",
+      "與 Docker Desktop 共用您的專案磁碟機 (設定、資源、檔案共用)，以便 bind mounts 能正常運作。",
       "Docker 映像檔以 Linux 主機為目標；在 Windows 和 macOS 上，請從原始碼執行面板。"
     ],
-    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []],
+    "options": {
+      "title": "安裝程式選項",
+      "intro": "Linux 安裝程式會在 bash -s -- 後面接收其選項，因此它們也能透過管道正常運作。使用相同的選項再次執行以進行升級；您的資料夾、.env 和 compose 編輯都會被保留。",
+      "items": {
+        "port": "在另一個連接埠上提供面板服務。",
+        "proxy": "僅監聽 127.0.0.1，用於在前方使用 TLS 的反向代理。",
+        "tag": "釘選特定版本，而不是追蹤最新版本。",
+        "dir": "安裝在 /opt/msm 以外的位置。",
+        "uninstall": "移除面板並保留其資料。透過管道傳送時沒有鍵盤可以回答問題，因此請添加 --yes；同時添加 --purge 以刪除資料夾。",
+        "help": "所有選項及其預設值。"
+      }
+    }
   },
   "faq": {
     "title": "常見問題",
     "items": [
       {
         "q": "真的免費嗎？",
-        "a": "是的。此面板採用 MIT 授權條款，並且不使用任何付費服務。所有內容都在您的機器上運行。"
+        "a": "是的。此面板採用 MIT 授權條款，且不使用任何付費服務。所有內容都在您的電腦上運行。"
       },
       {
         "q": "它能在 Raspberry Pi 或其他 ARM 機器上運行嗎？",
-        "a": "是的。Docker 映像檔同時支援這兩種架構，並且從原始碼安裝可以在任何運行 Node.js 24 和 Docker 的地方進行。",
+        "a": "是的。Docker 映像檔同時支援這兩種架構，而從原始碼安裝則可在任何支援 Node.js 24 和 Docker 的地方運行。",
         "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
       },
       {
         "q": "支援哪些伺服器類型？",
-        "a": "itzg 映像檔支援的所有類型，再加上來自四大來源的模組包。",
+        "a": "itzg 映像檔支援的所有伺服器類型，以及來自四大來源的模組包。",
         "pills": [
           "vanilla",
           "paper",
@@ -264,21 +292,29 @@
         ]
       },
       {
-        "q": "如何將面板轉移到新機器？",
+        "q": "如何將我的面板遷移到新機器？",
         "a": "複製資料夾。它包含資料庫、每個伺服器的世界、備份和模組庫。在新機器上啟動面板，並指向該資料夾。"
       },
       {
         "q": "可以有多人管理伺服器嗎？",
-        "a": "是的。面板具有管理員、操作員和檢視者角色，每個帳戶都可以啟用雙重驗證。"
+        "a": "是的。此面板具有管理員、操作員和檢視者角色，每個帳戶都可以啟用雙重驗證。"
+      },
+      {
+        "q": "家裡的朋友如何加入？",
+        "a": "在您的路由器上將伺服器的遊戲連接埠（從 25565 開始）轉發到運行它的機器，或者如果您的網路提供商不允許連接埠轉發，則使用隧道。伺服器的「邀請」標籤頁會顯示要分享的位址，並為您編寫邀請文字。請保持面板本身的連接埠關閉。"
       },
       {
         "q": "需要將它暴露在網際網路上嗎？",
-        "a": "不需要。玩家連接到遊戲埠，而不是面板。將面板保留在您的區域網路 (LAN) 上，或放在具有驗證功能的 VPN 或反向代理之後。"
+        "a": "不需要。玩家連接的是遊戲連接埠，而不是面板。請將面板保留在您的 LAN 或 VPN 或帶有驗證的反向代理之後。"
       },
       {
         "q": "Bedrock 玩家呢？",
-        "a": "兩者都可以像安裝任何其他插件或模組一樣進行安裝，並且面板會公開他們所需的設定。",
+        "a": "兩者都可以像安裝任何其他插件或模組一樣進行安裝，並且面板會公開它們所需的設定。",
         "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "它是用 AI 製作的嗎？",
+        "a": "部分是，且公開透明。大部分程式碼是使用 Claude Code 編寫的，維護者設計、審查和測試所有功能。儲存庫中的 AI 聲明描述了具體方法。"
       },
       {
         "q": "在哪裡可以獲得協助？",
@@ -288,8 +324,9 @@
   },
   "changelog": {
     "title": "更新日誌",
-    "intro": "每次發布，最新的在前。發布說明以英文發布。",
-    "releases": "GitHub 上的所有發布"
+    "intro": "每次發佈，最新的在前。發佈說明以英文發佈。",
+    "releases": "所有 GitHub 發佈",
+    "feed": "發佈動態消息 (Atom)"
   },
   "community": {
     "title": "來打個招呼",
@@ -306,32 +343,38 @@
     "releases": "發行版本",
     "contributing": "貢獻",
     "license": "授權條款",
-    "notAffiliated": "並非官方 Minecraft 產品。未經 Mojang 或 Microsoft 核准，亦與之無關。"
+    "notAffiliated": "並非官方的 Minecraft 產品。未經 Mojang 或 Microsoft 核准，亦與之無關。",
+    "serverTypes": "伺服器類型",
+    "guides": "指南",
+    "compare": "比較",
+    "roadmap": "發展藍圖",
+    "ai": "人工智慧的應用方式",
+    "conduct": "行為準則"
   },
   "meta": {
     "home": {
-      "title": "免費自架 Minecraft 伺服器控制面板",
-      "description": "透過瀏覽器運行原版和模組化的 Minecraft 伺服器。基於 Docker，模組包固定至精確版本，備份、排程、即時地圖、玩家分析。免費、開源，三步驟即可運行。"
+      "title": "免費自架 Minecraft 伺服器面板",
+      "description": "透過免費、自架的 Docker 面板，在瀏覽器中運行原版和模組化的 Minecraft 伺服器：釘選模組包、備份、排程和即時地圖。"
     },
     "features": {
-      "title": "功能",
-      "description": "Minecraft Server Manager 的所有功能：容器化伺服器、五個模組註冊中心、校驗和驗證下載、安全備份、排程、藍圖、崩潰偵測、即時地圖、角色權限和雙重驗證。"
+      "title": "Minecraft 伺服器面板功能",
+      "description": "Minecraft Server Manager 的所有功能：Docker 伺服器、五個模組註冊中心、驗證下載、備份、排程、當機鑑識、即時地圖和雙重驗證。"
     },
     "screenshots": {
-      "title": "螢幕截圖",
-      "description": "Minecraft Server Manager 在桌面和手機上的面板截圖：儀表板、設定精靈、主控台、模組、世界、備份、排程等。"
+      "title": "Minecraft 伺服器面板截圖",
+      "description": "Minecraft Server Manager 在桌機和手機上的面板截圖：儀表板、設定精靈、主控台、模組、世界、備份、排程等。"
     },
     "install": {
-      "title": "安裝",
-      "description": "使用 Docker 指令三步驟安裝 Minecraft Server Manager，或在 Windows、macOS 和 Linux 上從原始碼安裝。"
+      "title": "使用 Docker 安裝 Minecraft 伺服器面板",
+      "description": "使用三個指令即可透過 Docker 安裝 Minecraft Server Manager，或在 Windows、macOS 和 Linux 上從原始碼安裝。"
     },
     "faq": {
-      "title": "常見問題",
-      "description": "關於費用、支援的伺服器類型、ARM 支援、遷移、角色權限和網路暴露的解答。"
+      "title": "Minecraft 伺服器面板常見問題",
+      "description": "關於成本、支援的伺服器類型、Raspberry Pi 和 ARM、遷移到新機器、角色、Bedrock 玩家以及將面板暴露於網際網路的解答。"
     },
     "changelog": {
-      "title": "更新日誌",
-      "description": "Minecraft Server Manager 各版本的發行說明。"
+      "title": "變更日誌和版本說明",
+      "description": "免費自架 Minecraft 伺服器面板 Minecraft Server Manager 的每個版本的版本說明。"
     },
     "notFound": {
       "title": "找不到頁面",
@@ -345,8 +388,62 @@
   },
   "langNotice": "此頁面預設以英文顯示，直到翻譯完成。",
   "tutorial": {
-    "title": "三步驟啟動並執行",
-    "intro": "選擇您想執行面板的方式。填寫兩個欄位，下方所有指令都會為您的機器自動重寫。",
+    "title": "幾分鐘內即可上線",
+    "intro": "選擇您的機器並貼上指令。進階模式提供其他所有運行面板的方式，指令會針對您自己的資料夾和位址進行重寫。",
+    "modes": {
+      "simple": "簡易",
+      "advanced": "進階"
+    },
+    "simple": {
+      "linux": {
+        "label": "Linux",
+        "steps": [
+          {
+            "title": "運行安裝程式",
+            "body": "適用於任何具有 64 位元作業系統的 Linux 機器，從 VPS 到 Raspberry Pi 4 或 5。它會安裝 Docker（如果遺失），將面板設定在 /opt/msm，然後啟動它。之後再次運行以進行升級。"
+          },
+          {
+            "title": "開啟面板",
+            "body": "安裝程式會印出位址和一次性的設定 PIN 碼。在瀏覽器中開啟該位址，輸入 PIN 碼，然後建立您的管理員帳戶。"
+          }
+        ]
+      },
+      "windows": {
+        "label": "Windows",
+        "steps": [
+          {
+            "title": "安裝 Docker Desktop、Node.js、Git 和 pnpm",
+            "body": "在 PowerShell 中各一行。安裝完成後啟動 Docker Desktop 並保持運行。"
+          },
+          {
+            "title": "取得面板並啟動它",
+            "body": "開啟一個新的終端機，以便它能找到您剛安裝的工具。"
+          },
+          {
+            "title": "開啟面板",
+            "body": "首次運行會引導您完成系統檢查、時區設定，以及建立管理員帳戶。"
+          }
+        ]
+      },
+      "macos": {
+        "label": "macOS",
+        "steps": [
+          {
+            "title": "安裝 Docker Desktop、Node.js、Git 和 pnpm",
+            "body": "使用 Homebrew。安裝完成後啟動 Docker Desktop 並保持運行。"
+          },
+          {
+            "title": "取得面板並啟動它",
+            "body": "安裝步驟也會建置面板。無需編譯任何原生模組。"
+          },
+          {
+            "title": "開啟面板",
+            "body": "首次運行會引導您完成系統檢查、時區設定，以及建立管理員帳戶。"
+          }
+        ]
+      }
+    },
+    "advancedIntro": "填寫兩個欄位，下方所有指令都會針對您的機器進行重寫。",
     "dataDir": "主機上的資料夾",
     "dataDirHint": "絕對路徑。世界、備份、模組和資料庫都儲存在這裡。",
     "host": "主機名稱或 IP",
@@ -354,7 +451,7 @@
     "then": "然後開啟面板",
     "copy": "複製",
     "copied": "已複製！",
-    "firstRun": "首次執行會引導您完成系統檢查、設定時區，以及建立管理員帳戶。",
+    "firstRun": "首次運行會引導您完成系統檢查、時區設定，以及建立管理員帳戶。",
     "tabs": {
       "compose": {
         "label": "Docker Compose",
@@ -369,7 +466,7 @@
           },
           {
             "title": "啟動面板",
-            "body": "此映像檔支援多架構（amd64 和 arm64），並在每次發佈時更新。"
+            "body": "該映像檔是多架構的（amd64 和 arm64），並在每次發佈時更新。"
           }
         ]
       },
@@ -378,7 +475,7 @@
         "steps": [
           {
             "title": "在主機上建立資料夾",
-            "body": "相同的資料夾規則：絕對路徑，位於執行 Docker 的機器上。"
+            "body": "相同的資料夾規則：絕對路徑，位於運行 Docker 的機器上。"
           },
           {
             "title": "從 compose 檔案新增堆疊",
@@ -395,11 +492,11 @@
         "steps": [
           {
             "title": "檢查需求",
-            "body": "Node.js 24 或更新版本、pnpm，以及執行的 Docker（Windows 和 macOS 上的 Docker Desktop）。"
+            "body": "Node.js 24 或更新版本、pnpm，以及運行的 Docker（Windows 和 macOS 上的 Docker Desktop）。"
           },
           {
             "title": "複製並安裝",
-            "body": "安裝步驟也會建置面板的 CSS。無需編譯原生模組。"
+            "body": "安裝步驟也會建置面板的 CSS。無需編譯任何原生模組。"
           },
           {
             "title": "啟動面板",
@@ -412,15 +509,15 @@
         "steps": [
           {
             "title": "從原始碼安裝啟動",
-            "body": "從複製的資料夾執行此操作。PM2 會使用啟動其守護程式的 Node 版本來啟動應用程式，因此請固定解釋器。"
+            "body": "從複製的資料夾中運行此指令。PM2 會使用啟動其守護程式的 Node 版本來啟動應用程式，因此請固定解釋器。"
           },
           {
             "title": "儲存程序列表並啟用啟動",
-            "body": "pm2 startup 會列印一個指令，需要使用 sudo 執行；請執行一次。"
+            "body": "pm2 startup 會印出一個需要用 sudo 運行的指令；請運行一次。"
           },
           {
             "title": "偏好 systemd？",
-            "body": "一個在複製的資料夾中執行 node src/server.js 的單元，並設定 WorkingDirectory，其運作方式相同。面板不需要額外的旗標。"
+            "body": "一個從複製的資料夾運行 node src/server.js 並設定 WorkingDirectory 的單元，其運作方式相同。面板不需要額外的旗標。"
           }
         ]
       }
@@ -436,5 +533,1608 @@
     "checksums": "校驗和",
     "integrations": "整合",
     "keyless": "無密鑰"
+  },
+  "landing": {
+    "breadcrumb": "麵包屑導航",
+    "install": "安裝面板",
+    "docs": "閱讀文件",
+    "related": "繼續閱讀",
+    "open": "開啟",
+    "docsGuides": "文件中的更多指南",
+    "docsGuidesIntro": "伺服器擁有者最常問問題的簡短實用解答，與文件放在一起。"
+  },
+  "serversHub": {
+    "meta": {
+      "title": "Minecraft 伺服器類型：Paper、Fabric、Forge",
+      "description": "透過一個自行託管的面板運行 Paper、Purpur、Fabric、Quilt、Forge、NeoForge、原版遊戲或完整的模組包。選擇伺服器類型，看看您會得到什麼。"
+    },
+    "eyebrow": "所有伺服器類型",
+    "title": "一個面板，適用於所有類型的 Minecraft 伺服器",
+    "intro": "外掛程式、模組、未修改的遊戲，或整個模組包。選擇您想運行的內容，面板會為您處理 Java 版本、下載和釘選。",
+    "pills": [
+      "vanilla",
+      "paper",
+      "purpur",
+      "fabric",
+      "quilt",
+      "forge",
+      "neoforge",
+      "packs-curseforge",
+      "packs-modrinth",
+      "ftb",
+      "gtnh"
+    ],
+    "cards": {
+      "serverPaper": "Paper 和 Purpur 外掛程式伺服器，支援來自四個登錄庫的外掛程式，玩家可使用未修改的客戶端加入。",
+      "serverFabric": "Fabric 和 Quilt 伺服器，適用於輕量級、快速更新的模組，每次 Minecraft 升級前都會進行版本檢查。",
+      "serverForge": "Forge 和 NeoForge，適用於重量級模組，從 1.7.10 的經典版本到目前的模組包，為您挑選正確的 Java 版本。",
+      "serverVanilla": "未修改的遊戲，從快照到舊的 Beta 版本，提供世界控制、備份和玩家統計資料。",
+      "serverModpacks": "CurseForge、Modrinth、FTB 和 GT New Horizons 模組包，釘選到確切版本，還支援您自己的 zip 或 .mrpack 檔案。"
+    },
+    "sections": [
+      {
+        "title": "不確定選哪個？",
+        "body": "根據您的玩家應該安裝的內容來選擇，而不是根據聽起來最快的內容。如果沒有人應該安裝任何東西，請運行原版遊戲或 Paper。如果您正在安裝已發布的模組包，該模組包會為您決定載入器和 Minecraft 版本。如果您自己建置模組伺服器，Fabric 和 NeoForge 涵蓋了大多數現代模組，而 Forge 則涵蓋了較舊的時期。",
+        "points": [
+          "與朋友一起生存，沒有特殊要求：原版遊戲。",
+          "具有等級、領地和管理功能的公開伺服器：Paper。",
+          "來自 CurseForge 或 Modrinth 的特定模組包：依模組包的指示。",
+          "您自己組建的現代模組包：Fabric 或 NeoForge。",
+          "1.7 至 1.12 時期的舊模組包：Forge。"
+        ]
+      }
+    ],
+    "related": ["guidesHub", "serverModpacks"],
+    "cta": {
+      "title": "啟動您的第一個伺服器",
+      "body": "安裝面板，打開創建嚮導，然後選擇一個伺服器類型。所有類型均免費，並在您自己的機器上運行。"
+    }
+  },
+  "serverPaper": {
+    "meta": {
+      "title": "Paper 伺服器面板：外掛、自行託管",
+      "description": "免費、自行託管的 Paper 和 Purpur 伺服器面板。搜尋 Hangar、SpigotMC 和 Modrinth 的外掛，驗證每次下載，並保持更新。"
+    },
+    "eyebrow": "Paper 和 Purpur",
+    "title": "具備真實外掛瀏覽器的自行託管 Paper 伺服器面板",
+    "intro": "在自己的 Docker 容器中運行 Paper 或 Purpur，無需離開面板即可從四個註冊表中尋找外掛，並讓玩家使用他們已有的遊戲加入。",
+    "pills": ["paper", "purpur", "hangar", "spigotmc", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "為何選擇 Paper 作為公開伺服器",
+        "body": "外掛僅在伺服器端運行，因此玩家可以使用普通、未修改的客戶端加入，無需安裝任何東西。任何關於規則、權限、經濟、領地、小遊戲或管理內容都屬於外掛，這也是為何幾乎所有公開伺服器都運行 Paper。它經過多年的效能優化，並且幾乎涵蓋了曾讓管理員煩惱過的各種行為的設定。Purpur 是 Paper 的一個分支，擁有更多開關，包括遊戲玩法相關的。兩者都在創建精靈的 Vanilla 標籤頁中。",
+        "points": [
+          "玩家使用正常遊戲加入。無需模組，無需啟動器設定。",
+          "Bukkit 時期的絕大多數外掛仍然可以運行。",
+          "僅在需要額外的開關時選擇 Purpur；否則選擇 Paper。"
+        ]
+      },
+      {
+        "title": "四個外掛註冊表，一次搜尋",
+        "body": "外掛伺服器的 Mods 標籤頁會搜尋 Hangar（PaperMC 自有的外掛註冊表）、SpigotMC、Modrinth 和 CurseForge，並根據伺服器的 Minecraft 版本進行篩選。僅 CurseForge 需要 API 金鑰。您也可以貼上專案頁面、GitHub 儲存庫或發行版，或直接的 jar 連結，面板會找到正確的建置版本。每個註冊表的下載都會在到達伺服器前，與註冊表發布的最強校驗和進行比對，因此損壞或被篡改的檔案永遠不會被載入。",
+        "pills": ["hangar", "spigotmc", "modrinth", "curseforge", "github-releases", "sha512", "sha256"],
+        "points": [
+          "伺服器上已有的結果會顯示「已安裝」徽章。",
+          "如果 SpigotMC 資源託管在其他地方，面板會提前告知並提供開啟頁面並將 jar 作為上傳的選項。",
+          "上傳的 jar 會被識別，因此它們會保留真實名稱並保持可更新狀態。"
+        ],
+        "shot": "mods"
+      },
+      {
+        "title": "無需猜測即可更新外掛",
+        "body": "您添加的每個外掛都會每天排程檢查其來源，並可按需檢查。更新單一外掛、忽略您不想要的版本，或按下「全部更新」以一次性套用所有更新並重新啟動。如果更新出現問題，可以從共享函式庫還原到之前的建置版本。在伺服器的更新政策中開啟「通知我」，待更新就會顯示為徽章並出現在「更新」頁面。",
+        "points": [
+          "每天檢查 Hangar、SpigotMC、Modrinth、CurseForge 和 GitHub Releases。",
+          "還原會將之前的建置版本從函式庫中放回。",
+          "如果您釘選了 Paper 的建置版本，「更新」頁面會告知您何時有新版本發布。"
+        ]
+      },
+      {
+        "title": "像社群伺服器一樣運行",
+        "body": "Paper 伺服器享有與面板中其他伺服器相同的工具：帶有 RCON 命令列的即時主控台、白名單、管理員、封鎖和 IP 封鎖、傳送點，以及帶有冷卻時間的自訂聊天命令。為您的員工帳戶提供伺服器級別的權限，以便管理員可以在不接觸備份或檔案的情況下運行主控台。一鍵添加 BlueMap 即時地圖，僅透過面板自身的登入提供服務，Discord 警報會在需要您時通知您。",
+        "pills": ["bluemap", "discord"],
+        "shot": "console"
+      }
+    ],
+    "steps": {
+      "title": "透過三個步驟啟動 Paper 伺服器",
+      "items": [
+        {
+          "title": "在精靈中選擇 Paper",
+          "body": "開啟「創建伺服器」，停留在 Vanilla 標籤頁，選擇 Paper 或 Purpur，然後選擇 Minecraft 版本。免費的遊戲連接埠和合理的記憶體會為您填入。"
+        },
+        {
+          "title": "添加您的外掛",
+          "body": "在伺服器的 Mods 標籤頁，搜尋 Hangar、SpigotMC、Modrinth 或 CurseForge，或貼上連結。安裝過程會進行驗證。"
+        },
+        {
+          "title": "分享位址",
+          "body": "「概覽」標籤頁會顯示要提供給玩家的位址。他們使用已有的遊戲加入。"
+        }
+      ]
+    },
+    "faq": {
+      "title": "Paper 伺服器常見問題",
+      "items": [
+        {
+          "q": "我可以在 Paper 伺服器中添加模組嗎？",
+          "a": "不行。Paper 加載的是外掛，外掛僅在伺服器端運行。模組會改變遊戲本身，需要在伺服器和每個客戶端上都安裝模組加載器，例如 Fabric 或 NeoForge。如果您兩者都需要，請同時運行一個模組伺服器和一個外掛伺服器，而不是一個混合伺服器。"
+        },
+        {
+          "q": "我需要 SpigotMC 帳戶或 API 金鑰才能安裝外掛嗎？",
+          "a": "不需要。SpigotMC、Hangar 和 Modrinth 都無需金鑰即可工作。只有 CurseForge 會要求 API 金鑰，您只需在「設定」、「API 金鑰」中添加一次。"
+        },
+        {
+          "q": "影片中的紅石農場在我的伺服器上無法工作。為什麼？",
+          "a": "Paper 為了效能考量，預設會更改一些原版行為。這通常是原因，並且通常是 Paper 設定檔中的一個設定，您可以在伺服器的檔案管理器中編輯。"
+        },
+        {
+          "q": "我舊的 Bukkit 和 Spigot 外掛還能用嗎？",
+          "a": "大多數都可以。Paper 是 Spigot 的分支，保留了外掛 API，因此為 Bukkit 和 Spigot 編寫的外掛大多可以不經修改地運行。請檢查每個外掛頁面以了解它支援的 Minecraft 版本。"
+        }
+      ]
+    },
+    "related": ["serverFabric", "serverVanilla", "guideMulti"],
+    "cta": {
+      "title": "在家運行您的 Paper 伺服器",
+      "body": "在任何安裝了 Docker 的機器上安裝面板，然後從精靈創建一個 Paper 伺服器。免費、開源，屬於您。"
+    }
+  },
+  "serverFabric": {
+    "meta": {
+      "title": "自行託管的 Fabric 伺服器，內建模組瀏覽器",
+      "description": "自行託管 Fabric 或 Quilt 的 Minecraft 伺服器。搜尋 Modrinth 和 CurseForge，釘選載入器版本，並在升級前檢查所有模組。"
+    },
+    "eyebrow": "Fabric 和 Quilt",
+    "title": "一個了解模組支援情況的自行託管 Fabric 伺服器",
+    "intro": "從您想要的模組建立 Fabric 或 Quilt 伺服器，將載入器版本固定在您放置的位置，並等到所有模組都支援後再移至新的 Minecraft 版本。",
+    "pills": ["fabric", "quilt", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "為何選擇 Fabric",
+        "body": "Fabric 體積小巧，能在幾天內跟上新的 Minecraft 版本，並且支援大多數現代效能模組。如果您目標是建立一個擁有少量便利性模組的快速伺服器，那麼選擇這個載入器就對了。幾乎所有 Fabric 模組都需要 Fabric API，這是一個獨立的下載項目，您可以像其他模組一樣添加它。Quilt 是 Fabric 的一個分支，可以運行大多數 Fabric 模組；如果您有特定原因，請選擇它，否則請選擇 Fabric。",
+        "points": [
+          "快速跟上新的 Minecraft 版本。",
+          "大多數現代效能模組的所在地。",
+          "Quilt 伺服器會自動偵測 Fabric 版本，因為 Quilt 可以運行 Fabric 模組。"
+        ]
+      },
+      {
+        "title": "從您想要的模組開始",
+        "body": "精靈的「從模組開始」分頁會選擇載入器、Minecraft 版本以及載入器版本：最新版，或您釘選的特定版本。您也可以反向操作。先選擇模組，然後求解器會建議所有模組支援的最新載入器和 Minecraft 版本，並在伺服器建立時安裝該組合。",
+        "points": [
+          "釘選 Fabric 或 Quilt 載入器版本，而不是追蹤最新版。",
+          "「更新」頁面提供已釘選載入器的較新版本。",
+          "模組瀏覽器會依載入器篩選，因此 Forge 的 jar 檔不會誤植入 Fabric 伺服器。"
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "每次升級前進行版本檢查",
+        "body": "Fabric 伺服器的「模組」分頁有一個「版本」子分頁。它會將每個已安裝的模組與 Modrinth 和 CurseForge 進行比對，並報告所有模組都支援的最高 Minecraft 版本，以及每個較新版本將會遺漏的內容。只有在檢查確認後，才會提供較新的 Minecraft 版本，並且在無法識別 jar 檔時不會提供。",
+        "pills": ["modrinth", "curseforge"]
+      },
+      {
+        "title": "值得信賴且可復原的模組",
+        "body": "每個註冊下載項目在到達伺服器之前，都會與註冊機構發布的最強校驗和進行驗證。您新增的模組會儲存在共用函式庫中，透過 sha256 去重，因此運行相同模組的十個伺服器只會儲存一次。更新模組、忽略某個版本，或在更新出錯時回復到之前的版本。匯入 Modrinth 的 .mrpack 或 jar 檔的 zip 壓縮檔，所有 jar 檔都會被識別並在安裝任何東西之前與伺服器進行比對。",
+        "pills": ["mrpack", "zip", "sha512", "sha256"],
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "透過三個步驟啟動 Fabric 伺服器",
+      "items": [
+        {
+          "title": "在「從模組開始」分頁選擇 Fabric",
+          "body": "選擇 Fabric 或 Quilt、Minecraft 版本，以及最新的載入器版本或已釘選的版本。"
+        },
+        {
+          "title": "搜尋並新增模組",
+          "body": "搜尋 Modrinth 或 CurseForge，新增 Fabric API，然後新增其餘模組。每個下載項目都會經過驗證。"
+        },
+        {
+          "title": "邀請您的玩家",
+          "body": "「邀請」分頁會建立一個可直接貼上的邀請連結和一個您新增模組的客戶端 .mrpack，您的伺服器已預先加入遊戲內伺服器列表。"
+        }
+      ]
+    },
+    "faq": {
+      "title": "Fabric 伺服器常見問題",
+      "items": [
+        {
+          "q": "玩家需要安裝相同的模組嗎？",
+          "a": "是的，對於任何新增內容的模組都是如此。模組會改變遊戲本身，因此客戶端必須載入相同的模組。邀請分頁會建立一個您新增模組的客戶端 .mrpack，您的伺服器已預先加入遊戲內伺服器列表，玩家可以將其匯入 Prism 或 Modrinth App 等啟動器。"
+        },
+        {
+          "q": "我真的需要 Fabric API 嗎？",
+          "a": "幾乎總是需要。幾乎所有 Fabric 模組都依賴它，而且它是一個獨立的下載項目。像其他模組一樣從模組瀏覽器中新增它。"
+        },
+        {
+          "q": "我如何知道我的模組在新版 Minecraft 中是否可用？",
+          "a": "打開伺服器的「模組」分頁，然後是「版本」。它會顯示所有已安裝模組支援的最高 Minecraft 版本，以及較新版本將會遺漏的內容。"
+        },
+        {
+          "q": "模組更新破壞了伺服器。我可以回復嗎？",
+          "a": "可以。在「模組」分頁的對應列中回復該模組，之前的版本會從共用函式庫中恢復。"
+        }
+      ]
+    },
+    "related": ["serverForge", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "自行託管您的 Fabric 伺服器",
+      "body": "安裝面板，打開「從模組開始」分頁，然後選擇您的模組。無訂閱費用，且對您可運行的伺服器數量沒有限制。"
+    }
+  },
+  "serverForge": {
+    "meta": {
+      "title": "Forge 和 NeoForge 模組伺服器面板",
+      "description": "自行運行 Forge 或 NeoForge 模組化的 Minecraft 伺服器。我們會為您挑選合適的 Java，可以固定載入器版本，並找出當機的元兇。"
+    },
+    "eyebrow": "Forge 和 NeoForge",
+    "title": "Forge 模組伺服器面板，為您挑選合適的 Java",
+    "intro": "從經典的 1.7.10 到最新的 NeoForge 模組包，建立伺服器、調整記憶體大小，並在不逐行閱讀堆疊追蹤訊息的情況下，找出當機的元兇。",
+    "pills": ["forge", "neoforge", "curseforge", "modrinth"],
+    "sections": [
+      {
+        "title": "Forge 或 NeoForge？",
+        "body": "NeoForge 是舊的 Forge 生態系統目前用於最新版本的開發之處。它在 1.20.1 版本時從 Forge 分離出來，大多數為 1.20.2 及更新版本建立的大型模組包都以它為目標，因此請在 NeoForge 上啟動一個新的重量級伺服器。Forge 仍保有過去的輝煌：1.7.10、1.12.2 和 1.16.5 時期的任何內容都屬於 Forge，而這些是許多最受歡迎的模組包。一個載入器的模組無法在另一個上運行，而 1.20.1 的 NeoForge 模組包也無法在 1.20.1 的 Forge 上運行。",
+        "points": [
+          "新的重量級伺服器：NeoForge。",
+          "1.7.10、1.12.2 或 1.16.5 時期：Forge。",
+          "已發布的模組包：完全依照模組包的列表。"
+        ]
+      },
+      {
+        "title": "每次都選對的 Java",
+        "body": "Minecraft 的 Java 版本需求會隨著遊戲更新而改變，錯誤的版本會給您一個無用的 `UnsupportedClassVersionError` 錯誤，而不是清晰的訊息。舊的模組包確實需要 Java 8，而最新版本則需要 21 或更新版本。建立精靈會讀取您選擇的 Minecraft 版本並自行選擇運行時環境，因此意外的不匹配情況永遠不會發生。升級模組包時，如果新版本需要不同的 Java，它會重新解析 Java 版本。",
+        "points": ["1.16.5 及更早版本：Java 8。", "1.18 至 1.20.4：Java 17。", "1.20.5 至 1.21：Java 21。"]
+      },
+      {
+        "title": "為模組化伺服器調整記憶體",
+        "body": "每個伺服器都有兩個數字：Java 堆積記憶體和容器記憶體限制。Java 除了堆積記憶體外還需要額外的記憶體，大型模組包大約需要 1.5 到 2 GB，而沒有緩衝空間的容器會在 Java 嘗試存取時被終止。精靈會將限制設定為比堆積記憶體高 50%，並且面板會拒絕設定一個不超過堆積記憶體的容器限制。一個包含 150 到 300 個模組的「廚房水槽」模組包需要 6 到 8 GB 的堆積記憶體。",
+        "points": [
+          "因記憶體不足而停止的伺服器，會在歷史記錄中準確記錄為該原因。",
+          "設定較小的初始堆積記憶體，以觀察記憶體使用量是否符合實際情況。"
+        ]
+      },
+      {
+        "title": "當機報告會指出元兇",
+        "body": "當機報告會被自動擷取並解析為一行摘要，包含例外情況和最可能導致當機的模組。開啟內建檢視器、複製堆疊追蹤訊息，或在明確確認後，分享到 mclo.gs 並取得其自動化分析結果：已知問題及建議的修復方法，直接顯示在面板中。當機時自動重新啟動會嘗試以遞增的等待時間重試，並跳過需要先修復的當機，例如錯誤的 Java 版本或記憶體不足。",
+        "pills": ["mclogs"],
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "透過三個步驟啟動 Forge 伺服器",
+      "items": [
+        {
+          "title": "選擇載入器和版本",
+          "body": "在精靈的「模組來源」標籤頁中，選擇 Forge 或 NeoForge、Minecraft 版本，以及最新的載入器版本或指定的固定版本。"
+        },
+        {
+          "title": "提供足夠的記憶體",
+          "body": "根據您的模組列表大小設定 Java 堆積記憶體。容器限制會隨之設定，比堆積記憶體高 50%。"
+        },
+        {
+          "title": "新增模組或匯入 Zip 檔案",
+          "body": "搜尋 CurseForge 和 Modrinth，或匯入 CurseForge 的匯出檔案或一個包含 jar 檔案的 zip 壓縮包。每個 jar 檔案都會被識別並先與伺服器進行檢查。"
+        }
+      ]
+    },
+    "faq": {
+      "title": "Forge 伺服器常見問題",
+      "items": [
+        {
+          "q": "我還能運行 1.12.2 或 1.7.10 的模組包嗎？",
+          "a": "可以。在精靈中選擇版本和 Forge，面板將使用這些版本所需的 Java 8 來運行。GT New Horizons，這個 1.7.10 的專家級模組包，可以從「模組包」頁面安裝，並有其自己的 Java 版本選擇。"
+        },
+        {
+          "q": "Forge 伺服器需要多少記憶體？",
+          "a": "一個包含 40 到 80 個模組的輕量級模組包，在 4 GB 的堆積記憶體和 6 GB 的容器中運行良好。一個包含 150 到 300 個模組的模組包需要 6 到 8 GB 的堆積記憶體和約 10 GB 的容器空間。"
+        },
+        {
+          "q": "我可以固定特定的 Forge 版本嗎？",
+          "a": "可以。精靈的載入器版本選擇器可以選擇最新版本或特定版本，而「更新」頁面會提供已固定版本的較新版本，但不會自行套用。"
+        },
+        {
+          "q": "我的伺服器在啟動時當機了。我該從哪裡查看？",
+          "a": "開啟「監控」，然後是「歷史記錄」。當機報告卡會列出例外情況和可疑的模組，而「分析」功能會運行 mclo.gs 的分析，提供已知問題和修復方法。"
+        }
+      ]
+    },
+    "related": ["serverModpacks", "serverFabric", "guideHome"],
+    "cta": {
+      "title": "自行運行您的模組化伺服器",
+      "body": "在擁有足夠記憶體的機器上安裝面板，然後從精靈建立一個 Forge 或 NeoForge 伺服器。"
+    }
+  },
+  "serverVanilla": {
+    "meta": {
+      "title": "原版 Minecraft 伺服器面板，自行託管",
+      "description": "自行託管原版 Minecraft 伺服器：從舊版 Beta 到最新快照的任何版本，具備世界控制、每日備份和玩家統計資料。"
+    },
+    "eyebrow": "原汁原味的遊戲",
+    "title": "原版 Minecraft 伺服器，一切周邊事務皆已處理",
+    "intro": "保持遊戲與 Mojang 發布時完全相同，並從面板而非外掛程式取得備份、世界工具、管理和玩家統計資料。",
+    "pills": ["vanilla", "docker"],
+    "sections": [
+      {
+        "title": "任何你想要的版本",
+        "body": "選擇最新版本、快照或特定版本，包括舊版 Beta 和 Alpha。面板會選擇該版本所需的 Java 執行環境，拉取映像檔，並從單一表單啟動伺服器。無需安裝任何東西即可加入：玩家使用他們已有的遊戲連線。",
+        "points": ["最新版本、快照或特定版本。", "舊版 Beta 和 Alpha，用於懷舊伺服器。", "為每個版本選擇正確的 Java。"],
+        "shot": "wizard"
+      },
+      {
+        "title": "無需輸入指令即可控制世界",
+        "body": "世界控制欄位會顯示在伺服器的每個分頁上：遊戲內時鐘、天氣和常見的遊戲規則以切換晶片形式呈現，所有其他規則只需點擊一下即可。世界分頁會使用新的、保留的或自訂的種子重設活動世界，並首先提供安全備份。複製世界、將完成的世界保留在世界庫中，或以上傳 .zip 或 .tar 壓縮檔的形式上傳你已有的世界。",
+        "points": [
+          "使用新種子、相同種子或你輸入的種子重設。",
+          "所有伺服器共用的世界庫。",
+          "在瀏覽器中編輯 server.properties；磁碟上的值優先。"
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "從第一天開始備份",
+        "body": "每個新伺服器都會自動獲得每日備份排程。備份是儲存安全的：面板會暫停儲存、刷新世界、壓縮世界，並在記錄之前檢查壓縮檔是否可開啟。還原會將伺服器恢復到原來的狀態，並首先對當前資料進行安全備份。",
+        "shot": "backups"
+      },
+      {
+        "title": "無需外掛程式即可進行管理和統計",
+        "body": "原版沒有權限系統，因此面板為你提供了管理工具：白名單、各級管理員、封鎖和 IP 封鎖，以及傳送，在伺服器執行時即時生效，在伺服器停止時直接寫入檔案。遊戲本身的統計資料會按排程讀取到玩家個人資料和計分板中：遊戲時間、死亡次數、擊殺次數、挖掘的方塊和鑽石數量，以及移動距離。活動時間軸會保留聊天、加入、死亡和進度，以便搜尋。"
+      }
+    ],
+    "faq": {
+      "title": "原版伺服器問題",
+      "items": [
+        {
+          "q": "我可以執行快照伺服器嗎？",
+          "a": "可以。在精靈中選擇快照作為 Minecraft 版本。在每個新快照之前保留備份，因為快照世界無法在舊版本中開啟。"
+        },
+        {
+          "q": "原版伺服器可以有即時地圖嗎？",
+          "a": "原版不行。BlueMap 需要外掛程式或模組載入器才能執行。Paper 伺服器只需點擊一下即可獲得，玩家仍然可以使用未修改的客戶端加入。"
+        },
+        {
+          "q": "我可以重設世界但保留種子嗎？",
+          "a": "可以。從「世界」分頁重設活動世界，並選擇保留當前種子。面板會首先提供舊世界的安全備份。"
+        },
+        {
+          "q": "原版伺服器可以處理多少玩家？",
+          "a": "原版在許多玩家的情況下比 Paper 慢。對於一群朋友來說沒問題。對於繁忙的公共伺服器，Paper 執行相同的遊戲，並經過多年的效能優化。"
+        }
+      ]
+    },
+    "related": ["serverPaper", "guidePi", "guideHome"],
+    "cta": {
+      "title": "啟動原版伺服器",
+      "body": "安裝面板，在精靈中選擇原版，然後分享位址。免費且開源。"
+    }
+  },
+  "serverModpacks": {
+    "meta": {
+      "title": "Minecraft 模組包伺服器：一鍵安裝",
+      "description": "從 CurseForge、Modrinth、FTB 或 GT New Horizons 運行 Minecraft 模組包伺服器。模組包會被釘選，每次更新都會附帶備份和回滾選項。"
+    },
+    "eyebrow": "模組包伺服器",
+    "title": "永不擅自升級的 Minecraft 模組包伺服器",
+    "intro": "透過名稱安裝模組包，將其釘選到確切版本，並在您選擇時才進行升級，升級前會先進行備份，若新版本無法啟動，則可一鍵回滾。",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"],
+    "sections": [
+      {
+        "title": "支援所有主流模組包來源",
+        "body": "「模組包」頁面和精靈的「從模組包」分頁，可透過名稱搜尋安裝 CurseForge 和 Modrinth 的模組包；透過模組包和版本 ID 安裝 FTB 模組包；從其專屬發行索引安裝 GT New Horizons。不是已發行的模組包？上傳 Modrinth 的 .mrpack、CurseForge 的模組包匯出檔，或任何 mod jar 的 zip 壓縮檔。資訊清單，或透過識別出的 jar 進行多數決，將會填入載入器和 Minecraft 版本。",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export", "zip"],
+        "points": [
+          "CurseForge 需要 API 金鑰，只需在「設定」>「API 金鑰」中新增一次。",
+          "作者不允許自動下載的模組，將會顯示連結和上傳欄位，而非導致安裝失敗。",
+          "GT New Horizons 會為您設定好 Java 版本以及合理的記憶體和磁碟空間最小值。"
+        ]
+      },
+      {
+        "title": "釘選到確切版本",
+        "body": "當您選擇一個模組包時，面板會解析確切版本、記錄下來並安裝該版本。重新啟動伺服器永遠不會悄悄地升級模組包。您可以選擇伺服器如何得知新版本：僅手動（Manual Only）會完全不理會；通知我（Notify Me）會顯示徽章並列在「更新」頁面；自動更新（Auto-Update）則會在每日檢查後，透過相同的安全路徑套用模組包更新。任何會將世界遷移到不同 Minecraft 版本的更新都會被跳過，因為轉換世界是您的決定。",
+        "points": [
+          "僅手動是預設選項。",
+          "追蹤穩定發行版的伺服器永遠不會收到測試版。",
+          "自動更新永遠不會跨越 Minecraft 版本。"
+        ]
+      },
+      {
+        "title": "帶有回滾機制的升級",
+        "body": "升級模組包是一個單一操作。面板會進行備份、正常停止伺服器、更換釘選的版本、使用適合新版本的 Java 重建伺服器，並監控首次啟動情況，對於需要下載數 GB 資料的大型模組包，首次啟動會有足夠的時間。如果新版本無法啟動，則可一鍵回滾。",
+        "shot": "backups"
+      },
+      {
+        "title": "您自己的模組疊加",
+        "body": "您新增到模組包伺服器的模組會存放在共用函式庫中，並連結到伺服器，因此它們會在模組包更新後保留下來。您可以停用不想要的模組包模組，新增模組包缺乏的效能模組，並在下次升級時同時保留兩者。玩家可以從 CurseForge 或 Modrinth 安裝相同模組包的相同版本，而「邀請」分頁會提供一個可直接複製貼上的邀請，包含位址和版本。",
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "三步驟啟動模組包伺服器",
+      "items": [
+        {
+          "title": "尋找模組包",
+          "body": "在「模組包」頁面搜尋 CurseForge 或 Modrinth，或上傳 .mrpack、CurseForge 匯出檔或 jar 檔案的 zip 壓縮檔。"
+        },
+        {
+          "title": "選擇版本與記憶體",
+          "body": "選擇確切的模組包版本。為 Java 堆疊分配足夠的記憶體以容納模組數量；容器限制會隨之調整。"
+        },
+        {
+          "title": "建立並監控啟動",
+          "body": "面板會安裝模組包、釘選它並啟動伺服器。大型模組包的首次啟動需要一些時間；主控台會顯示每一行輸出。"
+        }
+      ]
+    },
+    "faq": {
+      "title": "模組包伺服器常見問題",
+      "items": [
+        {
+          "q": "重新啟動伺服器會更新我的模組包嗎？",
+          "a": "不會。模組包會被釘選到您安裝的確切版本。除非您手動升級，或將伺服器設定為自動更新並經過每日檢查，否則它不會變更。"
+        },
+        {
+          "q": "為什麼 CurseForge 需要 API 金鑰，而 Modrinth 不需要？",
+          "a": "CurseForge 只會回應帶有金鑰的請求。您可以從 CurseForge 主控台取得金鑰，並在「設定」>「API 金鑰」中新增一次。Modrinth 則不需要金鑰即可運作。"
+        },
+        {
+          "q": "我的模組包中有一些模組無法下載。該怎麼辦？",
+          "a": "這些模組的作者不允許自動下載。面板會列出每個無法下載的模組，並提供其頁面連結和上傳欄位，讓您可以在瀏覽器中下載 jar 檔案並將其放入。"
+        },
+        {
+          "q": "我可以安裝 FTB 模組包嗎？",
+          "a": "可以，透過 FTB API，使用模組包的數字 ID 和明確的版本 ID。面板目前尚未檢查 FTB 模組包的更新。"
+        }
+      ]
+    },
+    "related": ["guideFriends", "serverForge", "serverFabric"],
+    "cta": {
+      "title": "在家運行您的模組包伺服器",
+      "body": "安裝面板，開啟「模組包」頁面，然後選擇一個模組包。它會保持在您選擇的版本，直到您另行通知。"
+    }
+  },
+  "guidesHub": {
+    "meta": {
+      "title": "指南：自行架設 Minecraft 伺服器",
+      "description": "自行架設 Minecraft 伺服器的指南：與朋友同樂的模組包伺服器、樹莓派、家用電腦、擺脫付費代管，以及在一台機器上運行多個伺服器。"
+    },
+    "eyebrow": "指南",
+    "title": "自行架設 Minecraft 伺服器的指南",
+    "intro": "從架設在架子上的樹莓派到塞滿伺服器的機器，這些實用的教學涵蓋了人們實際使用的各種設定。",
+    "cards": {
+      "guideFriends": "為你的朋友架設一個 CurseForge 或 Modrinth 模組包伺服器，設定適當的記憶體並提供邀請連結。",
+      "guidePi": "將 Raspberry Pi 4 或 5 變成一個帶有網頁面板的 Minecraft 伺服器，並誠實地評估其效能。",
+      "guideHome": "在家裡的 Windows、macOS 或 Linux 上架設 Minecraft 伺服器，讓朋友安全地加入。",
+      "guideHosting": "將你的世界、插件和模組從付費代管遷移出來，而不會遺失任何物品。",
+      "guideMulti": "在一台機器上運行多個 Minecraft 伺服器，而不會互相影響連接埠、記憶體或磁碟空間。"
+    },
+    "related": ["serversHub"],
+    "cta": {
+      "title": "需要這裡沒有涵蓋的內容嗎？",
+      "body": "文件深入探討了所有功能，Discord 上有實際運行伺服器的人可以提供協助。"
+    }
+  },
+  "guideFriends": {
+    "meta": {
+      "title": "架設模組包伺服器給朋友",
+      "description": "在您自己的機器上為朋友架設 CurseForge 或 Modrinth 模組包伺服器：選擇模組包、分配足夠的記憶體、邀請朋友並進行備份。"
+    },
+    "eyebrow": "模組包伺服器指南",
+    "title": "如何為朋友架設模組包伺服器",
+    "intro": "您可以在自己的機器上架設您與朋友一起遊玩的模組包伺服器。安裝面板、從模組包建立伺服器、分配所需的記憶體，然後發送邀請連結給朋友。",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "docker"],
+    "sections": [
+      {
+        "title": "透過精靈選擇模組包",
+        "body": "「模組包」頁面以及建立精靈的「從模組包」分頁可以透過名稱搜尋 CurseForge 和 Modrinth；精靈還能透過 ID 接受 FTB 模組包，或您已有的模組包匯出檔。選擇您的朋友將要遊玩的版本。面板會精確安裝該版本並保持不變：重新啟動伺服器也不會偷偷升級模組包。CurseForge 需要一個免費的 API 金鑰，在「設定」>「API 金鑰」中添加一次；Modrinth 則不需要。",
+        "points": [
+          "搜尋 CurseForge 和 Modrinth，或上傳 .mrpack、CurseForge 匯出檔或 mod jar 的 zip 壓縮檔。",
+          "模組包版本已固定，因此所有人都遊玩同一個版本。",
+          "Java 版本會根據模組包的 Minecraft 版本自動選擇。"
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "mrpack", "cf-export"],
+        "shot": "modpacks"
+      },
+      {
+        "title": "分配足夠的記憶體",
+        "body": "模組包伺服器比原版伺服器需要更多的記憶體。伺服器有兩個記憶體設定：Java 堆積（heap）大小，以及圍繞它的容器限制（container limit），後者必須更大，因為 Java 會使用堆積以外的記憶體。一個包含 40 到 80 個模組的輕量級模組包需要 4 GB 的 Java 堆積和 6 GB 的容器限制；一個大型的綜合性模組包則需要 6 到 8 GB 的 Java 堆積和 10 GB 的容器限制。當伺服器因記憶體不足而停止時，面板會將其與崩潰區分開，讓您知道需要更改哪個設定。",
+        "points": [
+          "在精靈中設定記憶體，之後也可以在伺服器設定中更改。",
+          "為作業系統和面板保留記憶體。",
+          "「監控」分頁會顯示伺服器實際使用的記憶體量。"
+        ]
+      },
+      {
+        "title": "發送可供朋友加入的邀請",
+        "body": "朋友需要在他們的啟動器（CurseForge App、Modrinth App 或 Prism Launcher）中安裝相同模組包的相同版本。伺服器的「設定」>「邀請」分頁可以複製要分享的伺服器位址和包含 Minecraft 版本資訊的邀請文字。您網路上的朋友可以使用本機位址。對於其他地方的朋友，請在您的路由器上轉發遊戲連接埠，或者在您的 ISP 不允許時使用隧道服務。",
+        "points": [
+          "「邀請」分頁提供本機位址、您的公開位址和自訂位址。",
+          "如果啟用了白名單，請先在「玩家」分頁中添加每個朋友。",
+          "對於由您自行挑選的模組建立的伺服器，「邀請」分頁還能生成一個客戶端 .mrpack，安裝這些模組並將伺服器添加到多人遊戲列表中。"
+        ],
+        "pills": ["mrpack"]
+      },
+      {
+        "title": "確保世界安全",
+        "body": "每個新伺服器都會設定每日備份排程。在模組包更新之前，面板會進行另一次備份，然後在新版本上重建伺服器並監控首次啟動；如果伺服器無法啟動，只需點擊一下即可回滾。您在模組包之上額外添加的模組在更新後會保留。",
+        "points": ["從第一天開始每日備份。", "模組包更新和降級均包含備份和回滾功能。", "偵測、解釋並可分享崩潰報告。"],
+        "shot": "backups"
+      }
+    ],
+    "steps": {
+      "title": "架設您的模組包伺服器",
+      "items": [
+        {
+          "title": "安裝面板",
+          "body": "在 Linux 上，單行安裝程式會設定好 Docker 和面板。在 Windows 和 macOS 上，請與 Docker Desktop 並存執行 Node.js 來啟動面板。"
+        },
+        {
+          "title": "添加 CurseForge API 金鑰",
+          "body": "僅適用於 CurseForge 模組包：在「設定」>「API 金鑰」下添加免費金鑰。"
+        },
+        {
+          "title": "從模組包建立伺服器",
+          "body": "打開精靈的「從模組包」分頁，找到模組包，選擇其版本和記憶體，然後建立伺服器。"
+        },
+        {
+          "title": "邀請您的朋友",
+          "body": "啟動伺服器，打開「設定」>「邀請」，並發送邀請文字。朋友在他們的啟動器中安裝相同模組包版本後即可加入。"
+        }
+      ]
+    },
+    "faq": {
+      "title": "模組包伺服器常見問題",
+      "items": [
+        {
+          "q": "模組包伺服器需要多少 RAM？",
+          "a": "對於包含 40 到 80 個模組的輕量級模組包，大約需要 6 GB；對於包含 150 到 300 個模組的大型模組包，則需要 10 GB，每個模組包都有較小的 Java 堆積。像 GregTech New Horizons 這樣的專家級模組包可能需要 16 GB。同時也要為作業系統保留足夠的空間。"
+        },
+        {
+          "q": "我的朋友需要相同的模組包版本嗎？",
+          "a": "是的。伺服器運行一個固定的模組包版本，而客戶端如果擁有不同版本的模組通常會被拒絕加入或崩潰。請告知朋友伺服器「總覽」分頁上顯示的版本。"
+        },
+        {
+          "q": "朋友可以在沒有連接埠轉發的情況下加入嗎？",
+          "a": "是的，如果他們在您的網路內。如果他們在外部，您可以選擇在路由器上轉發遊戲連接埠，或使用隧道服務，這在您的 ISP 封鎖連接埠轉發時也有效。"
+        },
+        {
+          "q": "當模組包有更新時會發生什麼？",
+          "a": "使用「通知我」策略，更新頁面會顯示更新。套用更新會進行備份、重建伺服器並監控首次啟動，回滾只需點擊一下。您的朋友也需要在他們的啟動器中更新模組包。"
+        }
+      ]
+    },
+    "related": ["serverModpacks", "guideHome", "guidePi"],
+    "cta": {
+      "title": "在您自己的伺服器上遊玩您的模組包",
+      "body": "免費、開源，無需向任何人註冊帳戶。安裝面板並在精靈中從模組包建立伺服器。"
+    }
+  },
+  "guidePi": {
+    "meta": {
+      "title": "Raspberry Pi Minecraft 伺服器搭配網頁面板",
+      "description": "使用免費的網頁面板設定 Raspberry Pi Minecraft 伺服器。了解所需的硬體、如何用一個指令安裝，以及如何調整記憶體大小。"
+    },
+    "eyebrow": "Raspberry Pi 指南",
+    "title": "使用真正的網頁面板執行 Raspberry Pi Minecraft 伺服器",
+    "intro": "Raspberry Pi 4 或 5 是架設小型 Minecraft 伺服器的安靜、低功耗選擇。本文將介紹您需要購買的物品、如何用一個指令安裝面板，以及伺服器的極限。",
+    "pills": ["arm64", "linux", "docker", "paper", "fabric"],
+    "sections": [
+      {
+        "title": "所需物品",
+        "body": "此面板及其伺服器映像檔皆為 arm64 建置，因此 64 位元 Raspberry Pi 可像其他 Linux 機器一樣執行。記憶體是影響最大的限制：最多十位玩家的純淨版或 Paper 伺服器需要 4 GB 記憶體的機器上配置 2 GB 的 Java 堆積，輕度模組包則需要 6 GB 記憶體的機器上配置 4 GB 堆積。這使得 4 GB 的 Pi 處於入門級，而 8 GB 的 Pi 則處於舒適的中間位置。",
+        "points": [
+          "配備 4 GB 或更多記憶體的 Raspberry Pi 4 或 5。若要使用模組，建議 8 GB。",
+          "64 位元作業系統，例如 64 位元 Raspberry Pi OS。",
+          "透過 USB 連接的 SSD，而非 SD 卡。遊戲世界會持續讀寫，在慢速儲存裝置上讀取區塊時會出現延遲。",
+          "如果可以，請使用有線網路連線。"
+        ]
+      },
+      {
+        "title": "選擇適合 Pi 的伺服器類型",
+        "body": "Minecraft 比核心數量更在意單一核心的速度，而 Pi 的核心效能較為普通。Paper 伺服器執行與純淨版相同的遊戲，並經過多年的效能優化，玩家仍可使用未修改的客戶端加入。如果您想使用模組，搭載少量效能和生活品質模組的 Fabric 比大型 Forge 套件更適合。一個包含 200 個模組的龐大套件不適合 Pi。",
+        "pills": ["paper", "purpur", "fabric"],
+        "points": [
+          "小型團隊、未修改的遊戲：Paper。",
+          "少量模組：Fabric。",
+          "降低視距；將區塊從 12 降至 8 可節省大量記憶體，且在遊戲中幾乎察覺不到差異。"
+        ]
+      },
+      {
+        "title": "持續監控",
+        "body": "伺服器的「監控」標籤頁會顯示每秒滴答數和每滴答毫秒數，讓您了解 Pi 是否跟不上。記憶體計量器顯示容器實際使用的記憶體量。Java 預設會一次性申請整個堆積；如果您希望記憶體使用量能隨實際使用量變化，請在伺服器的「資源」卡片中設定較小的初始堆積。每日備份從第一天起就已啟用。",
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "在 Raspberry Pi 上安裝面板",
+      "items": [
+        {
+          "title": "燒錄 64 位元作業系統",
+          "body": "安裝 64 位元 Raspberry Pi OS (或其他 64 位元 Linux)，如果可以，請從 SSD 啟動，並更新系統。"
+        },
+        {
+          "title": "執行單行安裝指令",
+          "body": "安裝頁面上的安裝程式會在缺少 Docker 時進行安裝，將面板設定在 /opt/msm，啟動面板並等待其回應。它會自行偵測 arm64。"
+        },
+        {
+          "title": "在瀏覽器中完成設定",
+          "body": "從另一台電腦開啟 Pi 的 IP 位址並連接至連接埠 25564。由於面板可從您的網路存取，設定時會要求輸入 6 位數的 PIN，此 PIN 會由安裝程式顯示給您。"
+        },
+        {
+          "title": "建立小型伺服器",
+          "body": "在精靈程式中選擇 Paper 或 Fabric。預設記憶體會根據 Pi 的 RAM 自動調整；請為系統和其他服務保留足夠空間。"
+        }
+      ]
+    },
+    "faq": {
+      "title": "Raspberry Pi 問題",
+      "items": [
+        {
+          "q": "Raspberry Pi 3 可以嗎？",
+          "a": "不適合。Pi 3 只有 1 GB 記憶體，而即使是小型純淨版或 Paper 伺服器也需要 4 GB 機器的 2 GB 堆積。請使用配備 4 GB 或更多記憶體的 Pi 4 或 5。"
+        },
+        {
+          "q": "我需要 64 位元作業系統嗎？",
+          "a": "是的。面板映像檔和安裝程式都是為 arm64 和 amd64 建置的，安裝程式會在任何其他架構上停止執行。"
+        },
+        {
+          "q": "我可以在 Pi 上執行大型模組包嗎？",
+          "a": "大型模組包需要 6 到 8 GB 的 Java 堆積和總共約 10 GB 的記憶體，這超過了任何 Pi 的容量。請堅持使用 Paper 或輕量級的 Fabric 設定。"
+        },
+        {
+          "q": "家外的玩家如何加入？",
+          "a": "請將遊戲連接埠（預設為 25565，透過 TCP 和 UDP）從您的路由器轉發到 Pi。切勿轉發面板連接埠或 RCON 連接埠；請透過 VPN 或帶有 TLS 的反向代理來存取面板。"
+        }
+      ]
+    },
+    "related": ["guideHome", "serverPaper", "serverFabric"],
+    "cta": {
+      "title": "將您的 Pi 變成伺服器",
+      "body": "只需一個指令即可安裝所有內容。此面板免費、開源，並完全在 Pi 上執行。"
+    }
+  },
+  "guideHome": {
+    "meta": {
+      "title": "在家架設 Minecraft 伺服器，一步一步來",
+      "description": "使用免費的網頁面板，在家中的 Windows、macOS 或 Linux 電腦上架設 Minecraft 伺服器。安裝後，保持面板私密，讓朋友安全加入。"
+    },
+    "eyebrow": "家用伺服器指南",
+    "title": "在家架設 Windows、macOS 或 Linux 的 Minecraft 伺服器",
+    "intro": "任何能執行 Docker 的電腦都能架設您的伺服器。安裝面板，保持其私密，只開啟遊戲連接埠，您的朋友就能從任何地方加入。",
+    "pills": ["windows", "macos", "linux", "docker", "nodejs"],
+    "sections": [
+      {
+        "title": "兩種安裝方式",
+        "body": "在 Linux 電腦上，單行安裝程式會處理所有事情：如果缺少 Docker，它會安裝 Docker，將面板作為容器執行，並在重新啟動後再次啟動它。在 Windows 和 macOS 上，請使用 Node.js 24 與 Docker Desktop 一同直接執行面板。如果您的 Node.js 版本太舊，面板會顯示清晰的訊息並停止；如果 Docker 尚未執行，您仍然可以獲得完整的面板功能；一旦 Docker 啟動，伺服器就會開始運行。",
+        "pills": ["linux", "docker", "windows", "macos", "nodejs"],
+        "points": [
+          "Linux：安裝程式，或在 Portainer 或 Dockge 中使用 compose 檔案。",
+          "Windows：使用帶有 WSL2 後端的 Docker Desktop，然後從原始碼安裝面板。",
+          "macOS：使用 Docker Desktop，然後從原始碼安裝面板。",
+          "在 PM2 或 systemd 下，面板可於重新啟動後繼續運行。"
+        ]
+      },
+      {
+        "title": "保持面板私密",
+        "body": "玩家永遠不會直接與面板互動。他們會連接到遊戲連接埠。從原始碼進行全新安裝後，面板只會在執行它的本機電腦上，於 localhost 的 25564 連接埠上回應。若要從家中其他電腦存取，請將其設定為監聽您的網路；設定過程會要求輸入一次性 PIN 碼，因此即使陌生人先連上該連接埠，也無法取得管理員帳戶。切勿將面板的連接埠轉發到網際網路。若要在外出時管理伺服器，請使用 VPN、SSH 隧道或帶有 TLS 的反向代理。",
+        "points": ["預設僅限本機存取。", "當面板可從網路存取時，會要求輸入設定 PIN 碼。", "為每個帳戶啟用雙重驗證。"]
+      },
+      {
+        "title": "讓朋友加入",
+        "body": "每個伺服器都有一個遊戲連接埠，從 25565 開始並向上遞增。在您的路由器上，將該連接埠（TCP 和 UDP）轉發到執行伺服器的電腦。將遠端控制台連接埠（比遊戲連接埠高 1000）保持關閉：面板會從容器內部存取它們，永遠不需要將它們開啟。提供玩家一個您控制的網域名稱，而不是您的住家地址，這樣位址變更就只需要變更 DNS，而無需通知所有玩家。",
+        "points": [
+          "僅轉發遊戲連接埠，TCP 和 UDP。",
+          "保持 RCON 和面板連接埠關閉。",
+          "「總覽」標籤頁會顯示要分享的位址。"
+        ],
+        "shot": "overview"
+      },
+      {
+        "title": "讓它像伺服器一樣運作",
+        "body": "會進入睡眠狀態的家用電腦也會讓您的伺服器離線，因此請關閉託管伺服器電腦的睡眠功能。在伺服器設定中勾選「開機時啟動」，伺服器就會與面板一同重新啟動。當伺服器崩潰時自動重新啟動，並在每次嘗試之間增加等待時間。每天都會為每個新伺服器排定備份，排程還可以讓伺服器在離峰時段重新啟動。",
+        "shot": "schedules"
+      }
+    ],
+    "steps": {
+      "title": "在家架設您的第一個伺服器",
+      "items": [
+        {
+          "title": "安裝 Docker",
+          "body": "Linux 上安裝 Docker Engine，或 Windows 和 macOS 上安裝 Docker Desktop。在 Windows 上，與 Docker Desktop 分享存放面板的磁碟機。"
+        },
+        {
+          "title": "安裝並開啟面板",
+          "body": "依照您系統的安裝頁面指示操作，然後在瀏覽器中開啟面板。設定過程會檢查 Docker，建立您的管理員帳戶，並詢問您的時區。"
+        },
+        {
+          "title": "建立伺服器",
+          "body": "精靈會建議一個適合您電腦的免費連接埠和記憶體。選擇伺服器類型並按下建立。"
+        },
+        {
+          "title": "轉發遊戲連接埠",
+          "body": "在您的路由器上轉發伺服器的遊戲連接埠（TCP 和 UDP），然後將「總覽」標籤頁中的位址分享給朋友。"
+        }
+      ]
+    },
+    "faq": {
+      "title": "家用架設常見問題",
+      "items": [
+        {
+          "q": "我可以在玩遊戲的同一台電腦上架設伺服器嗎？",
+          "a": "可以，只要它有足夠的記憶體同時運行。為伺服器分配其所需的堆疊記憶體加上 Java 的額外空間，並為遊戲客戶端保留足夠的空間。一個供少數朋友使用的原版伺服器大約需要 4 GB 的記憶體。"
+        },
+        {
+          "q": "為什麼 Wi-Fi 內的朋友可以加入，但外面的朋友卻不行？",
+          "a": "您的路由器沒有轉發遊戲連接埠，或者防火牆封鎖了它。請將伺服器的遊戲連接埠透過 TCP 和 UDP 轉發到託管電腦，並允許它通過該電腦的防火牆。"
+        },
+        {
+          "q": "我可以在 Windows 或 macOS 上執行面板的 Docker 映像檔嗎？",
+          "a": "容器安裝是針對 Linux 主機的。在 Windows 和 macOS 上，請使用 Node.js 24 與 Docker Desktop 一同從原始碼執行面板，一旦運行起來，其功能與 Linux 上相同。"
+        }
+      ]
+    },
+    "related": ["guidePi", "guideMulti", "serverVanilla"],
+    "cta": {
+      "title": "開始在家架設",
+      "body": "免費、開源，無需註冊任何帳戶。您的伺服器將儲存在您自己電腦的一個資料夾中。"
+    }
+  },
+  "guideHosting": {
+    "meta": {
+      "title": "離開付費 Minecraft 託管：遷移您的世界",
+      "description": "將 Minecraft 伺服器從付費主機遷移：取得正確的檔案，將世界和插件帶入您自己的面板，保留每個物品欄，並保留位址。"
+    },
+    "eyebrow": "遷移指南",
+    "title": "將您的 Minecraft 伺服器從付費託管中移出",
+    "intro": "將您的世界、插件和模組帶回家，每個物品欄都完好無損。首先盤點，複製整個伺服器資料夾，在您自己的面板中重建，然後再將玩家指向它。",
+    "pills": ["docker", "paper", "fabric", "forge", "packs-curseforge", "packs-modrinth"],
+    "sections": [
+      {
+        "title": "下載前先盤點",
+        "body": "在舊伺服器仍在運行時記下這些。如果假設而不是檢查，其中每一個都可能導致遷移失敗。線上模式最重要：如果舊伺服器在關閉狀態下運行，而新伺服器在開啟狀態下運行，或者反之，每個玩家都會獲得不同的身份和一個全新的、空的物品欄。",
+        "points": [
+          "確切的 Minecraft 版本和載入器。1.20.1 NeoForge 不是 1.20.1 Forge。",
+          "模組或插件列表，包含版本。",
+          "來自 server.properties 的 level-name。世界資料夾通常不稱為 world。",
+          "線上模式，開啟或關閉。",
+          "任何存在於伺服器資料夾之外的內容，例如插件的資料庫。"
+        ]
+      },
+      {
+        "title": "取得整個資料夾，而不僅僅是世界",
+        "body": "使用主機的檔案管理器或下載選項，取得整個伺服器目錄。取得插件和模組的 jar 檔案本身，而不是名稱列表：版本很重要，而且下個月最新版本會是不同的檔案。也下載您的備份。只存在於您要離開的面板中的備份不是您擁有的備份。在最終下載之前正確停止伺服器，以便遊戲將世界刷新到磁碟。"
+      },
+      {
+        "title": "在您自己的面板中重建它",
+        "body": "建立一個相同類型和相同確切版本的伺服器。然後將各個部分帶入。世界頁面接受您的世界作為 .zip 或 .tar 壓縮檔，自動在其中找到世界，並將其安裝到伺服器，首先備份當前的世界。在插件或模組伺服器上，匯入您的 jar 檔案的 zip 壓縮檔：每個檔案都會被識別，與伺服器進行判斷，如果適合則安裝。配置和其他內容透過檔案管理器進入，檔案管理器可以直接在瀏覽器中編輯和上傳。如果舊伺服器運行的是已發布的整合包，則改為安裝相同版本的相同整合包。",
+        "pills": ["zip", "mrpack", "cf-export"],
+        "points": [
+          "上傳世界會在您的壓縮檔中找到世界。",
+          "匯入 Zip 會識別每個 jar 檔案並檢查它是否與伺服器相符。",
+          "檔案管理器處理配置、白名單和 ops 檔案。"
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "保留位址，保留玩家",
+        "body": "如果玩家連接到裸 IP 位址，每次移動都會讓他們編輯伺服器列表，有些人從不這樣做。使用您控制的主機名稱並將其指向您的新機器。然後移動就變成 DNS 更改。在切換前一天降低記錄的存活時間，以便更改快速傳播。SRV 記錄允許玩家即使伺服器在不同埠上運行，也可以輸入裸域名，這與主機分發遊戲位址的方式相同。"
+      }
+    ],
+    "steps": {
+      "title": "切換順序",
+      "items": [
+        {
+          "title": "在私人埠上測試",
+          "body": "在新伺服器上啟動一個玩家不知道的埠，自己加入，並檢查您知道的基地、您的物品欄以及每個插件或模組是否已載入。"
+        },
+        {
+          "title": "最終複製",
+          "body": "宣布重啟，正確停止舊伺服器，再次下載世界，並安裝該副本，以便最新的更改隨之而來。"
+        },
+        {
+          "title": "切換埠和位址",
+          "body": "使用遊戲埠卡將伺服器移動到其公共埠，然後將您的主機名稱指向新機器。"
+        },
+        {
+          "title": "保留舊伺服器一段時間",
+          "body": "幾天後才取消舊方案。保持停止狀態，這樣就沒有人會在廢棄的副本上建造。"
+        }
+      ]
+    },
+    "faq": {
+      "title": "遷移問題",
+      "items": [
+        {
+          "q": "玩家會保留他們的物品欄嗎？",
+          "a": "是的，只要兩個伺服器上的線上模式相同，並且您移動了整個世界資料夾。玩家資料存在於世界內部，以每個玩家的身份為鍵，如果線上模式改變，該身份也會改變。"
+        },
+        {
+          "q": "我的主機只允許我下載世界。這足夠嗎？",
+          "a": "對於原版，大部分足夠。對於插件或模組伺服器，您還需要確切版本的 jar 檔案，因為沒有創建它的模組，世界將無法正確載入。向您的主機索取完整的伺服器目錄。"
+        },
+        {
+          "q": "面板會取代我主機控制面板中的哪些功能？",
+          "a": "控制台、檔案管理器、備份、排程、玩家管理、插件和模組安裝以及整合包安裝，以及主機通常會額外收費的功能，例如更多伺服器或更多備份槽。限制是您自己的硬體。"
+        }
+      ]
+    },
+    "related": ["guideHome", "serverModpacks", "guideMulti"],
+    "cta": {
+      "title": "將您的伺服器帶回家",
+      "body": "安裝面板，建立一個與舊伺服器相符的伺服器，然後上傳您的世界。免費、開源，並且歸您所有。"
+    }
+  },
+  "guideMulti": {
+    "meta": {
+      "title": "在一台機器上運行多個 Minecraft 伺服器",
+      "description": "在一台機器上運行多個 Minecraft 伺服器：自動分配連接埠、每個伺服器獨立的記憶體、CPU 和磁碟限制、共享模組，以及一個儀表板管理所有伺服器。"
+    },
+    "eyebrow": "多伺服器指南",
+    "title": "乾淨地在一台機器上運行多個 Minecraft 伺服器",
+    "intro": "在一台機器上同時運行一個生存世界、一個創意建築伺服器，以及一個週末用的模組包。每個伺服器都有自己的容器、自己的連接埠和自己的限制，而您可以在一個儀表板上看到它們。",
+    "pills": ["docker", "paper", "fabric", "forge", "vanilla"],
+    "sections": [
+      {
+        "title": "連接埠自動分配",
+        "body": "遊戲連接埠會從 25565 開始，按順序自動分配，遠端主控台連接埠則比遊戲連接埠高 1000。十個伺服器會使用 25565 到 25574 的遊戲連接埠，並將 RCON 連接埠獨立開來，這樣您就可以在防火牆上只開啟一個連續的遊戲連接埠範圍，而無需暴露 RCON。如果另一個伺服器正在使用該連接埠、該機器上的任何 Docker 容器已發佈該連接埠，或系統回報該連接埠繁忙，則該連接埠會被視為已佔用。稍後透過「遊戲連接埠」卡片移動伺服器時，面板會在儲存前檢查新連接埠。",
+        "points": [
+          "每個伺服器自動配對一個遊戲連接埠和一個 RCON 連接埠。",
+          "「下一個可用連接埠」會選擇最低的可用連接埠。",
+          "僅開啟遊戲連接埠範圍。RCON 保持關閉。"
+        ]
+      },
+      {
+        "title": "限制確保一個伺服器不會拖垮其他伺服器",
+        "body": "每個伺服器都是一個獨立的 Docker 容器，設有 CPU 限制、Java 堆疊大小和其上的硬體記憶體限制。Docker 無法限制資料夾的磁碟使用量，因此面板會進行管理：每個伺服器都有磁碟配額，任何會超出配額的動作（例如安裝模組或上傳世界）都會被封鎖，直到釋放空間為止。啟用「超出配額時停止伺服器」後，任何超出配額 10% 以上的伺服器將會被停止，並記錄在歷史記錄中。",
+        "points": [
+          "每個伺服器獨立的 CPU、堆疊和記憶體限制。",
+          "由面板強制執行的磁碟配額。",
+          "新伺服器的預設值會根據機器的記憶體進行調整。"
+        ],
+        "shot": "storage"
+      },
+      {
+        "title": "共享可共享的資源",
+        "body": "您新增的模組會儲存在共享函式庫中一次，並透過 sha256 去重複化，然後連結到所有使用它們的伺服器。因此，運行相同模組的十個伺服器不會重複儲存十次。世界會進入一個任何伺服器都可以安裝的世界函式庫。藍圖會將伺服器的完整設定捕捉為單一的 .mcserver.zip 檔案，然後「複製」會使用它來建立一個具有新連接埠的相同伺服器。",
+        "shot": "blueprints"
+      },
+      {
+        "title": "統一檢視所有伺服器",
+        "body": "儀表板一目了然地顯示所有伺服器的狀態：狀態、記憶體使用量、線上玩家、待更新項目和近期活動。標籤可組織伺服器列表。全域排程可跨伺服器執行重新啟動、備份或命令，而「更新」頁面會收集整個伺服器群組中過期的項目。每個伺服器的權限讓朋友可以運行他們自己的伺服器，而無需看到您的伺服器。",
+        "shot": "dashboard"
+      }
+    ],
+    "steps": {
+      "title": "規劃多伺服器機器",
+      "items": [
+        {
+          "title": "加總記憶體需求",
+          "body": "加總每個運行中伺服器的 Java 堆疊大小和額外緩衝空間，然後為系統預留空間。已停止的伺服器不消耗記憶體，因此週末用的模組包在平日不會產生額外負擔。"
+        },
+        {
+          "title": "設定合理的預設值",
+          "body": "管理員可以在「設定」、「新伺服器的預設值」下設定每個新伺服器開始時的堆疊大小、磁碟配額和 CPU 限制。"
+        },
+        {
+          "title": "開啟一個連接埠範圍",
+          "body": "開啟一個足夠容納您計劃運行伺服器數量的遊戲連接埠範圍，同時支援 TCP 和 UDP。保持 RCON 連接埠區塊關閉。"
+        }
+      ]
+    },
+    "faq": {
+      "title": "多伺服器常見問題",
+      "items": [
+        {
+          "q": "一台機器可以運行多少個伺服器？",
+          "a": "主要取決於記憶體。加總每個運行中伺服器的堆疊大小和額外緩衝空間：一個小型原版或 Paper 伺服器總共需要約 4 GB，一個輕度模組包約需 6 GB。已停止的伺服器不消耗任何資源。"
+        },
+        {
+          "q": "每個伺服器可以有自己的管理員嗎？",
+          "a": "可以。每個伺服器的權限可以獨立授予檢視、管理、主控台、玩家、內容、備份、檔案、設定和刪除權限，並且可以完全隱藏某個伺服器不讓特定使用者看到。"
+        },
+        {
+          "q": "玩家可以在遊戲中切換我的伺服器嗎？",
+          "a": "無法透過面板本身實現。每個伺服器都有自己的位址和連接埠。要讓玩家在遊戲中互相切換伺服器，需要一個代理伺服器，您可以將其與其他伺服器一起運行。"
+        }
+      ]
+    },
+    "related": ["guideHome", "serversHub", "guideHosting"],
+    "cta": {
+      "title": "從一個地方管理您的整個伺服器群組",
+      "body": "一次安裝面板，然後根據需要添加伺服器。沒有每個伺服器的費用，也沒有實例數量限制。"
+    }
+  },
+  "compareHub": {
+    "meta": {
+      "title": "Minecraft 伺服器面板比較：Pterodactyl、AMP、Crafty",
+      "description": "免費與付費 Minecraft 伺服器面板的公平比較：Pterodactyl、Crafty Controller、AMP、MCSManager 和 PufferPanel，以及 Minecraft Server Manager。"
+    },
+    "eyebrow": "比較面板",
+    "title": "Minecraft 伺服器面板比較",
+    "intro": "有幾個不錯的面板可以運行 Minecraft 伺服器。以下是 Minecraft Server Manager 與它們各自的差異，以及其他面板是更佳選擇的情況。",
+    "cards": {
+      "comparePtero": "一個免費的多遊戲面板，專為託管公司打造，每個機器上都有獨立的守護進程 (daemon)。比較設定的難易度和 Minecraft 的功能。",
+      "compareCrafty": "一個用 Python 編寫的免費 Minecraft 面板，將伺服器作為普通進程運行。比較伺服器的隔離方式以及模組包的導入方式。",
+      "compareAmp": "一個商業面板，支援數百種遊戲，按授權等級銷售。比較價格、執行個體限制和 Minecraft 的深度支援。",
+      "compareMcsm": "一個免費、分散式的 Minecraft 和 Steam 遊戲面板。比較架構、Docker 使用和模組包處理方式。",
+      "comparePuffer": "一個免費、輕量級的面板，支援多種遊戲和多台機器，伺服器可作為進程或容器運行。比較隔離性、節點和 Minecraft 的深度支援。"
+    },
+    "sections": [
+      {
+        "title": "這些比較是如何撰寫的",
+        "body": "關於其他面板的每一個事實都來自該專案自身的網站、文件或儲存庫，並且每個頁面都註明了檢查日期。如果我們無法確認某項內容，我們會省略而不是猜測。如果事實有變，請在 Discord 或 GitHub 上告知我們，我們將修正頁面。",
+        "points": [
+          "每個頁面都列出了其他面板做得更好的地方。",
+          "價格和版本引用了檢查時的日期。",
+          "Minecraft Server Manager 與這些專案沒有任何關聯。它們的名稱屬於其所有者。"
+        ]
+      },
+      {
+        "title": "Minecraft Server Manager 的建置目的",
+        "body": "適合單一擁有者或小型團隊，在自己的機器上運行 Minecraft Java 伺服器。每個伺服器都是資源受限的 Docker 容器，整個面板位於一個資料夾中，並且其他地方棘手的 Minecraft 功能都已內建：固定模組包並支援回滾、五個模組註冊表的單一搜尋、崩潰偵測、一鍵式即時地圖和可攜式藍圖。",
+        "pills": ["paper", "purpur", "fabric", "forge", "neoforge", "quilt", "vanilla"]
+      }
+    ],
+    "faq": {
+      "title": "關於選擇面板的常見問題",
+      "items": [
+        {
+          "q": "在家裡只運行一個 Minecraft 伺服器，應該選擇哪個面板？",
+          "a": "如果您只運行 Minecraft Java 並需要模組包、備份和即時地圖，而不想自己組合這些功能，那麼 Minecraft Server Manager 就是為此而設計的。如果您還託管其他遊戲或管理多台機器，那麼像 Pterodactyl、MCSManager 或 AMP 這樣的多遊戲面板會更適合。"
+        },
+        {
+          "q": "Minecraft Server Manager 真的免費嗎？",
+          "a": "是的。它採用 MIT 授權，沒有付費方案，也不使用任何付費服務。下載 CurseForge 需要 CurseForge API 金鑰，您可以在設定中添加。"
+        },
+        {
+          "q": "我可以將現有的世界轉移到 Minecraft Server Manager 中嗎？",
+          "a": "是的。在「世界」頁面上傳您的世界並將其安裝到新伺服器，或者在創建伺服器時導入模組包匯出檔案或包含模組 jar 檔的 zip 壓縮包。"
+        }
+      ]
+    },
+    "related": ["serversHub", "guideHosting"],
+    "cta": {
+      "title": "在您自己的機器上試用",
+      "body": "透過三個步驟安裝面板，並從精靈開始創建您的第一個伺服器。您的整個面板都保留在一個資料夾中，您可以將其複製到任何地方。"
+    },
+    "table": {
+      "title": "所有面板一覽",
+      "columns": [
+        "",
+        "Minecraft Server Manager",
+        "Pterodactyl",
+        "Crafty Controller",
+        "AMP",
+        "MCSManager",
+        "PufferPanel"
+      ],
+      "rows": [
+        {
+          "label": "價格",
+          "values": ["免費。", "免費。", "免費。", "付費授權等級。", "免費。", "免費。"]
+        },
+        {
+          "label": "授權",
+          "values": ["MIT。", "MIT。", "GPL-3.0。", "商業，閉源。", "Apache-2.0。", "Apache-2.0。"]
+        },
+        {
+          "label": "遊戲",
+          "values": [
+            "Minecraft Java 版。",
+            "多種，透過 eggs。",
+            "Minecraft Java 和 Bedrock 版。",
+            "超過 200 種。",
+            "Minecraft 和 Steam 遊戲。",
+            "多種，透過範本。"
+          ]
+        },
+        {
+          "label": "遊戲伺服器運行方式",
+          "values": [
+            "Docker 容器。",
+            "Docker 容器。",
+            "主機上的進程。",
+            "進程，或啟用後為 Docker 容器。",
+            "容器或進程。",
+            "進程或容器。"
+          ]
+        },
+        {
+          "label": "多台機器",
+          "values": [
+            "否。每個機器一個面板。",
+            "是，搭配 Wings 節點。",
+            "其文件未提及遠端節點。",
+            "專業授權及以上。",
+            "是，搭配守護進程。",
+            "是，搭配節點。"
+          ]
+        },
+        {
+          "label": "主機系統",
+          "values": [
+            "Linux、Windows、macOS。",
+            "Linux。",
+            "Linux、Windows、macOS。",
+            "Linux、Windows。",
+            "Linux、Windows、macOS。",
+            "Linux。"
+          ]
+        }
+      ],
+      "note": "事實根據各專案自身文件檢查，時間為 2026 年 10 月和 11 月。每個比較頁面都有詳細資訊。"
+    }
+  },
+  "comparePtero": {
+    "meta": {
+      "title": "Pterodactyl 的 Minecraft 伺服器替代方案",
+      "description": "Minecraft Server Manager 與 Pterodactyl 的比較：一個程序和一個資料夾，取代了面板、守護進程、資料庫和 Redis，並內建了 Minecraft 功能。"
+    },
+    "eyebrow": "Pterodactyl 替代方案",
+    "title": "專為 Minecraft 設計的 Pterodactyl 替代方案",
+    "intro": "Pterodactyl 是一個免費的開源面板，可運行多種遊戲和多台機器。Minecraft Server Manager 僅運行一種遊戲在一台機器上，因此設定需求少得多，並且內建了 Minecraft 工具。",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "並排比較",
+      "columns": ["", "Minecraft Server Manager", "Pterodactyl"],
+      "rows": [
+        {
+          "label": "價格與授權",
+          "values": ["免費，MIT。", "免費，MIT。"]
+        },
+        {
+          "label": "安裝內容",
+          "values": [
+            "一個 Node.js 程序，或一個 Docker 容器。",
+            "一個 PHP (Laravel) 面板，搭配 React 前端，以及運行在每個節點上的 Go 語言編寫的 Wings 守護進程。"
+          ]
+        },
+        {
+          "label": "資料庫與快取",
+          "values": [
+            "內建於資料夾中的 SQLite 檔案。無需額外運行其他服務。",
+            "MySQL 5.7.22+ 或 MariaDB 10.2+、Redis、網頁伺服器和 Composer。"
+          ]
+        },
+        {
+          "label": "遊戲伺服器運行方式",
+          "values": ["資源受限的 Docker 容器。", "隔離的 Docker 容器 (需要 Docker)。"]
+        },
+        {
+          "label": "支援的系統",
+          "values": [
+            "Linux、Windows 和 macOS。映像檔支援 amd64 和 arm64 架構。",
+            "僅限 Linux：Ubuntu、Debian 和 RHEL 系列發行版。Wings 不支援 Windows。"
+          ]
+        },
+        {
+          "label": "管理的機器",
+          "values": ["一台。面板和 Docker 運行在同一台主機上。", "多台。一個面板控制多台機器的 Wings 節點。"]
+        },
+        {
+          "label": "遊戲",
+          "values": [
+            "Minecraft Java 版。Bedrock 玩家可透過 Geyser 加入。",
+            "透過 \"eggs\" 支援多種遊戲，包括 Minecraft、Rust、Terraria 和 ARK。"
+          ]
+        }
+      ],
+      "note": "截至 2026 年 10 月，根據各專案自身文件核實的資訊。"
+    },
+    "sections": [
+      {
+        "title": "無需組裝複雜堆疊的設定",
+        "body": "Pterodactyl 官方文件稱其為一個高度複雜的系統，具有多項依賴：PHP、資料庫伺服器、Redis、網頁伺服器、佇列工作程序，以及每個節點上的 Wings。這種設計使其能夠服務於託管公司。Minecraft Server Manager 是一個與您的 Docker socket 通訊的單一程序，將包括資料庫在內的所有內容都保存在一個資料夾中。在 Linux 上，一個安裝腳本即可完成設定，並在缺少時安裝 Docker。",
+        "points": [
+          "無需單獨的守護進程、資料庫伺服器或快取服務。",
+          "複製資料夾即可將整個面板遷移到新機器。",
+          "原生支援 Windows 和 macOS，可與 Docker Desktop 並存。"
+        ],
+        "pills": ["docker", "portainer", "dockge", "pm2"]
+      },
+      {
+        "title": "Minecraft Server Manager 在 Minecraft 方面的優勢",
+        "body": "由於它僅運行 Minecraft，因此面板能理解模組包 (modpack)、模組 jar 檔和崩潰報告的含義。Minecraft 伺服器管理員常用的工具都已內建在面板中，無需額外尋找和整合。",
+        "points": [
+          "模組包固定到確切版本，升級時會先備份，並可一鍵回滾。",
+          "跨五個註冊中心搜尋，並根據伺服器的載入器和 Minecraft 版本進行篩選。",
+          "所有下載在到達伺服器前都會進行校驗和驗證。",
+          "自動偵測、解析崩潰，並可一鍵分享到 mclo.gs。",
+          "一鍵部署 BlueMap 即時地圖，並受面板自身登入保護。",
+          "在精靈設定介面中，所有 itzg 映像檔的設定都以淺顯易懂的英文說明。"
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Pterodactyl 較佳的選擇時機",
+        "body": "Pterodactyl 成熟、積極維護，並獲得託管公司的支持。如果您符合以下任一情況，它將是更強的選擇。",
+        "points": [
+          "您在多台機器上運行伺服器，並希望有一個統一的面板來管理所有伺服器。",
+          "您託管 Minecraft 以外的其他遊戲。",
+          "您向眾多獨立客戶銷售或共享託管服務，並需要這種規模的擴展性。",
+          "您已在使用 Pterodactyl，並且其 eggs 已滿足您的需求。"
+        ]
+      },
+      {
+        "title": "關於 Pelican 的說明",
+        "body": "Pelican Panel 是 Pterodactyl 的一個分支，授權為 AGPL-3.0，在檢查本頁面時仍處於發佈候選階段。它保留了面板加 Wings 的設計，增加了 SQLite 和 PostgreSQL 作為資料庫選項，並設有一個插件中心，第三方插件可在此瀏覽 CurseForge 和 Modrinth 的模組包。"
+      }
+    ],
+    "faq": {
+      "title": "Pterodactyl 相關問題",
+      "items": [
+        {
+          "q": "我能將伺服器從 Pterodactyl 遷移到 Minecraft Server Manager 嗎？",
+          "a": "可以。從 Pterodactyl 下載伺服器的世界檔案，在 Minecraft Server Manager 中創建相同類型和 Minecraft 版本的伺服器，然後在「世界」頁面上傳世界檔案並將其安裝到該伺服器。對於已安裝模組的伺服器，在創建伺服器時匯入模組包或您的模組 jar 檔案壓縮包。"
+        },
+        {
+          "q": "Minecraft Server Manager 需要像 MySQL 這樣的資料庫伺服器嗎？",
+          "a": "不需要。它使用 Node.js 24 內建的 SQLite 引擎，並將資料庫檔案與其他所有內容一起存儲在資料夾中。"
+        },
+        {
+          "q": "Minecraft Server Manager 能像 Wings 節點一樣管理多台機器嗎？",
+          "a": "不能。它管理其運行所在機器的 Docker守護進程。若要管理多台機器，請在每台機器上運行一個面板，或選擇一個支援多節點的面板。"
+        }
+      ]
+    },
+    "related": ["compareHub", "compareMcsm", "guideMulti"],
+    "cta": {
+      "title": "無需額外堆疊即可運行 Minecraft",
+      "body": "透過三個步驟安裝 Minecraft Server Manager，並在精靈設定中創建您的第一個伺服器。"
+    }
+  },
+  "compareCrafty": {
+    "meta": {
+      "title": "Crafty Controller 與 Minecraft Server Manager 比較",
+      "description": "Crafty Controller 和 Minecraft Server Manager 都是免費的 Minecraft 管理面板。比較伺服器的隔離方式、模組包安裝方式以及它們各自的適用場景。"
+    },
+    "eyebrow": "Crafty Controller 的替代方案",
+    "title": "Crafty Controller 與 Minecraft Server Manager 比較",
+    "intro": "兩者都是免費、自行託管的 Minecraft 管理面板。Crafty 以 Python 編寫，將每個伺服器作為主機上的進程運行。Minecraft Server Manager 則將每個伺服器運行在獨立的 Docker 容器中，並將模組包、模組搜尋和崩潰診斷工具整合到面板中。",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "並排比較",
+      "columns": ["", "Minecraft Server Manager", "Crafty Controller"],
+      "rows": [
+        {
+          "label": "價格與授權",
+          "values": ["免費，MIT。", "免費，GPL-3.0。"]
+        },
+        {
+          "label": "編寫語言",
+          "values": ["Node.js 24。", "Python 3.10 至 3.12。"]
+        },
+        {
+          "label": "遊戲伺服器運行方式",
+          "values": ["資源受限的 Docker 容器。", "主機上的進程。面板本身也可在 Docker 中運行。"]
+        },
+        {
+          "label": "Docker",
+          "values": ["主機上必需。", "可選。"]
+        },
+        {
+          "label": "支援的系統",
+          "values": [
+            "Linux、Windows 和 macOS。鏡像支援 amd64 和 arm64。",
+            "Linux、Windows、macOS 和 Raspberry Pi OS，以及 Docker、UnRAID 和 CasaOS 的指南。其鏡像支援 amd64 和 arm64。"
+          ]
+        },
+        {
+          "label": "版本",
+          "values": ["Java 版。基岩版玩家可透過 Geyser 加入。", "Java 版 1.8 至最新版，以及基岩版。"]
+        },
+        {
+          "label": "模組包",
+          "values": [
+            "透過精靈安裝 CurseForge、Modrinth、FTB 和 GT New Horizons 模組包，並固定到特定版本。",
+            "其 FAQ 描述了匯入 zip 格式的模組包，或透過 mrpack-install 安裝 Modrinth 模組包。"
+          ]
+        },
+        {
+          "label": "備份、排程、權限、雙重驗證",
+          "values": [
+            "是：每個伺服器獨立保留備份、cron 排程、三種權限角色（可設定伺服器權限）、TOTP。",
+            "是：備份管理器、任務排程器、使用者角色，以及 TOTP 和通行密鑰。"
+          ]
+        }
+      ],
+      "note": "資料截至 2026 年 10 月，根據各專案自身文件檢查。"
+    },
+    "sections": [
+      {
+        "title": "容器取代主機進程",
+        "body": "在 Minecraft Server Manager 中，每個伺服器都運行在基於知名 itzg Minecraft 鏡像的獨立 Docker 容器中，擁有各自的記憶體和 CPU 限制，以及由面板強制執行的磁碟配額。單一伺服器無法耗盡主機記憶體或填滿磁碟，重新建置伺服器也不會影響其他伺服器。缺點是需要在主機上安裝 Docker。",
+        "points": [
+          "每個伺服器皆有記憶體、CPU 和磁碟限制。",
+          "在容器停止前進行優雅的 RCON 停止，並具備帶有退避機制的崩潰偵測。",
+          "鏡像為每個伺服器選擇合適的 Java 版本，因此混合的 Minecraft 版本也能正常運作。"
+        ],
+        "pills": ["docker", "amd64", "arm64"],
+        "shot": "overview"
+      },
+      {
+        "title": "Minecraft Server Manager 的優勢",
+        "body": "精靈功能可為您安裝和固定模組包與模組，確保重新啟動時不會意外升級模組包。",
+        "points": [
+          "透過精靈安裝 CurseForge、Modrinth、FTB 和 GT New Horizons 模組包。",
+          "匯入 Modrinth .mrpack、CurseForge 匯出檔或您自訂的 jar 檔案集合，每個 jar 檔案都會被識別。",
+          "一次搜尋五個登錄庫，並根據伺服器的載入器和版本進行篩選。",
+          "升級前會先備份，並可一鍵回滾。",
+          "一鍵生成 BlueMap 即時地圖和 mclo.gs 崩潰報告分享。",
+          "可攜式藍圖：匯出伺服器的設定，並在任何地方建立相同的伺服器。"
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"]
+      },
+      {
+        "title": "Crafty Controller 的適用時機",
+        "body": "Crafty 成熟、積極維護，且無需 Docker 即可在更多地方運行。",
+        "points": [
+          "您想在不安裝 Docker 的情況下運行伺服器，例如直接在 Windows、macOS 或 Raspberry Pi 上運行。",
+          "您運行的是基岩版專用伺服器本身，而不僅僅是透過 Geyser 運行 Java 版。",
+          "您希望使用通行密鑰登入。"
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Crafty Controller 常見問題",
+      "items": [
+        {
+          "q": "我能將我的 Crafty 伺服器轉移到 Minecraft Server Manager 嗎？",
+          "a": "可以。建立一個相同類型和 Minecraft 版本的伺服器，然後在「Worlds」頁面上传世界 zip 檔案並將其安裝到該伺服器。對於已安裝模組的伺服器，在建立伺服器時匯入您的模組包或模組 jar 檔案的 zip 集合。"
+        },
+        {
+          "q": "Minecraft Server Manager 可以在 Raspberry Pi 上運行嗎？",
+          "a": "可以，在安裝了 Docker 的 64 位元作業系統上。面板鏡像支援 arm64 和 amd64。"
+        },
+        {
+          "q": "為什麼 Minecraft Server Manager 需要 Docker？",
+          "a": "每個伺服器都運行在自己的容器中，這使得它能夠實現資源限制、乾淨的重建，以及為每個 Minecraft 版本提供正確的 Java 版本。"
+        }
+      ]
+    },
+    "related": ["compareHub", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "親自體驗您的伺服器",
+      "body": "只需三個步驟即可安裝面板，然後在精靈中從模組包建立伺服器。"
+    }
+  },
+  "compareAmp": {
+    "meta": {
+      "title": "Minecraft 伺服器管理的免費 AMP 替代方案",
+      "description": "將 Minecraft Server Manager 與 CubeCoders 的 AMP 進行比較：一個免費、MIT 授權的 Minecraft 管理面板，沒有伺服器數量限制，對比商業化的多遊戲管理面板。"
+    },
+    "eyebrow": "AMP 替代方案",
+    "title": "Minecraft 的免費 AMP 替代方案",
+    "intro": "CubeCoders 的 AMP 是一款商業化的管理面板，支援眾多遊戲，並以授權層級販售。Minecraft Server Manager 免費且開源，僅支援 Minecraft，且對您創建的伺服器數量沒有限制。",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "並排比較",
+      "columns": ["", "Minecraft Server Manager", "AMP"],
+      "rows": [
+        {
+          "label": "價格",
+          "values": ["免費。無分級。", "標準版 £7.50 / $10，專業版 £15 / $30，進階版 £30 / $40，企業版則為變動訂閱制。"]
+        },
+        {
+          "label": "授權與原始碼",
+          "values": ["MIT 授權，原始碼在 GitHub 上。", "商業化且閉源。其公開的 GitHub 儲存庫用於問題追蹤與文件。"]
+        },
+        {
+          "label": "可創建的伺服器數量",
+          "values": ["無限制，僅受限於您的硬體。", "標準版 5 個實例，專業版 15 個，進階版 50 個。"]
+        },
+        {
+          "label": "面板使用者",
+          "values": ["無限制，具備管理員、操作員和檢視者角色。", "標準版 3 位，專業版以上無限制。"]
+        },
+        {
+          "label": "商業用途",
+          "values": ["MIT 授權允許。", "僅限企業版授權。"]
+        },
+        {
+          "label": "多台機器",
+          "values": ["每個面板限一台機器。", "專業版及以上版本支援。"]
+        },
+        {
+          "label": "支援系統",
+          "values": ["Linux、Windows 和 macOS。映像檔支援 amd64 和 arm64 架構。", "Windows 和 Linux。"]
+        },
+        {
+          "label": "遊戲",
+          "values": [
+            "Minecraft Java 版。玩家可透過 Geyser 加入 Bedrock 版。",
+            "超過 200 種遊戲和應用程式在其相容性列表中，包括 Minecraft Java 版和 Bedrock 版。"
+          ]
+        }
+      ],
+      "note": "資料於 2026 年 10 月根據各專案自身文件進行檢查。AMP 價格來自 CubeCoders 的版本比較表，可能會有所變動。"
+    },
+    "sections": [
+      {
+        "title": "無授權限制，無實例數量限制",
+        "body": "AMP 的分級方案決定了您能獲得多少實例和面板使用者，且僅有企業版允許商業用途。Minecraft Server Manager 沒有分級：所有功能、所有伺服器和所有使用者帳戶在 MIT 授權下均免費，且不使用任何付費服務。CurseForge 下載需要 CurseForge API 金鑰，您可在設定中添加。",
+        "points": [
+          "創建任意數量的伺服器，只要您的機器能負荷。",
+          "邀請您的整個團隊，提供每個伺服器的權限和雙因素登入。",
+          "原始碼公開，您可以閱讀、分支和貢獻。"
+        ]
+      },
+      {
+        "title": "Minecraft Server Manager 在 Minecraft 方面的優勢",
+        "body": "專注於單一遊戲的管理面板可以深入優化該遊戲。itzg Minecraft 映像檔支援的每一項設定都在精靈（wizard）中提供，並附有淺顯易懂的說明，同時內建了 Minecraft 的工作流程。",
+        "points": [
+          "支援 CurseForge、Modrinth、FTB 和 GT New Horizons 的模組包，一鍵回滾。",
+          "跨五個註冊中心的模組搜尋，支援校驗和驗證下載。",
+          "在提供 Minecraft 版本升級前進行版本相容性檢查。",
+          "提供崩潰診斷並可分享至 mclo.gs，以及一鍵生成 BlueMap 實時地圖。",
+          "玩家分析、物品欄分析和儲存空間分析，支援磁碟配額。"
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "bluemap", "mclogs"],
+        "shot": "wizard"
+      },
+      {
+        "title": "AMP 更適合的時機",
+        "body": "AMP 的應用範圍遠超僅限 Minecraft 的管理面板，並提供商業支援。",
+        "points": [
+          "您希望從單一面板託管多種不同的遊戲。",
+          "您需要透過 OIDC 進行單一登入、自訂品牌或部署範本，這些功能包含在其進階版中。",
+          "您經營託管業務，並希望獲得帶有供應商支援的商業授權。",
+          "您想自行運行 Bedrock Dedicated Server。"
+        ]
+      }
+    ],
+    "faq": {
+      "title": "AMP 問題",
+      "items": [
+        {
+          "q": "Minecraft Server Manager 是否可用於商業用途？",
+          "a": "MIT 授權允許商業用途。此面板專為單一機器的擁有者和小型團隊設計，因此在依賴它為客戶提供服務前，請確認它是否符合您的託管需求。"
+        },
+        {
+          "q": "Minecraft Server Manager 是否支援 Minecraft 以外的遊戲？",
+          "a": "否。它僅支援 Minecraft Java 版伺服器，這也是為何它能在模組包、模組和崩潰報告方面做得如此深入。"
+        },
+        {
+          "q": "我能將 AMP 的 Minecraft 實例遷移過來嗎？",
+          "a": "可以。創建一個相同類型和 Minecraft 版本的伺服器，然後在「世界」（Worlds）頁面上傳實例的世界作為 zip 檔案並安裝到該伺服器。模組伺服器可以從模組包、模組包匯出或模組 jar 的 zip 開始。"
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideHosting"],
+    "cta": {
+      "title": "所有功能，免費",
+      "body": "只需三個步驟即可安裝 Minecraft Server Manager。無需購買，無需解鎖。"
+    }
+  },
+  "compareMcsm": {
+    "meta": {
+      "title": "MCSManager 的 Minecraft 伺服器替代方案",
+      "description": "比較 MCSManager 與 Minecraft Server Manager：一個用於 Minecraft 和 Steam 遊戲的分布式面板，以及一個內建模組包的僅限 Minecraft 的面板。"
+    },
+    "eyebrow": "MCSManager 的替代方案",
+    "title": "專注於 Minecraft 的 MCSManager 替代方案",
+    "intro": "MCSManager 是一款免費開源面板，用於管理 Minecraft 和 Steam 遊戲，並可管理多台機器。Minecraft Server Manager 僅在單台機器上運行 Minecraft，每個伺服器都裝在 Docker 容器中，並內建了 Minecraft 工具。",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "並排比較",
+      "columns": ["", "Minecraft Server Manager", "MCSManager"],
+      "rows": [
+        {
+          "label": "價格與授權",
+          "values": ["免費，MIT。", "免費，Apache-2.0。"]
+        },
+        {
+          "label": "開發語言",
+          "values": ["Node.js 24。", "TypeScript on Node.js。"]
+        },
+        {
+          "label": "安裝內容",
+          "values": ["一個程序，或一個 Docker 容器。", "兩個服務：一個網頁面板和一個守護程序。"]
+        },
+        {
+          "label": "資料庫",
+          "values": ["內建於資料夾內的 SQLite 檔案。", "無需。"]
+        },
+        {
+          "label": "遊戲伺服器運行方式",
+          "values": ["資源受限的 Docker 容器。", "Docker 容器或普通程序，由您選擇。"]
+        },
+        {
+          "label": "支援系統",
+          "values": [
+            "Linux、Windows 和 macOS。映像檔支援 amd64 和 arm64。",
+            "Windows、Linux 和 macOS，Linux 提供一鍵安裝腳本。"
+          ]
+        },
+        {
+          "label": "可管理的機器",
+          "values": ["一台。面板和 Docker 運行在同一台主機上。", "多台，透過分散式守護程序。"]
+        },
+        {
+          "label": "遊戲",
+          "values": [
+            "Minecraft Java 版。Bedrock 玩家可透過 Geyser 加入。",
+            "Minecraft 和 Steam 遊戲，如 Palworld 和 Terraria，來自內建的市集。"
+          ]
+        }
+      ],
+      "note": "截至 2026 年 10 月，根據各專案自身文件檢查的事實。"
+    },
+    "sections": [
+      {
+        "title": "Minecraft Server Manager 在 Minecraft 方面的優勢",
+        "body": "MCSManager 部署多種遊戲伺服器。Minecraft Server Manager 專注於單一遊戲，因此其設定精靈、模組工具和歷史記錄都圍繞 Minecraft 設計。",
+        "points": [
+          "itzg Minecraft 映像檔的所有設定，在設定精靈中以淺顯易懂的英文解釋。",
+          "CurseForge、Modrinth、FTB 和 GT New Horizons 模組包，支援一鍵回滾。",
+          "跨五個註冊表的單一模組搜尋，支援校驗和驗證下載。",
+          "提供崩潰日誌分析，指出可疑之處，並支援一鍵分享到 mclo.gs。",
+          "一鍵部署 BlueMap 即時地圖、玩家分析和可攜式藍圖。",
+          "整個面板，包括資料庫，都在一個資料夾中，可複製以進行遷移。"
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "console"
+      },
+      {
+        "title": "預設使用容器",
+        "body": "Minecraft Server Manager 中的每個伺服器都是一個 Docker 容器，擁有獨立的記憶體和 CPU 限制，以及面板強制執行的磁碟配額。每個伺服器可獨立選擇 Java 版本，因此 1.12 模組包和最新的 Paper 版本可以並存，無需手動管理 Java 安裝。MCSManager 允許您在容器和普通程序之間進行選擇，這在 Docker 不適用時更具彈性。",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "title": "MCSManager 更適合的時機",
+        "body": "MCSManager 開發非常活躍，並且支援的範圍不僅限於 Minecraft。",
+        "points": [
+          "您需要從單一面板管理多台機器上的伺服器。",
+          "您也需要託管 Steam 遊戲，例如 Palworld 或 Terraria。",
+          "您希望將伺服器作為普通程序運行，而不是使用 Docker。",
+          "您想要一個拖放式儀表板和一個預建遊戲部署的市集。"
+        ]
+      }
+    ],
+    "faq": {
+      "title": "MCSManager 問題",
+      "items": [
+        {
+          "q": "我可以將 Minecraft 伺服器從 MCSManager 遷移出來嗎？",
+          "a": "可以。在 Minecraft Server Manager 中創建一個相同類型和 Minecraft 版本的伺服器，然後在「Worlds」頁面上传世界作為 zip 檔案並將其安裝到該伺服器。模組伺服器可以從模組包、包匯出或模組 jar 的 zip 檔案開始。"
+        },
+        {
+          "q": "我需要為 Minecraft Server Manager 安裝 Docker 嗎？",
+          "a": "是的。Docker 運行所有伺服器。在 Linux 上，如果 Docker 缺失，安裝腳本會為您安裝 Docker。"
+        },
+        {
+          "q": "多人可以共用一個 Minecraft Server Manager 面板嗎？",
+          "a": "可以。提供管理員、操作員和檢視者角色，以及每個伺服器的權限，並可選擇為每個帳戶啟用雙因素登入。"
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideMulti", "comparePuffer"],
+    "cta": {
+      "title": "深入了解 Minecraft",
+      "body": "透過三個步驟安裝面板，並從設定精靈開始創建您的第一個伺服器。"
+    }
+  },
+  "comparePuffer": {
+    "meta": {
+      "title": "PufferPanel 的 Minecraft 伺服器替代方案",
+      "description": "Minecraft Server Manager 與 PufferPanel 比較：每個伺服器都在自己的 Docker 容器中運行，並內建 Minecraft 工具，對比輕量級的多遊戲、多節點面板。"
+    },
+    "eyebrow": "PufferPanel 的替代方案",
+    "title": "專為 Minecraft 設計的 PufferPanel 替代方案",
+    "intro": "PufferPanel 是一款免費、開源的面板，支援在一台或多台機器上運行多種遊戲。Minecraft Server Manager 僅在單一機器上運行 Minecraft，始終使用 Docker，並內建 Minecraft 工具。",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "並排比較",
+      "columns": ["", "Minecraft Server Manager", "PufferPanel"],
+      "rows": [
+        {
+          "label": "價格與授權",
+          "values": ["免費，MIT。", "免費，Apache-2.0。"]
+        },
+        {
+          "label": "開發語言",
+          "values": ["Node.js 24。", "Go。"]
+        },
+        {
+          "label": "安裝內容",
+          "values": [
+            "一個程序，或一個 Docker 容器。",
+            "一個來自其 apt 或 yum 儲存庫的服務，或其 Docker 映像。另一台機器的節點運行相同的套件。"
+          ]
+        },
+        {
+          "label": "資料庫",
+          "values": ["內建於資料夾內的 SQLite 檔案。", "基本安裝無需設定。有指南說明如何使用外部資料庫。"]
+        },
+        {
+          "label": "遊戲伺服器運行方式",
+          "values": [
+            "資源受限的 Docker 容器，始終如此。",
+            "主機上的程序（其文件說明此環境沒有安全功能）或 Docker 容器。"
+          ]
+        },
+        {
+          "label": "主機系統",
+          "values": [
+            "Linux、Windows 和 macOS。映像檔為 amd64 和 arm64 建置。",
+            "Linux：Ubuntu 22.04 和 24.04 以及 Debian 10 和 11 的套件，支援 amd64 和 arm64，Raspbian 支援 arm64，並提供 yum 儲存庫。不支援 32 位元。"
+          ]
+        },
+        {
+          "label": "管理的機器",
+          "values": ["一台。面板和 Docker 運行在同一台主機上。", "多台。其他機器的節點為單一面板運行伺服器。"]
+        },
+        {
+          "label": "Minecraft",
+          "values": [
+            "Java 版，itzg 映像檔的所有伺服器類型，以及 CurseForge、Modrinth、FTB 和 GT New Horizons 整合包。Bedrock 玩家可透過 Geyser 加入。",
+            "Java 和 Bedrock 伺服器的模板，CurseForge 和 FTB 整合包，以及 BungeeCord、Velocity 和 Waterfall 代理。"
+          ]
+        }
+      ],
+      "note": "截至 2026 年 11 月，根據 PufferPanel 的文件、其儲存庫及其模板儲存庫的事實檢查。"
+    },
+    "sections": [
+      {
+        "title": "無需記憶設定的隔離",
+        "body": "PufferPanel 允許您為每個伺服器選擇環境。標準環境將伺服器作為主機上的程序運行，與面板相同的用戶，其自身文件說明沒有安全功能；Docker 環境則將其隔離。Minecraft Server Manager 僅提供後者。每個伺服器都是自己的容器，具有記憶體和 CPU 限制、面板強制執行的磁碟配額，並且與其他伺服器沒有共享內容，除了模組庫。",
+        "points": [
+          "每個伺服器一個容器，標記並限制資源。",
+          "由面板強制執行的磁碟配額。",
+          "偵測並記錄崩潰或記憶體不足的伺服器。"
+        ],
+        "pills": ["docker"]
+      },
+      {
+        "title": "Minecraft Server Manager 在 Minecraft 方面更深入",
+        "body": "模板啟動伺服器；工作隨後而來。尋找和更新模組、移動中的整合包、需要閱讀的崩潰報告、需要備份的世界。這些都內建在此面板中。",
+        "points": [
+          "整合包固定到確切版本。升級和降級會先備份，然後一鍵回滾。",
+          "跨五個註冊表的單一搜尋，依據伺服器的載入器和 Minecraft 版本過濾。",
+          "每個下載在到達伺服器之前都會進行校驗和驗證。",
+          "版本檢查顯示已安裝的每個模組已支援哪些未來的 Minecraft 版本。",
+          "偵測、解析崩潰報告，並一鍵分享到 mclo.gs。",
+          "一鍵式 BlueMap 即時地圖，位於面板自身的登入頁面後方。"
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "PufferPanel 更適合的時機",
+        "body": "PufferPanel 輕量、免費且已存在多年。如果以下任一點符合您，請選擇它。",
+        "points": [
+          "您運行 Minecraft 以外的遊戲。",
+          "您在多台機器上運行伺服器，並希望為所有伺服器使用一個面板。",
+          "您想要原生的 Bedrock 伺服器，或 BungeeCord、Velocity 或 Waterfall 代理網路。",
+          "您完全不想運行 Docker。",
+          "您想要 SFTP 存取伺服器檔案。"
+        ]
+      }
+    ],
+    "faq": {
+      "title": "PufferPanel 問題",
+      "items": [
+        {
+          "q": "我能將 Minecraft 伺服器從 PufferPanel 遷移到 Minecraft Server Manager 嗎？",
+          "a": "可以。下載伺服器的世界資料夾，創建相同類型和 Minecraft 版本的伺服器，然後在「世界」頁面上傳世界並將其安裝到該伺服器。對於已安裝模組的伺服器，在創建時匯入整合包或其模組 jar 檔的 zip 壓縮包。"
+        },
+        {
+          "q": "Minecraft Server Manager 需要 Docker 嗎？",
+          "a": "是的。每個 Minecraft 伺服器都作為 Docker 容器運行，這也是它為每個伺服器限制記憶體、CPU 和磁碟的原因。面板本身可以運行在 Docker 中，或直接從 Node.js 運行。"
+        },
+        {
+          "q": "它能在第二台機器上運行伺服器嗎？",
+          "a": "不能。它管理運行它的機器上的 Docker守護進程。對於兩台機器，請在每台機器上運行一個面板，或選擇帶有節點的面板，例如 PufferPanel。"
+        }
+      ]
+    },
+    "related": ["compareHub", "compareCrafty", "compareMcsm"],
+    "cta": {
+      "title": "每個伺服器都在自己的容器中",
+      "body": "透過三個步驟安裝面板，並在設定精靈中創建您的第一個伺服器。"
+    }
   }
 }

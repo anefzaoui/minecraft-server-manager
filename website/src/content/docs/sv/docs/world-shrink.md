@@ -1,6 +1,6 @@
 ---
 title: 'Krympa en värld'
-description: 'Med tiden sprider sig en värld ut: varje plats en spelare någonsin har gått, flugit eller'
+description: 'Krymp en Minecraft-värld genom att radera sällan besökta delar för att frigöra diskutrymme och snabba upp säkerhetskopieringar.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

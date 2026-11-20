@@ -1,6 +1,6 @@
 ---
 title: 'Zmenšení světa'
-description: 'Časem se svět rozrůstá: každé místo, kde hráč kdy chodil, létal nebo'
+description: 'Zmenšete svět Minecraftu odstraněním zřídka navštěvovaných chunků, abyste získali zpět místo na disku a zrychlili zálohování.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

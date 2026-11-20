@@ -9,15 +9,15 @@
   },
   "backups": {
     "title": "Cadangan",
-    "description": "Halaman Cadangan menampilkan setiap snapshot di seluruh armada Anda, beserta ukuran, alasan, dan usia."
+    "description": "Halaman Cadangan menampilkan setiap snapshot di seluruh armada Anda, beserta ukuran, alasan, dan usia, dapat difilter berdasarkan server dan alasan."
   },
   "blueprints": {
     "title": "Blueprints",
-    "description": "Blueprint menangkap seluruh konfigurasi server (tipe, versi, sumber daya, lingkungan, pin paket, dan opsional konfigurasi serta dunianya) menjadi satu file po"
+    "description": "Blueprints menyimpan seluruh konfigurasi server Minecraft sebagai resep yang dapat digunakan kembali untuk membuat server baru. Rahasia tidak pernah disertakan."
   },
   "chatbot": {
-    "title": "Obrolan bot per server Minecraft",
-    "description": "Cabang ini menambahkan obrolan bot yang dikonfigurasi admin ke setiap server Minecraft yang dikelola."
+    "title": "Chatbot per server Minecraft",
+    "description": "Panel ini menawarkan chatbot yang dikonfigurasi admin untuk setiap server Minecraft yang dikelola, diatur pada tab Pengaturan → Chatbot server."
   },
   "console-and-chat": {
     "title": "Konsol & perintah obrolan",
@@ -29,7 +29,7 @@
   },
   "getting-started": {
     "title": "Memulai",
-    "description": "Saat pertama kali membuka panel, Anda akan diminta untuk membuat akun administrator."
+    "description": "Instal Minecraft Server Manager dan selesaikan penyiapan pertama: pemeriksaan sistem, zona waktu Anda, dan akun admin."
   },
   "index": {
     "title": "Dokumentasi",
@@ -37,27 +37,27 @@
   },
   "integrations": {
     "title": "Integrasi",
-    "description": "Setiap server memiliki integrasinya di bawah grup Pengaturan: Discord, Halaman Status publik, Undangan sekali klik, dan tab Chatbot opsional."
+    "description": "Setiap server memiliki integrasinya di bawah grup Pengaturan: Discord, Halaman Status publik, Undangan sekali klik, dan tab Chatbot opsional (hanya admin)."
   },
   "modpacks": {
     "title": "Modpack",
-    "description": "Halaman Modpack (dan tab Dari modpack di wizard pembuatan) menginstal modpack sebagai server, selalu disematkan ke versi pack yang tepat sehingga restart dapat"
+    "description": "Instal modpack CurseForge, Modrinth, FTB, dan GT New Horizons sebagai server, selalu disematkan ke versi pack yang tepat."
   },
   "public-api": {
     "title": "API Publik",
-    "description": "API HTTP kecil yang hanya bisa dibaca untuk mengambil status server dari luar panel: a"
+    "description": "API HTTP kecil yang hanya bisa dibaca untuk mengambil status server dari luar panel: dasbor status, monitor waktu aktif, bot Discord, aturan otomatisasi rumah."
   },
   "schedules": {
     "title": "Jadwal",
-    "description": "Halaman Jadwal mengotomatiskan tugas berulang dengan ekspresi cron."
+    "description": "Halaman Jadwal mengotomatiskan tugas berulang dengan ekspresi cron. Tanpa cron eksternal, tanpa skrip."
   },
   "servers": {
     "title": "Membuat & mengelola server",
-    "description": "Klik Buat Server (bilah atas) atau kartu Buat server untuk membuka wizard."
+    "description": "Buat, mulai, hentikan, bangun ulang, dan konfigurasikan server Minecraft di panel: wizard pembuatan, pengaturan, memori, dan port game."
   },
   "storage": {
     "title": "Penyimpanan",
-    "description": "Halaman Penyimpanan menunjukkan ke mana ruang disk Anda digunakan: penggunaan per server dan bagaimana trennya dari waktu ke waktu."
+    "description": "Lihat ke mana ruang disk terbuang, batasi setiap folder server dengan kuota disk, dan bersihkan apa yang tidak lagi Anda perlukan."
   },
   "two-factor-authentication": {
     "title": "Autentikasi dua faktor",
@@ -65,18 +65,46 @@
   },
   "updates": {
     "title": "Pembaruan",
-    "description": "Halaman Pembaruan melacak apa saja yang sudah usang di seluruh armada Anda di satu tempat:"
+    "description": "Lacak dan terapkan pembaruan untuk versi Minecraft, modpack, mod, dan plugin di setiap server, dengan kebijakan per server."
   },
   "users-and-roles": {
     "title": "Pengguna & peran",
-    "description": "Panel ini mendukung banyak pengguna."
+    "description": "Akun, peran admin, operator, dan penampil, serta izin per server di Minecraft Server Manager."
   },
   "world-shrink": {
     "title": "Mengecilkan dunia",
-    "description": "Seiring waktu sebuah dunia akan meluas: setiap tempat yang pernah dijelajahi pemain, baik berjalan kaki, terbang, atau"
+    "description": "Mengecilkan dunia Minecraft dengan menghapus chunk yang jarang dikunjungi, untuk menghemat ruang disk dan mempercepat pencadangan."
   },
   "worlds-and-files": {
-    "title": "Dunia & file",
-    "description": "Halaman Dunia mengelola data dunia di seluruh server Anda: ganti dunia aktif, unggah dunia, atau unduh salah satunya."
+    "title": "Dunia & Berkas",
+    "description": "Pustaka dunia, unggahan dan penukaran dunia, tab mod dan plugin, serta pengelola berkas di peramban."
+  },
+  "guide-backups": {
+    "title": "Cadangan server Minecraft yang benar-benar bisa dipulihkan",
+    "description": "Cara membuat cadangan server Minecraft yang benar-benar bisa dipulihkan: salinan yang konsisten, disimpan di tempat lain, dan diuji setidaknya sekali."
+  },
+  "guide-choosing-a-loader": {
+    "title": "Vanilla, Paper, Fabric, Forge, NeoForge, Quilt: yang mana?",
+    "description": "Vanilla, Paper, Fabric, Forge, NeoForge atau Quilt: jenis server Minecraft mana yang akan dijalankan, dipilih berdasarkan apa yang dipasang pemain Anda."
+  },
+  "guide-moving-a-server": {
+    "title": "Memindahkan server Minecraft ke host lain",
+    "description": "Memindahkan dunia itu mudah. Memindahkan server yang masih bisa diakses pemain, dengan inventaris, rumah, dan izin mereka tetap utuh, adalah bagian yang sering bermasalah."
+  },
+  "guide-server-memory": {
+    "title": "Berapa banyak RAM yang dibutuhkan server Minecraft?",
+    "description": "Berapa banyak RAM yang dibutuhkan server Minecraft untuk vanilla, Paper, mod ringan dan modpack besar, serta berapa banyak yang tersisa untuk mesin."
+  },
+  "guide-server-wont-start": {
+    "title": "Server Minecraft Anda tidak mau mulai",
+    "description": "Server Minecraft yang tidak mau mulai, diperbaiki berdasarkan urutan kemungkinan: log, versi Java, memori, EULA dan port, serta mod."
+  },
+  "invites-and-status-page": {
+    "title": "Undangan & halaman status",
+    "description": "Undang teman ke server dengan alamat, versi, dan modpack klien, serta bagikan halaman status publik yang hanya menampilkan apa yang Anda pilih."
+  },
+  "live-map": {
+    "title": "Peta langsung",
+    "description": "Aktifkan peta 3D langsung BlueMap dari dunia server dalam satu klik, disajikan hanya melalui login panel."
   }
 }

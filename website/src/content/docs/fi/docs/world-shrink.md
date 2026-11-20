@@ -1,6 +1,6 @@
 ---
 title: 'Maailman pienentäminen'
-description: 'Ajan myötä maailma leviää: jokainen paikka, jossa pelaaja on koskaan kävellyt, lentänyt tai'
+description: 'Pienennä Minecraft-maailmaa poistamalla harvoin vierailtuja paloja levytilan vapauttamiseksi ja varmuuskopioiden nopeuttamiseksi.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

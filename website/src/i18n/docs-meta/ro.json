@@ -8,16 +8,16 @@
     "description": "Minecraft Server Manager este o aplicație Node.js redată pe server, cu un singur proces."
   },
   "backups": {
-    "title": "Copii de rezervă",
-    "description": "Pagina Copii de rezervă afișează fiecare instantaneu din flota dvs., cu dimensiunea, motivul și vechimea."
+    "title": "Backupuri",
+    "description": "Pagina Backupuri afișează fiecare instantaneu din flota dvs., cu dimensiunea, motivul și vechimea, filtrabile după server și după motiv."
   },
   "blueprints": {
     "title": "Blueprints",
-    "description": "Un blueprint surprinde întreaga configurație a unui server (tip, versiune, resurse, mediu, pin de pachet și, opțional, configurația și lumea sa) într-un singur fișier."
+    "description": "Blueprints salvează întreaga configurație a unui server Minecraft ca o rețetă reutilizabilă pentru crearea de noi servere. Secretele nu sunt niciodată incluse."
   },
   "chatbot": {
     "title": "Chatbot Minecraft per server",
-    "description": "Questo fork aggiunge una chatbot configurabile dall'amministratore a ciascun server Minecraft gestito."
+    "description": "Panoul oferă un chatbot configurat de administrator pentru fiecare server Minecraft gestionat, configurat în fila Setări → Chatbot a serverului."
   },
   "console-and-chat": {
     "title": "Consolă și comenzi de chat",
@@ -29,7 +29,7 @@
   },
   "getting-started": {
     "title": "Primii pași",
-    "description": "Prima dată când deschideți panoul, acesta vă solicită să creați un cont de administrator."
+    "description": "Instalează Minecraft Server Manager și finalizează configurarea inițială: verificarea sistemului, fusul orar și contul de administrator."
   },
   "index": {
     "title": "Documentație",
@@ -37,27 +37,27 @@
   },
   "integrations": {
     "title": "Integrări",
-    "description": "Fiecare server își poartă integrările sub grupul Setări: Discord, o Pagină de Stare publică, Invitații cu un singur clic și fila opțională Chatbot."
+    "description": "Fiecare server își poartă integrările sub grupul Setări: Discord, o Pagină de Stare publică, Invitații cu un singur clic și fila opțională Chatbot (doar pentru administratori)."
   },
   "modpacks": {
-    "title": "Modpackuri",
-    "description": "Pagina Modpackuri (și fila Din modpack din vrăjitorul de creare) instalează un modpack ca server, întotdeauna fixat la o versiune exactă a pachetului, astfel încât o repornire să poată"
+    "title": "Pachete de Moduri",
+    "description": "Instalează pachete de moduri CurseForge, Modrinth, FTB și GT New Horizons ca servere, mereu fixate la o versiune exactă a pachetului."
   },
   "public-api": {
     "title": "API Publică",
-    "description": "Un API HTTP mic, doar pentru citire, pentru preluarea stării serverului din afara panoului: a"
+    "description": "Un API HTTP mic, doar pentru citire, pentru preluarea stării serverului din afara panoului: un tablou de bord al stării, un monitor de funcționare, un bot Discord, o regulă de automatizare a casei."
   },
   "schedules": {
     "title": "Programări",
-    "description": "Pagina Programări automatizează sarcinile recurente cu expresii cron."
+    "description": "Pagina Programări automatizează sarcinile recurente cu expresii cron. Fără cron extern, fără scripturi."
   },
   "servers": {
     "title": "Crearea și gestionarea serverelor",
-    "description": "Apăsați pe Create a Server (bara de sus) sau pe cardul Create a server pentru a deschide expertul."
+    "description": "Creează, pornește, oprește, reconstruiește și configurează servere Minecraft în panou: vrăjitorul de creare, setări, memorie și portul jocului."
   },
   "storage": {
     "title": "Stocare",
-    "description": "Pagina Stocare arată unde se duce spațiul dvs. pe disc: utilizarea per server și cum evoluează în timp."
+    "description": "Vedeți unde se duce spațiul pe disc, limitați fiecare folder de server cu o cotă de disc și curățați ceea ce nu mai aveți nevoie."
   },
   "two-factor-authentication": {
     "title": "Autentificare în doi pași",
@@ -65,18 +65,46 @@
   },
   "updates": {
     "title": "Actualizări",
-    "description": "Pagina Actualizări urmărește ce este învechit pe întreaga flotă într-un singur loc:"
+    "description": "Urmăriți și aplicați actualizări pentru versiuni Minecraft, modpack-uri, moduri și plugin-uri pe fiecare server, cu o politică per server."
   },
   "users-and-roles": {
     "title": "Utilizatori și roluri",
-    "description": "Panoul este multi-utilizator."
+    "description": "Conturi, rolurile de administrator, operator și vizualizator, și permisiuni per server în Minecraft Server Manager."
   },
   "world-shrink": {
     "title": "Micșorarea unei lumi",
-    "description": "În timp, o lume se extinde: fiecare loc în care un jucător a mers, a zburat sau"
+    "description": "Micșorați o lume Minecraft prin ștergerea fragmentelor rar vizitate, pentru a recupera spațiu pe disc și a accelera backup-urile."
   },
   "worlds-and-files": {
-    "title": "Lumile și fișierele",
-    "description": "Pagina Lumile gestionează datele lumilor pe serverele tale: schimbă lumea activă, încarcă o lume sau descarcă una."
+    "title": "Lumi & fișiere",
+    "description": "Biblioteca de lumi, încărcări și schimbări de lumi, fila moduri și pluginuri și managerul de fișiere din browser."
+  },
+  "guide-backups": {
+    "title": "Backup-uri pentru serverul Minecraft care funcționează cu adevărat",
+    "description": "Cum să creezi backup-uri pentru serverul Minecraft care funcționează cu adevărat: copii consistente, păstrate în altă parte și testate cel puțin o dată."
+  },
+  "guide-choosing-a-loader": {
+    "title": "Vanilla, Paper, Fabric, Forge, NeoForge, Quilt: care să alegi?",
+    "description": "Vanilla, Paper, Fabric, Forge, NeoForge sau Quilt: ce tip de server Minecraft să rulezi, ales în funcție de ce instalează jucătorii tăi."
+  },
+  "guide-moving-a-server": {
+    "title": "Mutarea unui server Minecraft pe altă gazdă",
+    "description": "Mutarea unei lumi este ușoară. Mutarea unui server la care jucătorii se pot conecta în continuare, cu inventarele, casele și permisiunile lor intacte, este partea care merge prost."
+  },
+  "guide-server-memory": {
+    "title": "Cât RAM necesită un server Minecraft?",
+    "description": "Cât RAM necesită un server Minecraft pentru vanilla, Paper, moduri ușoare și modpack-uri mari, și cât să rămână pentru mașină."
+  },
+  "guide-server-wont-start": {
+    "title": "Serverul tău Minecraft nu pornește",
+    "description": "Un server Minecraft care nu pornește, remediat în ordinea probabilității: log-ul, versiunea Java, memoria, EULA și portul, și mod-urile."
+  },
+  "invites-and-status-page": {
+    "title": "Invitații și pagina de stare",
+    "description": "Invită prieteni pe un server cu adresa, versiunea și un modpack de client, și partajează o pagină de stare publică ce afișează doar ce alegi tu."
+  },
+  "live-map": {
+    "title": "Hartă live",
+    "description": "Activează o hartă 3D live BlueMap a lumii unui server printr-un singur clic, servită doar prin autentificarea panoului."
   }
 }

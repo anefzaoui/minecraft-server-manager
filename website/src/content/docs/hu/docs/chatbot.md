@@ -1,54 +1,54 @@
 ---
 title: 'Szerverenkénti Minecraft chatbot'
-description: 'Ez a fork egy rendszergazda által konfigurálható chatbotot ad minden felügyelt Minecraft szerverhez.'
+description: 'A panel minden felügyelt Minecraft szerverhez egy rendszergazda által konfigurált chatbotot kínál, amely a szerver Beállítások → Chatbot lapján állítható be.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/chatbot.md'
 ---
 
 [← Vissza a dokumentumokhoz](/docs/)
 
-Ez a fork minden felügyelt Minecraft szerverhez egy rendszergazda által konfigurálható chatbotot ad hozzá. Egy OpenAI-kompatibilis chat-kompletálási végponthoz csatlakozik, beleértve az Ollama-t egy másik LAN-gazdán. Minden szervernek saját végpontja, modellje, meghívó neve, személyisége, átirat-szabályzata, kihelyezési üzenetei és teljesítményszabályzata van. Az alapértelmezett meghívó a `@wizard`, és az alapértelmezett személyiség egy ősi, játékos világban élő varázslót mutat be; mindkettő szerkeszthető.
+A panel minden felügyelt Minecraft szerverhez egy rendszergazda által konfigurálható chatbotot kínál, amely a szerver **Beállítások → Chatbot** lapján állítható be. Ez egy OpenAI-kompatibilis chat-completions végponthoz csatlakozik, beleértve az Ollama-t egy másik LAN-os gazdagépen. Minden szervernek saját végpontja, modellje, meghívóneve, személyisége, átirat-politikája, kihelyezési üzenetei és teljesítménypolitikája van. Az alapértelmezett meghívó a `@wizard`, az alapértelmezett személyiség pedig egy ősi, játékos kedvű, a játék világában játszódó varázslót mutat be; mindkettő szerkeszthető.
 
 ![Chatbot beállítások](/docs/images/integrations-chatbot.png)
 
-## Játékosélmény
+## Játékos élmény
 
-- Bármely játékos használhatja a `@wizard <üzenet>` (vagy a konfigurált meghívót) beszélgetéshez és determinisztikus, Minecraft verzió-tudatos vanilla recept súgóhoz.
-- A csatlakozási üdvözlések és egy konfigurálható egyszeri játék-munkamenet bejelentkezés emlékezteti a játékosokat a chatbot elérhetőségére. A `@wizard chat` egy rövid opt-in beszélgetési ablakot nyit meg; a `@wizard bye` bezárja azt.
-- **Alapvető felhasználók** meghívhatnak engedélyezett ön/világ teljesítményeket. **Teljesítményvezérlők** külön validált műveleteket hajthatnak végre, amelyek más online játékosokat érintenek. Az egyik csoportba sem tartozó játékosok csak beszélgetésre korlátozódnak.
-- Az alapvető felhasználók önmaguknak adott ajándékai egy elem engedélyezési listát használnak. A vezérlők bármilyen érvényes névtérrel rendelkező vanilla vagy modded elemet adhatnak egy másik játékosnak, a mennyiségi korlátozások és egyéb teljesítménybiztonsági intézkedések betartásával.
+- Bármely játékos használhatja a `@wizard <üzenet>` (vagy a konfigurált meghívót) parancsot beszélgetéshez és determinisztikus, Minecraft verzió-tudatos vanilla recept súgóhoz.
+- A csatlakozási üdvözlések és egy konfigurálható, egyszeri játék-munkamenet ellenőrzés emlékezteti a játékosokat a chatbot elérhetőségére. A `@wizard chat` parancs megnyit egy rövid, opt-in beszélgetési ablakot; a `@wizard bye` parancs bezárja azt.
+- **Alap felhasználók** meghívhatnak engedélyezett önmaguknak vagy világnak szóló képességeket. **Teljesítményvezérlők** külön validált műveleteket hajthatnak végre, amelyek egy másik online játékost érintenek. Az egyik csoportba sem tartozó játékosok csak beszélgetésre korlátozódnak.
+- Az alap felhasználók önmaguknak szóló ajándékai egy elem engedélyezési listát használnak. A vezérlők bármilyen érvényes névterű vanilla vagy modded elemet adhatnak egy másik játékosnak, a mennyiségi korlátozások és egyéb teljesítménybiztonsági intézkedések betartásával.
 
 ![Chatbot átiratok](/docs/images/chatbot-transcripts.png)
 
 ## Tervezés és biztonság
 
-A konfiguráció és az átiratok csak rendszergazdák számára érhetők el. A modell soha nem kap nyers RCON-t vagy tetszőleges parancs végrehajtást. Egy üzenet csak az egyetlen rögzített eszközt teszi elérhetővé, amely megfelel a kifejezett szándéknak; a szerver kódja érvényesíti az engedélyezést, az argumentumokat, a zászlókat, a mennyiségeket, a visszaszámlálásokat és az online játékosok pontos neveit, mielőtt egy meglévő szolgáltatási műveletet végrehajtana. A Minecraft kiválasztók elutasításra kerülnek, a játékosok közötti műveletek nem célozhatják meg a hívót, a teljesítmények szárazfutás módban indulnak, és minden megkísérelt teljesítmény auditálásra kerül. A nem támogatott eszközmeghívó modellek csak beszélgetésre esnek vissza.
+A konfiguráció és az átiratok csak rendszergazdák számára érhetők el. A modell soha nem kap nyers RCON vagy tetszőleges parancs végrehajtást. Egy üzenet csak az egyetlen, rögzített eszközt teszi elérhetővé, amely megfelel annak kifejezett szándékának; a szerver kódja érvényesíti az engedélyezést, az argumentumokat, a zászlókat, a mennyiségeket, a hűtési időket és az online játékosok pontos neveit, mielőtt egy meglévő szolgáltatási műveletet végrehajtana. A Minecraft kiválasztók elutasításra kerülnek, a játékosok közötti műveletek nem célozhatják meg a hívót, a képességek szárazfutás módban indulnak, és minden megkísérelt képesség auditálva van. A nem támogatott eszközmeghívó modellek csak beszélgetésre esnek vissza.
 
-A válaszok korlátozottak a Minecraft csevegéshez. Az ismert vanilla receptek a mellékelt verzió-specifikus receptadatokból származnak, és stabil 2x2/3x3 sorokban jelennek meg; az LLM nem bízható meg receptelrendezések kitalálásában. Az ismeretlen vagy modded receptek a JEI/REI-hez irányítják a játékost a válasz kitalálása helyett.
+A válaszok korlátozottak a Minecraft csevegéshez. Az ismert vanilla receptek a mellékelt, verziószámozott receptadatokból származnak, és stabil 2x2/3x3 sorokban jelennek meg; az LLM nem bízható meg a recept elrendezések kitalálásában. Az ismeretlen vagy modded receptek a JEI/REI-hez irányítják a játékost a válasz kitalálása helyett.
 
 ## Fő implementációs fájlok
 
-- `src/services/wizard.js`: szerverenkénti konfiguráció, OpenAI-kompatibilis kérések, csevegés kezelése, kihelyezés, átirat tárolás és válaszkorlátok.
-- `src/services/wizardPowers.js`: szerepkör ellenőrzések, szándék-specifikus eszközsémák, validálás, végrehajtás, visszaszámlálások és teljesítmény auditálás.
-- `src/services/wizardRecipes.js`: determinisztikus verzió-specifikus recept keresés és rács formázás. A recept és elem adatok a mellékelt [`minecraft-data`](https://github.com/PrismarineJS/minecraft-data) csomagból származnak. (Ennek a dokumentumnak egy korábbi tervezete egy `src/data/recipes/` mappára mutatott, amely soha nem lett commitelve; nincs ilyen mappa, és az adatok a csomagban találhatók. Lásd: "Függőség lábnyom".)
+- `src/services/wizard.js`: szerverenkénti konfiguráció, OpenAI-kompatibilis kérések, csevegés kezelése, kihelyezés, átirat megőrzés, és válaszkorlátok.
+- `src/services/wizardPowers.js`: szerepkör ellenőrzések, szándékspecifikus eszközsémák, validálás, végrehajtás, hűtési idők, és teljesítmény auditálás.
+- `src/services/wizardRecipes.js`: determinisztikus, verziószámozott recept keresés és rács formázás. A recept- és elemadatok a mellékelt [`minecraft-data`](https://github.com/PrismarineJS/minecraft-data) csomagból származnak. (Egy korábbi dokumentumtervezet egy `src/data/recipes/` mappára mutatott, amely soha nem lett commit-olva; nincs ilyen mappa, és az adatok a csomagban találhatók. Lásd "Dependency footprint".)
 - `src/analytics/ingest.js`: továbbítja a feldolgozott csatlakozásokat, kilépéseket és játékos csevegéseket a chatbotnak.
-- `src/web/routes/wizard.js`, `public/js/pages/integrations.js`, és `views/partials/server/integrations.hbs`: rendszergazdai API és szerverenkénti Integrációk UI.
-- `src/db/migrations/011_wizard_chat.js` - `019_wizard_power_controllers.js`: perzisztens séma.
-- `test/wizard.test.js`: engedélyezés, eszközhatár, tárolás, kihelyezés és csevegés viselkedési tesztek.
+- `src/web/routes/wizard.js`, `public/js/pages/integrations.js`, és `views/partials/server/integrations.hbs` (a `chatbot.hbs` keresztül): rendszergazdai API és a szerverenkénti Beállítások → Chatbot lap.
+- `src/db/migrations/011_wizard_chat.js`, `013_wizard_invocation_name.js`, `015_wizard_powers.js`, `017_wizard_outreach.js`, és `019_wizard_power_controllers.js`: perzisztens séma.
+- `test/wizard.test.js`: engedélyezési, eszközhatár, megőrzési, kihelyezési és csevegési viselkedési tesztek.
 
-A belső `wizard` útvonal/modul/tábla nevek megmaradnak a frissítési és API kompatibilitás érdekében; a „chatbot” a felhasználó által látható terméknév. Hasonlóképpen, a tárolt `power_testers_json` mező a felhasználói felület **Alapvető felhasználók** csoportjának felel meg.
+A belső `wizard` útvonal/modul/tábla nevek megmaradnak a frissítési és API kompatibilitás érdekében; a "chatbot" a felhasználóbarát terméknév. Hasonlóképpen, a tárolt `power_testers_json` mező a felhasználói felület **Alap felhasználók** csoportjának felel meg.
 
 ## Függőség lábnyom (`minecraft-data`)
 
-A recept súgó a `minecraft-data` csomagot használja. Nagy helyet foglal a lemezen (körülbelül 429 MB telepítve), és a gyártási képbe kerül, mert futásidejű függőség, nem fejlesztői. Szándékosan tartjuk meg, hogy a recept súgó offline módban működjön minden Minecraft kiadáshoz, hálózati hívás nélkül.
+A recept súgó a `minecraft-data` csomagot használja. Nagy helyet foglal a lemezen (kb. 429 MB telepítve), és a production image-ben van, mert futásidejű függőség, nem fejlesztői. Szándékosan tartjuk meg, hogy a recept súgó offline módban működjön minden Minecraft kiadáshoz, hálózati hívás nélkül.
 
 Megjegyzések a következő szemlélőnek (ember vagy AI), hogy a méret ne okozzon meglepetést:
 
-- Jelenleg csak a Java (`pc`) adatok használatosak. A `wizardRecipes.js` a `minecraftData.versions.pc` és az adott verzió `recipes`, `items`, és `blocks` tábláit olvassa. Az általa ténylegesen érintett fájlok összesen körülbelül 15 MB-ot tesznek ki minden pc verzión keresztül.
-- A csomag körülbelül 330 MB-ja a `data/bedrock`, és itt semmi sem olvassa még. Szándékosan hagyjuk bent. Ha a panel valaha is támogatni fogja a Bedrock Minecraftot, a Bedrock recept és elem adatok már itt vannak, így a recept funkció bővíthető a Bedrock szerverek lefedésére anélkül, hogy új függőséget adnánk hozzá. Kezdje a `minecraftData.versions.bedrock` elemnél, és kövesse ugyanazt az alakot, mint a pc útvonal.
-- Ha a méretet le kell csökkenteni a Bedrock támogatás érkezése előtt, erre már van minta ebben a tárban. Az `src/services/itemRegistry.js` lekéri a `minecraft-data` fájlokat a jsDelivr CDN-ről, amikor szüksége van rájuk, és gyorsítótárazza őket az `api_cache`-ben. Vagy ez a megközelítés, vagy egy kis, kézzel kiválasztott `src/data/recipes/` részhalmaz, amely néhány gyakori verziót fed le, jelentősen csökkentené a képet.
+- Jelenleg csak a Java (`pc`) adatok használatosak. A `wizardRecipes.js` a `minecraftData.versions.pc` és az verziónkénti `recipes`, `items`, és `blocks` táblákat olvassa. Az általa ténylegesen érintett fájlok összesen kb. 15 MB-ot tesznek ki minden pc verzión keresztül.
+- A csomag mintegy 330 MB-ja a `data/bedrock` mappa, és jelenleg semmi sem olvassa. Szándékosan hagyjuk ott. Ha a panel valaha is hozzáadja a Bedrock Minecraft támogatást, a Bedrock recept- és elemadatok már ott lesznek, így a recept funkció bővíthető lesz Bedrock szerverek lefedésére anélkül, hogy új függőséget kellene hozzáadni. A `minecraftData.versions.bedrock` alapján kell elindulni, és követni kell ugyanazt az alakot, mint a pc útvonal.
+- Ha a méretet le kell csökkenteni a Bedrock támogatás érkezése előtt, már van erre minta ebben a repositoryban. A `src/services/itemRegistry.js` lekéri a `minecraft-data` fájlokat a jsDelivr CDN-ről, amikor szüksége van rájuk, és a `api_cache`-ben tárolja őket. Vagy ez a megközelítés, vagy egy kis, kézzel válogatott `src/data/recipes/` alcsoport, amely néhány gyakori verziót fed le, jelentősen csökkentené a kép méretét.
 
 ## Helyi tárolás és manuális ellenőrzés
 
-Minden beállítás és tárolt átirat a panel SQLite adatbázisában található a `/data/panel.db` címen a panel tárolóban. A standard Compose mount használatával a gazda elérési útja `${DATA_DIR_HOST}/panel.db` (például `/opt/msm/data/panel.db`). A releváns táblák a `wizard_configs`, `wizard_transcripts`, és `wizard_outreach`; a teljesítmény auditok az `events` tábla sorai, `wizard-power` típussal. Az opcionális LLM API kulcs AES-256-GCM titkosítással van titkosítva a panel `SESSION_SECRET` használatával, általában `${DATA_DIR_HOST}/.session-secret` néven tárolva.
+Minden beállítás és megőrzött átirat a panel SQLite adatbázisában található a `/data/panel.db` címen a panel konténeren belül. A standard Compose mount-tal a host elérési útja `${DATA_DIR_HOST}/panel.db` (például `/opt/msm/data/panel.db`). A releváns táblák a `wizard_configs`, `wizard_transcripts`, és `wizard_outreach`; a teljesítmény auditok az `events` tábla sorai, `wizard-power` típussal. Az opcionális LLM API kulcs AES-256-GCM titkosítással van védve a panel at-rest kulcsával, a `.secret-key` a data mappában (külön a `SESSION_SECRET`-től).
 
-Készítsen biztonsági másolatot az adatbázisról, és állítsa le a panelt a közvetlen SQLite szerkesztések előtt, hogy a WAL biztonságosan kezelve legyen. Az admin UI/API használata javasolt, mert érvényesítést és titkosítást alkalmaz. Tartsa együtt a `panel.db`, `panel.db-wal`, és `panel.db-shm` fájlokat, amikor élő adatbázist másol.
+Biztonsági mentést kell készíteni az adatbázisról, és le kell állítani a panelt a közvetlen SQLite szerkesztések előtt, hogy a WAL biztonságosan kezelve legyen. A rendszergazdai UI/API használata javasolt, mert érvényesítést és titkosítást alkalmaz. Tartsa együtt a `panel.db`, `panel.db-wal`, és `panel.db-shm` fájlokat, amikor egy élő adatbázist másol.

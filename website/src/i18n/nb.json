@@ -8,9 +8,12 @@
     "home": "Hjem",
     "features": "Funksjoner",
     "screenshots": "Skjermbilder",
+    "servers": "Servere",
+    "guides": "Veiledninger",
     "install": "Installer",
     "docs": "Dokumentasjon",
     "faq": "Ofte stilte spørsmål",
+    "compare": "Sammenlign",
     "changelog": "Endringslogg",
     "github": "GitHub",
     "discord": "Discord",
@@ -23,10 +26,11 @@
     "eyebrow": "Gratis og åpen kildekode. Kjører på din egen maskin.",
     "title": "Kjør Minecraft-serverne dine fra ett brukervennlig panel.",
     "subtitle": "Minecraft Server Manager gjør Docker til et koselig hjem for serverne dine: modpacks som forblir festet, en-klikks sikkerhetskopiering, tidsplaner, et live kart, spillerstatistikk og en konsoll som snakker et enkelt språk. Ingen regninger, ingen binding, hele panelet ditt i én mappe.",
-    "primary": "Kom i gang på 3 steg",
+    "primary": "Kom i gang på minutter",
     "secondary": "Utforsk funksjonene",
     "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
-    "scroll": "Se veiledningen"
+    "scroll": "Se veiledningen",
+    "shotCaption": "Det ekte panelet: dashbordet med seks eksempelserevere, i mørkt tema."
   },
   "pillars": {
     "title": "Laget for folk som drifter servere, ikke billetter",
@@ -52,7 +56,7 @@
   },
   "features": {
     "title": "Alt servereiere strekker seg etter",
-    "intro": "Den komplette funksjonsturen, fra opprettelse av en server til deling av dens livekart.",
+    "intro": "Den komplette funksjonsturen, fra oppretting av en server til deling av live-kartet.",
     "cta": "Les dokumentasjonen",
     "groups": [
       {
@@ -60,13 +64,13 @@
         "items": [
           {
             "title": "Ressursbegrensede containere",
-            "body": "Opprett, start, stopp, start på nytt, bygg om og slett servere med grasiøse RCON-stopp og automatisk krasjdeteksjon.",
+            "body": "Opprett, start, stopp, start på nytt, bygg om og slett servere med en ryddig RCON-stopp og automatisk krasjdeteksjon.",
             "icon": "server",
             "pills": ["docker"]
           },
           {
-            "title": "Veiledet opprettelsesveiviser",
-            "body": "Enkel eller avansert modus, med alle bildeinnstillinger forklart på enkelt engelsk før du velger dem.",
+            "title": "Veiledet opprettingsveiviser",
+            "body": "Enkel eller avansert modus, med alle bildeinnstillinger forklart på enkelt norsk før du velger dem.",
             "icon": "wand"
           },
           {
@@ -82,7 +86,7 @@
         ]
       },
       {
-        "title": "Mods og modpakker",
+        "title": "Mods og modpacks",
         "items": [
           {
             "title": "Fem registre i én nettleser",
@@ -97,7 +101,7 @@
           },
           {
             "title": "Importer alt",
-            "body": "Alle jar-filer identifiseres og kompatibilitetssjekkes ved innlasting.",
+            "body": "Alle jar-filer identifiseres og kompatibilitetssjekkes underveis.",
             "icon": "upload",
             "pills": ["mrpack", "cf-export", "zip"]
           },
@@ -114,8 +118,13 @@
           },
           {
             "title": "Velg-mods-først-løser",
-            "body": "Velg modsene du vil ha og få den nyeste fullt kompatible lasteløseren og Minecraft-versjonen.",
+            "body": "Velg modsene du vil ha og få den nyeste fullt kompatible lasten og Minecraft-versjonen.",
             "icon": "sparkles"
+          },
+          {
+            "title": "Alle pakkeversjoner, alle lastelasterversjoner",
+            "body": "Flytt en modpack til en hvilken som helst publisert versjon, nyere eller eldre, eller bytt lastelasterversjon. En sikkerhetskopi kommer først, og en feilet oppstart rulles tilbake.",
+            "icon": "refresh"
           }
         ]
       },
@@ -123,7 +132,7 @@
         "title": "Beskyttelse og automatisering",
         "items": [
           {
-            "title": "Sikkerhetskopiering som sparer",
+            "title": "Sikkerhetskopiering med lagringsbeskyttelse",
             "body": "Øyeblikksbilder med oppbevaringsklasser, gjenoppretting på stedet, og valgfri verdensforminsking for å frigjøre diskplass.",
             "icon": "archive"
           },
@@ -154,8 +163,8 @@
         "title": "Innsikt og fellesskap",
         "items": [
           {
-            "title": "Livekart",
-            "body": "Ett klikk til et livekart, servert gjennom panelets autentiserte proxy.",
+            "title": "Live kart",
+            "body": "Ett klikk til et live kart, servert gjennom panelets autentiserte proxy.",
             "icon": "map",
             "pills": ["bluemap"]
           },
@@ -166,7 +175,7 @@
           },
           {
             "title": "Discord og chatbot",
-            "body": "Webhooks med per-hendelse-brytere, pluss en valgfri per-server chatbot med begrenset in-game-makt.",
+            "body": "Webhooks med per-hendelse-brytere, pluss en valgfri per-server chatbot med begrenset makt i spillet.",
             "icon": "message",
             "pills": ["discord"]
           },
@@ -176,8 +185,14 @@
             "icon": "globe"
           },
           {
+            "title": "Inviter venner",
+            "body": "Kopier en invitasjon med adresse og versjon. For en server bygget fra mods du valgte, gi venner en klient .mrpack som installerer dem og legger til serveren i listen deres.",
+            "icon": "users",
+            "pills": ["mrpack"]
+          },
+          {
             "title": "Brukere, roller og 2FA",
-            "body": "Admin-, operatør- og seerroller med TOTP tofaktorautentisering.",
+            "body": "Roller som admin, operatør og seer med TOTP tofaktorautentisering.",
             "icon": "lock"
           }
         ]
@@ -190,11 +205,12 @@
     "desktop": "Skrivebord",
     "mobile": "På en telefon",
     "items": {
-      "dashboard": "Dashbordet: alle servere, spillerantall og nylig aktivitet på et øyeblikk.",
+      "dashboard": "Dashbordet: hver server, antall spillere og nylig aktivitet på et øyeblikk.",
       "wizard": "Opprettelsesveiviseren forklarer hver innstilling før du velger den.",
       "overview": "En servers oversikt med ressursmålere og hurtighandlinger.",
       "console": "Sanntidskonsollen med en RCON-kommandolinje og loggfiltre.",
       "mods": "Mods fra fem registre, filtrert etter serverens loader og versjon.",
+      "modpacks": "Modpacks: søk i CurseForge og Modrinth, og hver pakke installeres festet til en eksakt versjon.",
       "worlds": "Bytt verdener og administrer filer fra nettleseren.",
       "backups": "Sikkerhetskopier med oppbevaringsklasser og gjenoppretting på stedet.",
       "schedules": "Cron-planer for omstarter, sikkerhetskopier og kommandoer.",
@@ -204,42 +220,54 @@
   },
   "install": {
     "title": "Installasjon",
-    "intro": "Velg alternativet som passer din vert. Alle veier gir deg samme kontrollpanel.",
+    "intro": "Velg alternativet som passer din vert. Hver vei gir deg samme kontrollpanel.",
     "requirements": "Krav",
     "reqItems": [
       "Docker Engine (Linux) eller Docker Desktop (Windows, macOS).",
-      "Node.js 24 eller nyere for installasjon fra kildekode. Docker-imaget har sitt eget.",
-      "Noen få gigabyte diskplass for server-imager og verdener."
+      "Node.js 24 eller nyere for installasjon fra kildekode. Docker-imaget inneholder sin egen.",
+      "Noen få gigabyte diskplass for server-imagene og verdener."
     ],
     "docker": {
       "title": "Alternativ 1: Docker",
-      "body": "Et ferdigbygd multi-arkitektur-image publiseres til GHCR ved hver utgivelse. Hent compose-filen, sett én variabel, og start.",
+      "body": "Et ferdigbygd multi-arkitektur-image publiseres til GHCR ved hver utgivelse. Last ned compose-filen, sett én variabel, og start.",
       "after": "Åpne deretter http://din-vert:25564. I Portainer eller Dockge, lim inn compose-filen som en stack og sett DATA_DIR_HOST i stackens miljøvariabler.",
-      "warning": "Kontrollpanelet styrer vertens Docker-daemon gjennom den monterte socketen, som er lik root på verten. Behandle admin-innloggingen deretter og aldri eksponer panelet direkte mot internett."
+      "warning": "Panelet styrer vertens Docker-daemon via den monterte socketen, som er lik root på verten. Behandle admin-påloggingen deretter, og aldri eksponer panelet direkte mot internett."
     },
     "source": {
       "title": "Alternativ 2: Fra kildekode",
       "body": "Ethvert operativsystem, inkludert Windows og macOS med Docker Desktop.",
-      "after": "Åpne http://localhost:25564. Første kjøring guider deg gjennom systemkontroll, tidssone og oppretting av administratorkonto."
+      "after": "Åpne http://localhost:25564. Første kjøring guider deg gjennom en systemkontroll, din tidssone, og opprettelse av administratorkontoen."
     },
     "next": "Neste steg",
-    "nextBody": "Kom-i-gang-guiden dekker førstegangs oppsett, oppretting av din første server, og hvor alt befinner seg.",
-    "nextCta": "Les kom-i-gang-guiden",
+    "nextBody": "Kom-i-gang-guiden dekker førstegangsoppsett, opprettelse av din første server, og hvor alt befinner seg.",
+    "nextCta": "Les kom i gang",
     "compose": "Last ned docker-compose.yml",
     "windows": "Merknader for Windows",
     "windowsItems": [
       "Docker Desktop må kjøre før du starter eller oppretter servere.",
-      "Del prosjektdrevverket ditt med Docker Desktop (Innstillinger, Ressurser, Fil-deling) slik at bind-monteringer fungerer.",
+      "Del prosjektdisken din med Docker Desktop (Innstillinger, Ressurser, Fil-deling) slik at bind-monteringer fungerer.",
       "Docker-imaget er rettet mot Linux-verter; på Windows og macOS, kjør panelet fra kildekode."
     ],
-    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []],
+    "options": {
+      "title": "Installasjonsvalg",
+      "intro": "Linux-installasjonsprogrammet tar sine valg etter bash -s --, slik at de fungerer også gjennom pipen. Kjør det igjen med de samme valgene for å oppgradere; din datamappe, .env og compose-redigeringer beholdes.",
+      "items": {
+        "port": "Server panelet på en annen port.",
+        "proxy": "Lytt kun på 127.0.0.1, for en omvendt proxy med TLS foran.",
+        "tag": "Fest en utgivelse i stedet for å følge den nyeste.",
+        "dir": "Installer et annet sted enn /opt/msm.",
+        "uninstall": "Fjern panelet og behold dataene. Gjennom en pipe er det ingen tastatur for å svare på spørsmålet, så legg til --yes; legg også til --purge for å slette datamappen.",
+        "help": "Alle valg, med standardverdi."
+      }
+    }
   },
   "faq": {
     "title": "Ofte stilte spørsmål",
     "items": [
       {
         "q": "Er den virkelig gratis?",
-        "a": "Ja. Panelet har MIT-lisens og bruker ingen betalte tjenester. Alt kjører på din maskin."
+        "a": "Ja. Panelet er lisensiert under MIT og bruker ingen betalte tjenester. Alt kjører på din maskin."
       },
       {
         "q": "Fungerer den på en Raspberry Pi eller en annen ARM-maskin?",
@@ -264,12 +292,16 @@
         ]
       },
       {
-        "q": "Hvordan flytter jeg panelet til en ny maskin?",
-        "a": "Kopier data-mappen. Den inneholder databasen, hver servers verden, sikkerhetskopier og mod-biblioteket. Start panelet på den nye maskinen og pek den mot den mappen."
+        "q": "Hvordan flytter jeg panelet mitt til en ny maskin?",
+        "a": "Kopier datamappen. Den inneholder databasen, hver servers verden, sikkerhetskopier og mod-biblioteket. Start panelet på den nye maskinen og pek den mot den mappen."
       },
       {
         "q": "Kan flere personer administrere servere?",
-        "a": "Ja. Panelet har roller som admin, operatør og seer, og hver konto kan aktivere tofaktorautentisering."
+        "a": "Ja. Panelet har roller som administrator, operatør og seer, og hver konto kan aktivere tofaktorautentisering."
+      },
+      {
+        "q": "Hvordan blir venner utenfor hjemmet mitt med?",
+        "a": "Videresend serverens spillport, fra 25565 og oppover, på ruteren din til maskinen som kjører den, eller bruk en tunnel hvis internettleverandøren din ikke tillater portvideresending. Serverens fane for Invitasjoner viser adressen du skal dele og skriver invitasjonsteksten for deg. Hold panelets egen port lukket."
       },
       {
         "q": "Må den være eksponert mot internett?",
@@ -281,15 +313,20 @@
         "pills": ["geyser", "floodgate"]
       },
       {
+        "q": "Er den laget med AI?",
+        "a": "Delvis, og åpent. Mesteparten av koden er skrevet med Claude Code, og vedlikeholderen designer, gjennomgår og tester hver funksjon. AI-erklæringen i depotet beskriver hvordan."
+      },
+      {
         "q": "Hvor får jeg hjelp?",
-        "a": "Discord-serveren har et støtteforum og ekte mennesker. Feil og funksjonsønsker går til GitHub issues."
+        "a": "Discord-serveren har et støtteforum og ekte mennesker. Feil og funksjonsforespørsler går til GitHub issues."
       }
     ]
   },
   "changelog": {
     "title": "Endringslogg",
     "intro": "Hver utgivelse, nyeste først. Utgivelsesnotater publiseres på engelsk.",
-    "releases": "Alle utgivelser på GitHub"
+    "releases": "Alle utgivelser på GitHub",
+    "feed": "Utgivelsesstrøm (Atom)"
   },
   "community": {
     "title": "Kom og si hei",
@@ -306,32 +343,38 @@
     "releases": "Utgivelser",
     "contributing": "Bidra",
     "license": "Lisens",
-    "notAffiliated": "Ikke et offisielt Minecraft-produkt. Ikke godkjent av eller assosiert med Mojang eller Microsoft."
+    "notAffiliated": "Ikke et offisielt Minecraft-produkt. Ikke godkjent av eller assosiert med Mojang eller Microsoft.",
+    "serverTypes": "Serveryper",
+    "guides": "Veiledninger",
+    "compare": "Sammenlign",
+    "roadmap": "Veikart",
+    "ai": "Hvordan AI brukes",
+    "conduct": "Etiske retningslinjer"
   },
   "meta": {
     "home": {
-      "title": "Gratis selv-hostet kontrollpanel for Minecraft-servere",
-      "description": "Kjør vanilla og modifiserte Minecraft-servere fra nettleseren din. Docker-basert, modpacks festet til eksakte versjoner, sikkerhetskopier, tidsplaner, live kart, spilleranalyse. Gratis, åpen kildekode, oppe og kjører i tre trinn."
+      "title": "Gratis selv-hostet kontrollpanel for Minecraft-server",
+      "description": "Kjør vanilla og modifiserte Minecraft-servere fra nettleseren din med et gratis, selv-hostet Docker-panel: forhåndsvalgte modpacks, sikkerhetskopier, tidsplaner og et live kart."
     },
     "features": {
-      "title": "Funksjoner",
-      "description": "Alle funksjoner i Minecraft Server Manager: containeriserte servere, fem mod-registre, nedlastinger med kontrollsumverifisering, sikkerhetskopier som er trygge for lagring, tidsplaner, maler, krasjdiagnostikk, live kart, roller og tofaktorautentisering."
+      "title": "Funksjoner for Minecraft-serverpanel",
+      "description": "Alle funksjoner i Minecraft Server Manager: Docker-servere, fem mod-registre, verifiserte nedlastinger, sikkerhetskopier, tidsplaner, krasjanalyse, et live kart og 2FA."
     },
     "screenshots": {
-      "title": "Skjermbilder",
-      "description": "Skjermbilder av Minecraft Server Manager-panelet på skrivebord og telefon: dashbord, veiviser, konsoll, mods, verdener, sikkerhetskopier, tidsplaner og mer."
+      "title": "Skjermbilder av Minecraft-serverpanel",
+      "description": "Skjermbilder av Minecraft Server Manager-panelet på datamaskin og telefon: dashbord, veiviser, konsoll, mods, verdener, sikkerhetskopier, tidsplaner og mer."
     },
     "install": {
-      "title": "Installer",
-      "description": "Installer Minecraft Server Manager med Docker i tre kommandoer, eller fra kildekode på Windows, macOS og Linux."
+      "title": "Installer et Minecraft-serverpanel med Docker",
+      "description": "Installer Minecraft Server Manager med Docker med tre kommandoer, eller fra kildekode på Windows, macOS og Linux."
     },
     "faq": {
-      "title": "Ofte stilte spørsmål",
-      "description": "Svar om kostnad, støttede servertyper, ARM-støtte, migrering, roller og eksponering mot internett."
+      "title": "Ofte stilte spørsmål om Minecraft-serverpanel",
+      "description": "Svar om kostnad, støttede servertyper, Raspberry Pi og ARM, flytting til en ny maskin, roller, Bedrock-spillere og eksponering av panelet til internett."
     },
     "changelog": {
-      "title": "Endringslogg",
-      "description": "Utgivelsesnotater for hver versjon av Minecraft Server Manager."
+      "title": "Endringslogg og utgivelsesnotater",
+      "description": "Utgivelsesnotater for hver versjon av Minecraft Server Manager, det gratis selv-hostede kontrollpanelet for Minecraft-server."
     },
     "notFound": {
       "title": "Side ikke funnet",
@@ -345,26 +388,80 @@
   },
   "langNotice": "Denne siden vises på engelsk inntil oversettelsen er klar.",
   "tutorial": {
-    "title": "Klar på tre steg",
-    "intro": "Velg hvordan du vil kjøre panelet. Fyll inn de to feltene, så skriver alle kommandoene under seg selv for din maskin.",
+    "title": "Klar på minutter",
+    "intro": "Velg maskinen din og lim inn kommandoene. Avansert har alle andre måter å kjøre panelet på, med kommandoer omskrevet for din egen mappe og adresse.",
+    "modes": {
+      "simple": "Enkel",
+      "advanced": "Avansert"
+    },
+    "simple": {
+      "linux": {
+        "label": "Linux",
+        "steps": [
+          {
+            "title": "Kjør installasjonsprogrammet",
+            "body": "Fungerer på enhver Linux-maskin med et 64-biters OS, fra en VPS til en Raspberry Pi 4 eller 5. Det installerer Docker hvis det mangler, setter opp panelet i /opt/msm, og starter det. Kjør det igjen senere for å oppgradere."
+          },
+          {
+            "title": "Åpne panelet",
+            "body": "Installasjonsprogrammet skriver ut adressen og en engangs oppsett-PIN. Åpne adressen i en nettleser, skriv inn PIN-koden, og opprett administratorkontoen din."
+          }
+        ]
+      },
+      "windows": {
+        "label": "Windows",
+        "steps": [
+          {
+            "title": "Installer Docker Desktop, Node.js, Git og pnpm",
+            "body": "Én linje hver i PowerShell. Start Docker Desktop når det er installert og la det kjøre."
+          },
+          {
+            "title": "Hent panelet og start det",
+            "body": "Åpne en ny terminal slik at den finner verktøyene du nettopp installerte."
+          },
+          {
+            "title": "Åpne panelet",
+            "body": "Første gangs kjøring guider deg gjennom en systemkontroll, tidssonen din, og oppretting av administratorkontoen."
+          }
+        ]
+      },
+      "macos": {
+        "label": "macOS",
+        "steps": [
+          {
+            "title": "Installer Docker Desktop, Node.js, Git og pnpm",
+            "body": "Med Homebrew. Start Docker Desktop når det er installert og la det kjøre."
+          },
+          {
+            "title": "Hent panelet og start det",
+            "body": "Installasjonstrinnet bygger også panelet. Det er ingenting å kompilere."
+          },
+          {
+            "title": "Åpne panelet",
+            "body": "Første gangs kjøring guider deg gjennom en systemkontroll, tidssonen din, og oppretting av administratorkontoen."
+          }
+        ]
+      }
+    },
+    "advancedIntro": "Fyll inn de to feltene, og hver kommando nedenfor skriver seg selv om for maskinen din.",
     "dataDir": "Datamappe på verten",
-    "dataDirHint": "Absolutt sti. Verdener, sikkerhetskopier, mods og databasen ligger her.",
+    "dataDirHint": "Absolutt sti. Verdener, sikkerhetskopier, mods og databasen ligger alle her.",
     "host": "Vertsnavn eller IP",
     "hostHint": "Hvor du vil åpne panelet fra en nettleser.",
     "then": "Åpne deretter panelet",
     "copy": "Kopier",
     "copied": "Kopiert!",
-    "firstRun": "Første gangs kjøring guider deg gjennom en systemkontroll, din tidssone og oppretting av administratorkontoen.",
+    "firstRun": "Første gangs kjøring guider deg gjennom en systemkontroll, tidssonen din, og oppretting av administratorkontoen.",
     "tabs": {
       "compose": {
         "label": "Docker Compose",
         "steps": [
           {
             "title": "Opprett datamappen",
-            "body": "Én mappe inneholder alt panelet eier."
+            "body": "Én mappe holder alt panelet eier."
           },
           {
-            "title": "Last ned compose-filen og pek den mot mappen",
+            "title": "Last ned compose-filen og pek den mot den mappen",
             "body": "DATA_DIR_HOST må være den absolutte stien på verten, fordi Docker monterer den fra vertens perspektiv."
           },
           {
@@ -403,7 +500,7 @@
           },
           {
             "title": "Start panelet",
-            "body": "Som standard lytter den kun på localhost. Sett PANEL_HOST=0.0.0.0 for å nå den fra andre maskiner i nettverket ditt."
+            "body": "Som standard lytter den kun på localhost. Sett PANEL_HOST=0.0.0.0 for å nå den fra andre maskiner på nettverket ditt."
           }
         ]
       },
@@ -411,8 +508,8 @@
         "label": "PM2 / systemd",
         "steps": [
           {
-            "title": "Start fra en kildekodeinstallasjon",
-            "body": "Kjør dette fra den klonede mappen. PM2 starter apper med Node-versjonen som startet daemonen, så fest tolkeren."
+            "title": "Start fra en kildeinstallasjon",
+            "body": "Kjør dette fra den klonede mappen. PM2 starter apper med Node-versjonen som startet daemonen, så fest tolken."
           },
           {
             "title": "Lagre prosesslisten og aktiver oppstart",
@@ -436,5 +533,1650 @@
     "checksums": "Kontrollsummer",
     "integrations": "Integrasjoner",
     "keyless": "nøkkel-løs"
+  },
+  "landing": {
+    "breadcrumb": "Brødsmuler",
+    "install": "Installer panelet",
+    "docs": "Les dokumentasjonen",
+    "related": "Les mer",
+    "open": "Åpne",
+    "docsGuides": "Flere veiledninger i dokumentasjonen",
+    "docsGuidesIntro": "Korte, praktiske svar på spørsmålene servereiere oftest stiller, holdt ved siden av dokumentasjonen."
+  },
+  "serversHub": {
+    "meta": {
+      "title": "Minecraft-servertyper: Paper, Fabric, Forge",
+      "description": "Kjør Paper, Purpur, Fabric, Quilt, Forge, NeoForge, vanilla, eller en komplett modpack fra ett selv-hostet panel. Velg servertype og se hva du får."
+    },
+    "eyebrow": "Alle servertyper",
+    "title": "Ett panel for alle typer Minecraft-servere",
+    "intro": "Plugins, mods, det uendrede spillet, eller en hel modpack. Velg hva du vil kjøre, så håndterer panelet Java-versjonen, nedlastingene og fastlåsingene for deg.",
+    "pills": [
+      "vanilla",
+      "paper",
+      "purpur",
+      "fabric",
+      "quilt",
+      "forge",
+      "neoforge",
+      "packs-curseforge",
+      "packs-modrinth",
+      "ftb",
+      "gtnh"
+    ],
+    "cards": {
+      "serverPaper": "Paper- og Purpur-plugin-servere, med plugins fra fire registre og spillere som kobler seg til med en umodifisert klient.",
+      "serverFabric": "Fabric- og Quilt-servere for lettvekts, raskt oppdaterte mods, med en versjonssjekk før hver Minecraft-oppgradering.",
+      "serverForge": "Forge og NeoForge for tungvekts mods, fra 1.7.10-klassikere til nåværende pakker, med riktig Java valgt for deg.",
+      "serverVanilla": "Det uendrede spillet, fra snapshots til gamle betaversjoner, med verdenskontroller, sikkerhetskopier og spillerstatistikk rundt det.",
+      "serverModpacks": "CurseForge, Modrinth, FTB og GT New Horizons-pakker låst til en eksakt versjon, pluss din egen zip eller .mrpack."
+    },
+    "sections": [
+      {
+        "title": "Usikker på hvilken?",
+        "body": "Velg basert på hva spillerne dine skal installere, ikke hva som høres raskest ut. Hvis ingen skal installere noe, kjør vanilla eller Paper. Hvis du installerer en publisert pakke, bestemmer pakken loaderen og Minecraft-versjonen for deg. Hvis du bygger en moddet server selv, dekker Fabric og NeoForge de fleste moderne mods, og Forge dekker de eldre epokene.",
+        "points": [
+          "Survival med venner, ingenting uvanlig: vanilla.",
+          "En offentlig server med ranger, krav og moderering: Paper.",
+          "En spesifikk pakke fra CurseForge eller Modrinth: hva enn pakken sier.",
+          "En moderne pakke du setter sammen selv: Fabric eller NeoForge.",
+          "En gammel pakke fra 1.7 til 1.12-æraen: Forge."
+        ]
+      }
+    ],
+    "related": ["guidesHub", "serverModpacks"],
+    "cta": {
+      "title": "Start din første server",
+      "body": "Installer panelet, åpne opprettingsveiviseren, og velg en servertype. Hver type er gratis og kjører på din egen maskin."
+    }
+  },
+  "serverPaper": {
+    "meta": {
+      "title": "Paper-serverpanel: plugins, selv-vert",
+      "description": "Et gratis, selv-vert Paper- og Purpur-serverpanel. Søk Hangar, SpigotMC og Modrinth etter plugins, verifiser hver nedlasting, og hold dem oppdatert."
+    },
+    "eyebrow": "Paper og Purpur",
+    "title": "Et selv-vert Paper-serverpanel med en ekte plugin-leser",
+    "intro": "Kjør Paper eller Purpur i sin egen Docker-container, finn plugins fra fire registre uten å forlate panelet, og la spillere koble seg til med spillet de allerede har.",
+    "pills": ["paper", "purpur", "hangar", "spigotmc", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Hvorfor Paper for en offentlig server",
+        "body": "Plugins kjører kun på serveren, så spillere kobler seg til med en vanlig, umodifisert klient og trenger aldri å installere noe. Alt som handler om regler, tillatelser, økonomi, landrettigheter, minispill eller moderering er en plugin, og det er derfor nesten alle offentlige servere kjører Paper. Den har år med ytelsesoptimalisering bak seg og en innstilling for nesten enhver oppførsel som har irritert en administrator. Purpur er en fork av Paper med enda flere brytere, inkludert spillbrytere. Begge er på Vanilla-fanen i opprettingsveiviseren.",
+        "points": [
+          "Spillere kobler seg til med det vanlige spillet. Ingen mods, ingen oppsett av launcher.",
+          "De fleste plugins fra Bukkit-tiden fungerer fortsatt.",
+          "Velg Purpur kun hvis du vil ha de ekstra bryterne; ellers Paper."
+        ]
+      },
+      {
+        "title": "Fire plugin-registre i ett søk",
+        "body": "Mods-fanen på en plugin-server søker i Hangar (Papers egen plugin-register), SpigotMC, Modrinth og CurseForge, filtrert etter serverens Minecraft-versjon. Kun CurseForge krever en API-nøkkel. Du kan også lime inn en prosjektside, et GitHub-repository eller en utgivelse, eller en direkte jar-lenke, og panelet finner riktig bygg. Hver register-nedlasting sjekkes mot den sterkeste kontrollsummen registeret publiserer før den når serveren, så en korrupt eller tuklet fil lander aldri.",
+        "pills": ["hangar", "spigotmc", "modrinth", "curseforge", "github-releases", "sha512", "sha256"],
+        "points": [
+          "Resultater som allerede er på serveren viser et \"Installert\"-merke.",
+          "Hvis en SpigotMC-ressurs er hostet et annet sted, sier panelet det tydelig og tilbyr å åpne siden og ta imot jar-filen som en opplasting i stedet.",
+          "Opplastede jar-filer identifiseres, slik at de beholder sitt ekte navn og forblir oppdaterbare."
+        ],
+        "shot": "mods"
+      },
+      {
+        "title": "Plugin-oppdateringer uten gjetting",
+        "body": "Hver plugin du legger til, sjekkes mot kilden daglig og ved behov. Oppdater én plugin, ignorer en versjon du ikke vil ha, eller trykk \"Oppdater alle\" for å anvende alt med én enkelt omstart. Hvis en oppdatering viser seg å være dårlig, tilbakestill til forrige bygg fra det delte biblioteket. Slå på \"Varsle meg\" i serverens oppdateringspolicy, og ventende oppdateringer vises som et merke og på Oppdateringer-siden.",
+        "points": [
+          "Daglige sjekker mot Hangar, SpigotMC, Modrinth, CurseForge og GitHub Releases.",
+          "En tilbakestilling setter forrige bygg tilbake fra biblioteket.",
+          "Hvis du fester et Paper-bygg, forteller Oppdateringer-siden deg når et nyere blir utgitt."
+        ]
+      },
+      {
+        "title": "Kjør den som en fellesskapsserver",
+        "body": "Paper-servere får de samme verktøyene som alle andre servere i panelet: en live konsoll med en RCON-kommandolinje, whitelist, ops, bans og IP-bans, teleporteringer og egendefinerte chat-kommandoer med nedkjøling. Gi personalet ditt kontoer med server-spesifikke tillatelser, slik at en moderator kan kjøre konsollen uten å berøre sikkerhetskopier eller filer. Ett klikk legger til et live kart med BlueMap, servert kun gjennom panelets egen innlogging, og Discord-varsler forteller deg når noe trenger din oppmerksomhet.",
+        "pills": ["bluemap", "discord"],
+        "shot": "console"
+      }
+    ],
+    "steps": {
+      "title": "Start en Paper-server i tre trinn",
+      "items": [
+        {
+          "title": "Velg Paper i veiviseren",
+          "body": "Åpne \"Opprett en server\", bli på Vanilla-fanen, velg Paper eller Purpur, og velg en Minecraft-versjon. En gratis spillport og fornuftig minne er fylt inn for deg."
+        },
+        {
+          "title": "Legg til dine plugins",
+          "body": "På serverens Mods-fane, søk i Hangar, SpigotMC, Modrinth eller CurseForge, eller lim inn en lenke. Installasjoner verifiseres mens de lastes ned."
+        },
+        {
+          "title": "Del adressen",
+          "body": "Oversiktsfanen viser adressen du skal gi til spillere. De kobler seg til med spillet de allerede har."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Spørsmål om Paper-server",
+      "items": [
+        {
+          "q": "Kan jeg legge til mods til en Paper-server?",
+          "a": "Nei. Paper laster plugins, som kun kjører på serveren. Mods endrer selve spillet og krever en mod-laster som Fabric eller NeoForge på både serveren og hver klient. Hvis du vil ha begge, kjør en moddet server og en plugin-server side om side i stedet for én hybrid."
+        },
+        {
+          "q": "Trenger jeg en SpigotMC-konto eller en API-nøkkel for å installere plugins?",
+          "a": "Nei. SpigotMC, Hangar og Modrinth fungerer alle uten nøkkel. Kun CurseForge ber om en API-nøkkel, som du legger til én gang under Innstillinger, API-nøkler."
+        },
+        {
+          "q": "En redstone-farm fra en video fungerer ikke på serveren min. Hvorfor?",
+          "a": "Paper endrer noe vanilla-oppførsel som standard i ytelsens navn. Det er vanligvis grunnen, og det er vanligvis en innstilling i Papers konfigurasjon, som du kan redigere i serverens filbehandler."
+        },
+        {
+          "q": "Vil mine gamle Bukkit- og Spigot-plugins fortsatt fungere?",
+          "a": "De fleste av dem, ja. Paper er en fork av Spigot og beholder plugin API-et, så plugins skrevet for Bukkit og Spigot fungerer stort sett uendret. Sjekk hver plugins side for Minecraft-versjonene den støtter."
+        }
+      ]
+    },
+    "related": ["serverFabric", "serverVanilla", "guideMulti"],
+    "cta": {
+      "title": "Kjør din Paper-server hjemme",
+      "body": "Installer panelet på en hvilken som helst maskin med Docker, og opprett deretter en Paper-server fra veiviseren. Gratis, åpen kildekode, og din."
+    }
+  },
+  "serverFabric": {
+    "meta": {
+      "title": "Selv-hostet Fabric-server med mod-leser",
+      "description": "Host din egen Fabric- eller Quilt Minecraft-server. Søk i Modrinth og CurseForge, fest loader-versjonen, og sjekk hver mod før oppgradering."
+    },
+    "eyebrow": "Fabric og Quilt",
+    "title": "En selv-hostet Fabric-server som vet hva moddene dine støtter",
+    "intro": "Lag en Fabric- eller Quilt-server fra moddene du ønsker, behold loader-versjonen der du satte den, og gå kun til en ny Minecraft-versjon når hver mod kan følge med.",
+    "pills": ["fabric", "quilt", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Hvorfor Fabric",
+        "body": "Fabric er liten, følger nye Minecraft-versjoner innen dager, og har de fleste moderne ytelsesmods. Hvis målet ditt er en rask server med en håndfull «quality-of-life»-mods, er dette loaderen du bør velge. Nesten alle Fabric-mods trenger også Fabric API, som er en separat nedlasting du legger til som enhver annen mod. Quilt er en fork av Fabric som kjører de fleste Fabric-mods; velg den hvis du har en spesifikk grunn, ellers velg Fabric.",
+        "points": [
+          "Rask til å følge nye Minecraft-utgivelser.",
+          "Hjemmet til de fleste moderne ytelsesmods.",
+          "Quilt-servere ser Fabric-versjoner automatisk, siden Quilt kjører Fabric-mods."
+        ]
+      },
+      {
+        "title": "Start fra moddene du ønsker",
+        "body": "Veiviserens «From Mods»-fane velger loader, Minecraft-versjon og en loader-versjon: den siste, eller en spesifikk du fester. Du kan også gjøre det motsatt. Velg moddene først, og løseren foreslår den nyeste loaderen og Minecraft-versjonen som alle støtter, og installerer deretter settet når serveren opprettes.",
+        "points": [
+          "Fest en Fabric- eller Quilt-loader-versjon i stedet for å følge den siste.",
+          "«Updates»-siden tilbyr nyere versjoner for en festet loader.",
+          "Mod-leseren filtrerer etter loader, så en Forge .jar-fil kan ikke havne i en Fabric-server ved en feiltakelse."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "En versjonssjekk før hver oppgradering",
+        "body": "En Fabric-servers «Mods»-fane har en «Versions» underfane. Den sjekker hver installerte mod mot Modrinth og CurseForge og rapporterer den høyeste Minecraft-versjonen de alle har en versjon for, pluss en oversikt over hva hver nyere versjon ville etterlate. En nyere Minecraft-versjon tilbys kun når den sjekken støtter det, og aldri mens en .jar-fil ikke kan identifiseres.",
+        "pills": ["modrinth", "curseforge"]
+      },
+      {
+        "title": "Mods du kan stole på og angre",
+        "body": "Hver register-nedlasting verifiseres mot den sterkeste kontrollsummen registeret publiserer før den når serveren. Mods du legger til lever i et delt bibliotek, deduplisert etter sha256, så ti servere som kjører den samme modden lagrer den én gang. Oppdater en mod, ignorer en versjon, eller tilbakestill til forrige versjon når en oppdatering går galt. Importer en Modrinth .mrpack eller en zip med .jar-filer, og hver .jar-fil identifiseres og sjekkes mot serveren før noe installeres.",
+        "pills": ["mrpack", "zip", "sha512", "sha256"],
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Start en Fabric-server i tre trinn",
+      "items": [
+        {
+          "title": "Velg Fabric på «From Mods»-fanen",
+          "body": "Velg Fabric eller Quilt, en Minecraft-versjon, og den siste loader-versjonen eller en festet en."
+        },
+        {
+          "title": "Søk og legg til mods",
+          "body": "Søk i Modrinth eller CurseForge, legg til Fabric API, og legg til resten. Hver nedlasting verifiseres."
+        },
+        {
+          "title": "Inviter spillerne dine",
+          "body": "«Invites»-fanen lager en kopieringsklar invitasjon og en klient .mrpack av moddene du la til, med serveren din allerede i serverlisten i spillet."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Spørsmål om Fabric-server",
+      "items": [
+        {
+          "q": "Trenger spillere å installere de samme moddene?",
+          "a": "Ja, for enhver mod som legger til innhold. Mods endrer selve spillet, så klienten må laste de samme. «Invites»-fanen bygger en klient .mrpack av moddene du la til, med serveren din allerede i serverlisten i spillet, som spillere importerer inn i en launcher som Prism eller Modrinth App."
+        },
+        {
+          "q": "Trenger jeg virkelig Fabric API?",
+          "a": "Nesten alltid. Nesten alle Fabric-mods er avhengige av den, og den er en separat nedlasting. Legg den til fra mod-leseren som enhver annen mod."
+        },
+        {
+          "q": "Hvordan vet jeg at moddene mine vil fungere på neste Minecraft-versjon?",
+          "a": "Åpne serverens «Mods»-fane og deretter «Versions». Den viser den høyeste Minecraft-versjonen hver installerte mod har en versjon for, og hva en nyere ville etterlate."
+        },
+        {
+          "q": "En mod-oppdatering ødela serveren. Kan jeg gå tilbake?",
+          "a": "Ja. Tilbakestill modden fra raden dens på «Mods»-fanen, og forrige versjon kommer tilbake fra det delte biblioteket."
+        }
+      ]
+    },
+    "related": ["serverForge", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Host din Fabric-server selv",
+      "body": "Installer panelet, åpne «From Mods»-fanen, og velg moddene dine. Ingen abonnement og ingen grenser for hvor mange servere du kjører."
+    }
+  },
+  "serverForge": {
+    "meta": {
+      "title": "Kontrollpanel for modded Forge og NeoForge-servere",
+      "description": "Kjør din egen modded Minecraft-server med Forge eller NeoForge. Riktig Java velges for deg, loader-bygg kan festes, og krasj navngir sine mistenkte."
+    },
+    "eyebrow": "Forge og NeoForge",
+    "title": "Et kontrollpanel for modded Forge-servere som velger riktig Java for deg",
+    "intro": "Fra 1.7.10-klassikere til nåværende NeoForge-pakker, opprett serveren, juster minnet, og finn modden bak en krasj uten å lese en stack trace linje for linje.",
+    "pills": ["forge", "neoforge", "curseforge", "modrinth"],
+    "sections": [
+      {
+        "title": "Forge eller NeoForge?",
+        "body": "NeoForge er der det gamle Forge-økosystemet nå gjør sitt arbeid for nåværende versjoner. Det skilte lag fra Forge under 1.20.1, og de fleste store pakker bygget for 1.20.2 og senere retter seg mot den, så start en ny tungvekts-server på NeoForge. Forge eier fortsatt fortiden: alt fra 1.7.10, 1.12.2 og 1.16.5-æraene er Forge, og det er en stor del av de mest elskede pakkene. Mods for én loader kjører ikke på den andre, og en 1.20.1 NeoForge-pakke kjører ikke på 1.20.1 Forge.",
+        "points": [
+          "Ny tungvekts-server: NeoForge.",
+          "1.7.10, 1.12.2 eller 1.16.5-æra: Forge.",
+          "En publisert pakke: hva enn pakken lister, nøyaktig."
+        ]
+      },
+      {
+        "title": "Riktig Java, Hver Gang",
+        "body": "Minecrafts Java-krav flytter seg med spillet, og feil versjon gir deg en lite hjelpsom UnsupportedClassVersionError i stedet for en klar melding. Gamle pakker trenger virkelig Java 8, og nåværende versjoner trenger 21 eller nyere. Opprettingsveiviseren leser Minecraft-versjonen du velger og velger kjøretiden selv, så feilmatching skjer aldri ved et uhell. Oppgradering av en pakke løser Java på nytt hvis den nye versjonen trenger en annen.",
+        "points": ["1.16.5 og tidligere: Java 8.", "1.18 til 1.20.4: Java 17.", "1.20.5 til 1.21: Java 21."]
+      },
+      {
+        "title": "Minne Justert for Modded",
+        "body": "Hver server har to tall: Java heap og containerens minnegrense. Java trenger minne utover heapen, omtrent 1,5 til 2 GB på en stor modpack, og en container uten spillerom blir drept i det øyeblikket Java strekker seg etter det. Veiviseren setter grensen 50 prosent over heapen, og panelet nekter en containergrense som ikke er over heapen. En «kitchen-sink»-pakke med 150 til 300 mods ønsker en 6 til 8 GB heap.",
+        "points": [
+          "En server som stoppes for å ha gått tom for minne, registreres nøyaktig slik i historikken.",
+          "Sett en mindre initial heap for å se minnebruk følge reell bruk."
+        ]
+      },
+      {
+        "title": "Krasj som Navngir Sine Mistenkte",
+        "body": "Krasjrapporter plukkes opp automatisk og parses til et sammendrag på én linje med unntaket og moddene som mest sannsynlig ligger bak. Åpne den innebygde viseren, kopier stack tracen, eller, etter en eksplisitt bekreftelse, del den til mclo.gs og få dens automatiserte innsikt: kjente problemer med foreslåtte løsninger, vist rett i panelet. Automatisk omstart ved krasj prøver igjen med økende ventetid, og hopper over krasj som trenger en løsning først, som feil Java eller å gå tom for minne.",
+        "pills": ["mclogs"],
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Start en Forge-server i Tre Steg",
+      "items": [
+        {
+          "title": "Velg Loader og Versjon",
+          "body": "På veiviserens «From Mods»-fane, velg Forge eller NeoForge, Minecraft-versjonen, og den siste loader-bygget eller et festet."
+        },
+        {
+          "title": "Gi Den Nok Minne",
+          "body": "Sett Java heap for størrelsen på modlisten din. Containergrensen følger, 50 prosent over den."
+        },
+        {
+          "title": "Legg til Mods eller Importer en Zip",
+          "body": "Søk på CurseForge og Modrinth, eller importer en CurseForge-eksport eller en zip med jar-filer. Hver jar identifiseres og sjekkes mot serveren først."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Spørsmål om Forge-servere",
+      "items": [
+        {
+          "q": "Kan jeg fortsatt kjøre en 1.12.2 eller 1.7.10-pakke?",
+          "a": "Ja. Velg versjonen og Forge i veiviseren, og panelet kjører den på Java 8, som disse versjonene trenger. GT New Horizons, 1.7.10 ekspertpakken, installeres fra Modpacks-siden med sitt eget Java-valg."
+        },
+        {
+          "q": "Hvor mye minne trenger en Forge-server?",
+          "a": "En lett pakke med 40 til 80 mods kjører bra på en 4 GB heap i en 6 GB container. En pakke med 150 til 300 mods ønsker 6 til 8 GB heap og omtrent 10 GB for containeren."
+        },
+        {
+          "q": "Kan jeg feste et spesifikt Forge-bygg?",
+          "a": "Ja. Veiviserens loader-byggvelger tar det siste eller et spesifikt bygg, og Oppdateringer-siden tilbyr nyere bygg for et festet uten å bruke dem på egen hånd."
+        },
+        {
+          "q": "Serveren min krasjet ved oppstart. Hvor skal jeg se?",
+          "a": "Åpne Overvåking og deretter Historikk. Krasjrapportkortet lister unntaket og de mistenkte moddene, og Analyser kjører mclo.gs innsikt for kjente problemer og løsninger."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "serverFabric", "guideHome"],
+    "cta": {
+      "title": "Kjør Din Moddede Server Selv",
+      "body": "Installer panelet på en maskin med nok minne, og opprett deretter en Forge- eller NeoForge-server fra veiviseren."
+    }
+  },
+  "serverVanilla": {
+    "meta": {
+      "title": "Kontrollpanel for Vanilla Minecraft-server, selv-hostet",
+      "description": "Host din egen vanilla Minecraft-server: alle versjoner fra gamle betaer til siste snapshot, med verdensstyring, daglige sikkerhetskopier og spillerstatistikk."
+    },
+    "eyebrow": "Spillet slik det er",
+    "title": "En vanilla Minecraft-server med alt rundt håndtert",
+    "intro": "Behold spillet nøyaktig slik Mojang leverer det, og få sikkerhetskopier, verktøy for verden, moderering og spillerstatistikk fra panelet i stedet for fra plugins.",
+    "pills": ["vanilla", "docker"],
+    "sections": [
+      {
+        "title": "Alle versjoner du ønsker",
+        "body": "Velg den siste utgivelsen, et snapshot, eller en spesifikk versjon, inkludert gamle betaer og alfaer. Panelet velger Java-kjøretidsmiljøet den versjonen trenger, laster ned imaget, og starter serveren fra det. Ingen installerer noe for å bli med: spillere kobler til med spillet de allerede har.",
+        "points": [
+          "Siste utgivelse, snapshots, eller en spesifikk versjon.",
+          "Gamle betaer og alfaer for en nostalgiserver.",
+          "Riktig Java valgt for hver versjon."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Verdensstyring uten å skrive kommandoer",
+        "body": "Verdensstyringen er tilgjengelig på hver fane på en server: klokken i spillet, været, og vanlige gamerules som brytere, med alle andre regler ett klikk unna. Verdensfanen tilbakestiller den aktive verdenen med et nytt, beholdt, eller egendefinert frø, og tilbyr en sikkerhetskopi først. Dupliser en verden, behold ferdige verdener i verdensbiblioteket, eller last opp en verden du allerede har som et .zip- eller .tar-arkiv.",
+        "points": [
+          "Tilbakestill med et nytt frø, samme frø, eller et du skriver inn.",
+          "Et verdensbibliotek delt av hver server.",
+          "Rediger server.properties i nettleseren; verdien på disken vinner."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Sikkerhetskopier fra dag én",
+        "body": "Hver nye server får automatisk en daglig sikkerhetskopieringsplan. Sikkerhetskopier er trygge: panelet pauser lagring, tømmer verden, ziper den, og sjekker at arkivet kan åpnes før det lagres. Gjenoppretting setter serveren tilbake nøyaktig slik den var, og tar først en sikkerhetskopi av de nåværende dataene.",
+        "shot": "backups"
+      },
+      {
+        "title": "Moderering og statistikk uten plugins",
+        "body": "Vanilla har ikke noe tillatelsessystem, så panelet gir deg modereringsverktøyene i stedet: hvitliste, ops på alle nivåer, bann og IP-bann, og teleporteringer, live mens serveren kjører og direkte inn i filene mens den er stoppet. Spillets egen statistikk leses inn i spillerprofiler og en poengtavle med jevne mellomrom: spilletid, dødsfall, drap, blokker og diamanter utvunnet, og avstand reist. En aktivitetslinje holder chat, innlogginger, dødsfall og prestasjoner søkbare."
+      }
+    ],
+    "faq": {
+      "title": "Spørsmål om Vanilla-server",
+      "items": [
+        {
+          "q": "Kan jeg kjøre en snapshot-server?",
+          "a": "Ja. Velg et snapshot som Minecraft-versjon i veiviseren. Ta en sikkerhetskopi før hver nye snapshot, fordi snapshot-verdener ikke kan åpnes i en eldre versjon."
+        },
+        {
+          "q": "Kan en vanilla-server ha et live kart?",
+          "a": "Ikke med vanilla. BlueMap trenger en plugin eller mod-laster for å kjøre. En Paper-server får en med et enkelt klikk, og spillere kobler fortsatt til med en umodifisert klient."
+        },
+        {
+          "q": "Kan jeg tilbakestille verden, men beholde frøet?",
+          "a": "Ja. Tilbakestill den aktive verdenen fra Verdens-fanen og velg å beholde det nåværende frøet. Panelet tilbyr først en sikkerhetskopi av den gamle verdenen."
+        },
+        {
+          "q": "Hvor mange spillere kan en vanilla-server håndtere?",
+          "a": "Vanilla er tregere med mange spillere enn Paper. For en vennegjeng fungerer det fint. For en travel offentlig server, kjører Paper det samme spillet med mange års ytelsesoptimalisering."
+        }
+      ]
+    },
+    "related": ["serverPaper", "guidePi", "guideHome"],
+    "cta": {
+      "title": "Start en Vanilla-server",
+      "body": "Installer panelet, velg Vanilla i veiviseren, og del adressen. Gratis og åpen kildekode."
+    }
+  },
+  "serverModpacks": {
+    "meta": {
+      "title": "Minecraft modpack-server: installasjon med ett klikk",
+      "description": "Kjør en Minecraft modpack-server fra CurseForge, Modrinth, FTB eller GT New Horizons. Pakker forblir festet, og hver oppdatering kommer med en sikkerhetskopi og mulighet for tilbakerulling."
+    },
+    "eyebrow": "Modpack-servere",
+    "title": "En Minecraft modpack-server som aldri oppgraderer bak ryggen din",
+    "intro": "Installer en pakke ved navn, fest den til en eksakt versjon, og oppgrader kun når du velger det, med en sikkerhetskopi først og tilbakerulling med ett klikk hvis den nye versjonen ikke starter.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"],
+    "sections": [
+      {
+        "title": "Alle store pakke-kilder",
+        "body": "Siden Modpacks og fanen From Modpack i veiviseren installerer pakker fra CurseForge og Modrinth ved å søke på navnene deres, FTB-pakker med deres pakke- og versjons-ID-er, og GT New Horizons fra sin egen utgivelsesindeks. Ikke en publisert pakke i det hele tatt? Last opp en Modrinth .mrpack, en CurseForge modpack-eksport, eller en hvilken som helst zip-fil med mod-jar-filer. Manifestet, eller et flertall av de identifiserte jar-filene, fyller inn lastemodulen og Minecraft-versjonen.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export", "zip"],
+        "points": [
+          "CurseForge trenger en API-nøkkel, som legges til én gang under Settings, API Keys.",
+          "Mods hvis forfattere ikke tillater automatiserte nedlastinger, listes med en lenke og en opplastingsplass i stedet for å feile installasjonen.",
+          "GT New Horizons får sin Java-versjon og fornuftige minimumskrav for minne og disk satt for deg."
+        ]
+      },
+      {
+        "title": "Festet til en eksakt versjon",
+        "body": "Når du velger en pakke, løser panelet den eksakte versjonen, registrerer den og installerer den. En omstart kan aldri stille oppgradere pakken. Du velger hvordan hver server varsles om nye versjoner: Manual Only lar den være helt i fred, Notify Me viser et merke og lister den på Updates-siden, og Auto-Update bruker pakkeoppdateringer etter den daglige sjekken gjennom den samme beskyttede banen. Oppdateringer som ville flytte en verden til en annen Minecraft-versjon, blir alltid hoppet over, fordi konvertering av en verden er din avgjørelse.",
+        "points": [
+          "Manual Only er standard.",
+          "Servere som sporer stabile utgivelser, blir aldri tilbudt en beta.",
+          "Auto-Update krysser aldri en Minecraft-versjon."
+        ]
+      },
+      {
+        "title": "Oppgraderinger med en vei tilbake",
+        "body": "Oppgradering av en pakke er én handling. Panelet tar en sikkerhetskopi, stopper serveren på en ryddig måte, bytter den festede versjonen, bygger serveren på nytt med riktig Java for den nye versjonen, og overvåker den første oppstarten, med et generøst tidsvindu for store pakker som laster ned gigabyte ved første oppstart. Hvis den nye versjonen ikke starter, rull tilbake med ett klikk.",
+        "shot": "backups"
+      },
+      {
+        "title": "Dine egne mods på toppen",
+        "body": "Mods du legger til en pakkeserver, lever i et delt bibliotek og lenkes inn i serveren, slik at de overlever pakkeoppdateringer. Deaktiver en pakkemod du ikke vil ha, legg til en ytelsesmod som pakken mangler, og behold begge gjennom neste oppgradering. Spillere installerer den samme pakken i samme versjon fra CurseForge eller Modrinth, og Invites-fanen gir deg en invitasjon klar til å limes inn med adresse og versjon.",
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Start en Modpack-server i tre trinn",
+      "items": [
+        {
+          "title": "Finn pakken",
+          "body": "Søk på CurseForge eller Modrinth på Modpacks-siden, eller last opp en .mrpack, en CurseForge-eksport, eller en zip-fil med jar-filer."
+        },
+        {
+          "title": "Velg versjon og minne",
+          "body": "Velg den eksakte pakkeversjonen. Gi Java-heapen nok plass til antall mods; containergrensen følger."
+        },
+        {
+          "title": "Opprett og se den starte",
+          "body": "Panelet installerer pakken, fester den og starter serveren. Den første oppstarten av en stor pakke tar tid; konsollen viser hver linje."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Spørsmål om Modpack-servere",
+      "items": [
+        {
+          "q": "Vil omstart av serveren oppdatere modpacken min?",
+          "a": "Nei. Pakken er festet til den eksakte versjonen du installerte. Den endres bare når du oppgraderer den, eller etter den daglige sjekken hvis du har satt serveren til Auto-Update."
+        },
+        {
+          "q": "Hvorfor trenger CurseForge en API-nøkkel når Modrinth ikke gjør det?",
+          "a": "CurseForge svarer bare på forespørsler som inneholder en nøkkel. Du kan få en fra CurseForge-konsollen og legge den til én gang under Settings, API Keys. Modrinth fungerer uten."
+        },
+        {
+          "q": "Noen mods i pakken min kunne ikke lastes ned. Hva nå?",
+          "a": "Forfatterne deres tillater ikke automatiserte nedlastinger. Panelet lister hver enkelt med en lenke til siden sin og en opplastingsplass, slik at du laster ned jar-filen i nettleseren din og slipper den inn."
+        },
+        {
+          "q": "Kan jeg installere en FTB-pakke?",
+          "a": "Ja, via FTB API med pakkens numeriske ID og en eksplisitt versjons-ID. Panelet sjekker ennå ikke FTB-pakker for oppdateringer."
+        }
+      ]
+    },
+    "related": ["guideFriends", "serverForge", "serverFabric"],
+    "cta": {
+      "title": "Kjør din Modpack-server hjemme",
+      "body": "Installer panelet, åpne Modpacks-siden, og velg en pakke. Den forblir på versjonen du valgte til du sier noe annet."
+    }
+  },
+  "guidesHub": {
+    "meta": {
+      "title": "Guider: host din egen Minecraft-server",
+      "description": "Guider for å hoste din egen Minecraft-server: en modpack-server for venner, en Raspberry Pi, en hjemme-PC, bytte fra betalt hosting, og mange servere på én maskin."
+    },
+    "eyebrow": "Guider",
+    "title": "Guider for å hoste din egen Minecraft-server",
+    "intro": "Praktiske veiledninger for oppsett folk faktisk bruker, fra en Raspberry Pi på hylla til en maskin full av servere.",
+    "cards": {
+      "guideFriends": "Host en CurseForge- eller Modrinth-modpack for vennene dine, med riktig minne og en invitasjon de kan følge.",
+      "guidePi": "Gjør en Raspberry Pi 4 eller 5 om til en Minecraft-server med et web-panel, og dimensjoner den ærlig.",
+      "guideHome": "Host en Minecraft-server hjemme på Windows, macOS eller Linux, og la venner koble seg til trygt.",
+      "guideHosting": "Flytt din verden, plugins og mods vekk fra en betalt host uten å miste et eneste inventar.",
+      "guideMulti": "Kjør flere Minecraft-servere på én maskin uten at porter, minne eller disk kommer i veien for hverandre."
+    },
+    "related": ["serversHub"],
+    "cta": {
+      "title": "Trenger du noe som ikke dekkes her?",
+      "body": "Dokumentasjonen går dypere inn på hver funksjon, og Discord har ekte mennesker som driver servere."
+    }
+  },
+  "guideFriends": {
+    "meta": {
+      "title": "Host en modpack-server for venner",
+      "description": "Host en CurseForge- eller Modrinth-modpack-server for vennene dine på din egen maskin: velg pakken, gi den nok minne, inviter venner og ta sikkerhetskopier."
+    },
+    "eyebrow": "Veiledning for modpack-server",
+    "title": "Slik hoster du en modpack-server for vennene dine",
+    "intro": "Din egen maskin kan hoste pakken du spiller med vennene dine. Installer panelet, opprett serveren fra pakken, gi den minnet den trenger, og send venner en invitasjon de kan følge.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "docker"],
+    "sections": [
+      {
+        "title": "Velg pakken fra veiviseren",
+        "body": "Siden Modpacks og fanen Fra modpack i opprettingsveiviseren søker etter CurseForge og Modrinth etter navn; veiviseren tar også FTB-pakker etter ID, eller en pakkeeksport du allerede har. Velg versjonen vennene dine vil spille. Panelet installerer nøyaktig den versjonen og holder den der: en omstart oppgraderer aldri pakken bak ryggen din. CurseForge trenger en gratis API-nøkkel, lagt til én gang under Innstillinger, API-nøkler; Modrinth trenger ingen.",
+        "points": [
+          "Søk i CurseForge og Modrinth, eller last opp en .mrpack, en CurseForge-eksport eller en zip-fil med mod-jar-filer.",
+          "Pakkens versjon er festet, så alle spiller den samme.",
+          "Java velges for pakkens Minecraft-versjon."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "mrpack", "cf-export"],
+        "shot": "modpacks"
+      },
+      {
+        "title": "Gi den nok minne",
+        "body": "Modpacks trenger langt mer minne enn en vanlig server, og en server har to tall: Java-heapen, og containergrensen rundt den, som må være større fordi Java bruker minne utover heapen sin. En lett pakke med 40 til 80 mods ønsker en 4 GB heap i en 6 GB container; en stor «kitchen-sink»-pakke 6 til 8 GB heap i 10 GB. Panelet forteller en server som er stoppet for å ha gått tom for minne, adskilt fra en krasj, slik at du vet hvilken innstilling du skal endre.",
+        "points": [
+          "Still inn minnet i veiviseren, og endre det senere i serverens innstillinger.",
+          "La minne være igjen for operativsystemet og panelet.",
+          "Fanen Overvåking viser hva serveren faktisk bruker."
+        ]
+      },
+      {
+        "title": "Send venner en invitasjon de kan følge",
+        "body": "Venner installerer samme pakke med samme versjon i sin launcher: CurseForge-appen, Modrinth-appen eller Prism Launcher. Serverens Invitasjons-fane, under Innstillinger, kopierer adressen som skal deles og en invitasjonstekst med Minecraft-versjonen. Venner på nettverket ditt bruker den lokale adressen. For venner andre steder, videresend spillporten på ruteren din, eller bruk en tunnel når leverandøren din ikke tillater det.",
+        "points": [
+          "Invitasjons-fanen tilbyr den lokale adressen, din offentlige adresse og en egendefinert.",
+          "Hvis hvitlisten er på, legg til hver venn på Spiller-fanen først.",
+          "For en server bygget fra mods du valgte, lager Invitasjons-fanen også en klient .mrpack som installerer dem og legger til serveren i flerspillerrlisten."
+        ],
+        "pills": ["mrpack"]
+      },
+      {
+        "title": "Hold verden trygg",
+        "body": "Hver nye server får en daglig sikkerhetskopieringsplan. Før en pakkeoppdatering tar panelet en ny sikkerhetskopi, bygger serveren på den nye versjonen og overvåker den første oppstarten; hvis den ikke starter, rulles den tilbake med ett klikk. Mods du la til på toppen av pakken forblir gjennom oppdateringer.",
+        "points": [
+          "Daglige sikkerhetskopier fra første dag.",
+          "Pakk-oppdateringer og nedgraderinger med en sikkerhetskopi og en tilbakerulling.",
+          "Krasjrapporter oppdaget, forklart og delbare."
+        ],
+        "shot": "backups"
+      }
+    ],
+    "steps": {
+      "title": "Host din modpack-server",
+      "items": [
+        {
+          "title": "Installer panelet",
+          "body": "På Linux setter installasjonsprogrammet på én linje opp Docker og panelet. På Windows og macOS, kjør panelet med Node.js ved siden av Docker Desktop."
+        },
+        {
+          "title": "Legg til en CurseForge API-nøkkel",
+          "body": "Kun for CurseForge-pakker: legg til en gratis nøkkel under Innstillinger, API-nøkler."
+        },
+        {
+          "title": "Opprett serveren fra pakken",
+          "body": "Åpne fanen Fra modpack i veiviseren, finn pakken, velg versjonen og minnet, og opprett serveren."
+        },
+        {
+          "title": "Inviter vennene dine",
+          "body": "Start serveren, åpne Innstillinger, Invitasjoner, og send invitasjonsteksten. Venner installerer samme pakkversjon i sin launcher og kobler seg til."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Spørsmål om modpack-server",
+      "items": [
+        {
+          "q": "Hvor mye RAM trenger en modpack-server?",
+          "a": "Omtrent 6 GB for en lett pakke med 40 til 80 mods og 10 GB for en stor pakke med 150 til 300, hver med en mindre Java-heap inni. Ekspertpakker som GregTech New Horizons krever 16 GB. La det være rom for operativsystemet også."
+        },
+        {
+          "q": "Trenger vennene mine samme modpack-versjon?",
+          "a": "Ja. Serveren kjører én festet pakkversjon, og en klient med forskjellige versjoner av mods blir vanligvis nektet eller krasjer. Fortell venner versjonen som vises på serverens Oversikt-fane."
+        },
+        {
+          "q": "Kan venner koble seg til uten portvideresending?",
+          "a": "Ja, hvis de er på nettverket ditt. Fra andre steder, enten videresend spillporten på ruteren din eller bruk en tunnel-tjeneste, som også fungerer når leverandøren din blokkerer portvideresending."
+        },
+        {
+          "q": "Hva skjer når pakken får en oppdatering?",
+          "a": "Med policyen «Varsle meg» viser Oppdateringer-siden det. Å bruke den tar en sikkerhetskopi, bygger serveren på nytt og overvåker den første oppstarten, og en tilbakerulling er ett klikk. Vennene dine oppdaterer deretter pakken i sin launcher også."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "guideHome", "guidePi"],
+    "cta": {
+      "title": "Spill din pakke på din egen server",
+      "body": "Gratis, åpen kildekode, og ingen konto hos noen. Installer panelet og opprett serveren fra pakken i veiviseren."
+    }
+  },
+  "guidePi": {
+    "meta": {
+      "title": "Minecraft-server på Raspberry Pi med web-panel",
+      "description": "Sett opp en Minecraft-server på Raspberry Pi med et gratis web-panel. Hvilken maskinvare du trenger, hvordan du installerer den med én kommando, og hvordan du dimensjonerer minnet."
+    },
+    "eyebrow": "Veiledning for Raspberry Pi",
+    "title": "Kjør en Minecraft-server på Raspberry Pi med et ekte web-panel",
+    "intro": "En Raspberry Pi 4 eller 5 er et stillegående, energieffektivt hjem for en liten Minecraft-server. Her er hva du bør kjøpe, hvordan du installerer panelet med én kommando, og hvor langt du kan presse den.",
+    "pills": ["arm64", "linux", "docker", "paper", "fabric"],
+    "sections": [
+      {
+        "title": "Hva du trenger",
+        "body": "Panelet og serverbildet er publisert for arm64, så en 64-biters Raspberry Pi kjører dem som enhver annen Linux-maskin. Minne er den viktigste begrensningen: en ren eller Paper-server for opptil ti spillere trenger en 2 GB Java heap på en 4 GB maskin, og en lett modpack trenger en 4 GB heap på en 6 GB maskin. Det plasserer en 4 GB Pi i nedre sjikt og en 8 GB Pi i det komfortable midtsjiktet.",
+        "points": [
+          "En Raspberry Pi 4 eller 5 med 4 GB minne eller mer. 8 GB hvis du vil ha mods.",
+          "Et 64-biters operativsystem, som 64-biters Raspberry Pi OS.",
+          "En SSD over USB i stedet for SD-kortet. Verdener leses og skrives konstant, og en verden på treg lagring hakker under lasting av chunks.",
+          "En kablet nettverkstilkobling hvis du kan."
+        ]
+      },
+      {
+        "title": "Velg en servertype som passer til Pi-en",
+        "body": "Minecraft bryr seg langt mer om hvor rask én kjerne er enn om hvor mange det er, og en Pi's kjerner er beskjedne. Paper kjører det samme spillet som vanilla med år med ytelsesoptimalisering, og spillere kobler seg fortsatt til med en umodifisert klient. Hvis du vil ha mods, passer Fabric med en håndfull ytelses- og livskvalitetsmods bedre enn en stor Forge-pakke. En 200-mods «kitchen-sink»-pakke er ikke en jobb for en Pi.",
+        "pills": ["paper", "purpur", "fabric"],
+        "points": [
+          "Liten gruppe, uendret spill: Paper.",
+          "Noen få mods: Fabric.",
+          "Senk visningsavstanden; å gå fra 12 til 8 chunks sparer mye minne og merkes knapt i spill."
+        ]
+      },
+      {
+        "title": "Følg med på den",
+        "body": "Serverens overvåkingsfane viser «ticks per second» og millisekunder per tick, slik at du kan se når Pi-en henger etter. Minnemåleren viser hva containeren faktisk bruker. Java reserverer hele heapen sin på forhånd som standard; hvis du foretrekker å se minnet følge reell bruk, sett en mindre initial heap i serverens ressurskort. Daglige sikkerhetskopier er aktivert fra dag én.",
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Installer panelet på en Raspberry Pi",
+      "items": [
+        {
+          "title": "Flash et 64-biters OS",
+          "body": "Installer 64-biters Raspberry Pi OS (eller en annen 64-biters Linux), start fra SSD-en hvis du kan, og oppdater systemet."
+        },
+        {
+          "title": "Kjør én-linjes installasjonsprogrammet",
+          "body": "Installasjonsprogrammet på installasjonssiden installerer Docker hvis det mangler, setter opp panelet i /opt/msm, starter det og venter til det svarer. Det oppdager arm64 automatisk."
+        },
+        {
+          "title": "Fullfør oppsettet i nettleseren",
+          "body": "Åpne Pi-ens adresse på port 25564 fra en annen datamaskin. Fordi panelet er tilgjengelig fra nettverket ditt, ber oppsettet om en 6-sifret PIN-kode, som installasjonsprogrammet skriver ut for deg."
+        },
+        {
+          "title": "Opprett en liten server",
+          "body": "Velg Paper eller Fabric i veiviseren. Standardminnet tilpasses Pi-ens RAM; la det være rom for systemet og andre tjenester."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Spørsmål om Raspberry Pi",
+      "items": [
+        {
+          "q": "Vil en Raspberry Pi 3 fungere?",
+          "a": "Den er ikke egnet. En Pi 3 har 1 GB minne, mens selv en liten vanilla- eller Paper-server trenger en 2 GB heap på en 4 GB maskin. Bruk en Pi 4 eller 5 med 4 GB eller mer."
+        },
+        {
+          "q": "Trenger jeg et 64-biters operativsystem?",
+          "a": "Ja. Panelbildet og installasjonsprogrammet er bygget for arm64 og amd64, og installasjonsprogrammet stopper på enhver annen arkitektur."
+        },
+        {
+          "q": "Kan jeg kjøre en stor modpack på en Pi?",
+          "a": "Store pakker krever 6 til 8 GB Java heap og rundt 10 GB minne totalt, mer enn noen Pi har. Hold deg til Paper eller et lett Fabric-oppsett."
+        },
+        {
+          "q": "Hvordan kobler spillere utenfor hjemmet mitt seg til?",
+          "a": "Videresend spillporten, 25565 som standard over TCP og UDP, fra ruteren din til Pi-en. Videresend aldri panelets port eller RCON-portene; nå panelet via et VPN eller en omvendt proxy med TLS i stedet."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverPaper", "serverFabric"],
+    "cta": {
+      "title": "Gjør din Pi om til en server",
+      "body": "Én kommando installerer alt. Panelet er gratis, åpen kildekode, og kjører utelukkende på Pi-en."
+    }
+  },
+  "guideHome": {
+    "meta": {
+      "title": "Host en Minecraft-server hjemme, trinn for trinn",
+      "description": "Host en Minecraft-server hjemme på Windows, macOS eller Linux med et gratis webpanel. Installer det, hold panelet privat, og la venner bli med trygt."
+    },
+    "eyebrow": "Veiledning for hjemmeserver",
+    "title": "Host en Minecraft-server hjemme på Windows, macOS eller Linux",
+    "intro": "Enhver datamaskin som kan kjøre Docker kan hoste serverne dine. Installer panelet, hold det privat, åpne kun spillporten, og vennene dine kan bli med hvor som helst fra.",
+    "pills": ["windows", "macos", "linux", "docker", "nodejs"],
+    "sections": [
+      {
+        "title": "To måter å installere på",
+        "body": "På en Linux-maskin gjør en-linjes installasjonsprogrammet alt: det installerer Docker hvis det mangler, kjører panelet som en container, og starter det igjen etter en omstart. På Windows og macOS kjører du panelet direkte med Node.js 24 ved siden av Docker Desktop. Panelet skriver ut en klar melding og stopper hvis Node.js-versjonen din er for gammel, og hvis Docker ikke kjører ennå, får du fortsatt hele panelet; servere starter så snart Docker er oppe.",
+        "pills": ["linux", "docker", "windows", "macos", "nodejs"],
+        "points": [
+          "Linux: installasjonsprogrammet, eller compose-filen i Portainer eller Dockge.",
+          "Windows: Docker Desktop med WSL2-backend, deretter panelet fra kildekode.",
+          "macOS: Docker Desktop, deretter panelet fra kildekode.",
+          "Under PM2 eller systemd overlever panelet omstarter."
+        ]
+      },
+      {
+        "title": "Hold panelet privat",
+        "body": "Spillere snakker aldri med panelet. De kobler seg til spillporten. En fersk installasjon fra kildekode svarer kun på maskinen den kjører på, på localhost port 25564. For å nå det fra en annen datamaskin i hjemmet ditt, sett det til å lytte på nettverket ditt; oppsettet ber deretter om en engangs-PIN, slik at en fremmed som når porten først ikke kan kreve administratorkontoen. Aldri videresend panelets port til internett. For å administrere servere borte fra hjemmet, bruk en VPN, en SSH-tunnel eller en omvendt proxy med TLS.",
+        "points": [
+          "Kun localhost som standard.",
+          "En oppsett-PIN når panelet er tilgjengelig fra nettverket.",
+          "Tofaktorautentisering for hver konto."
+        ]
+      },
+      {
+        "title": "La venner bli med",
+        "body": "Hver server får en spillport, som starter på 25565 og teller oppover. På ruteren din, videresend den porten, over både TCP og UDP, til datamaskinen som kjører serverne. La konsollportene for ekstern tilgang, 1000 over hver spillport, være stengt: panelet når dem innenfra containeren og trenger aldri dem åpne. Gi spillere et vertsnavn du kontrollerer i stedet for hjemmeadressen din, slik at en adresseendring er en DNS-endring og ikke en melding til hver spiller.",
+        "points": [
+          "Videresend kun spillporter, TCP og UDP.",
+          "Hold RCON og panelets port lukket.",
+          "Oversikt-fanen viser adressen som skal deles."
+        ],
+        "shot": "overview"
+      },
+      {
+        "title": "Få det til å oppføre seg som en server",
+        "body": "En hjemmedatamaskin som sover tar med seg serveren din, så slå av hvilemodus på maskinen som hoster den. Kryss av for Start ved paneloppstart i en servers innstillinger, og den kommer tilbake med panelet. Automatisk omstart ved krasj bringer en krasjet server tilbake med økende ventetid mellom forsøk. Daglige sikkerhetskopier planlegges for hver nye server, og tidsplaner kan starte servere på nytt i rolige perioder.",
+        "shot": "schedules"
+      }
+    ],
+    "steps": {
+      "title": "Host din første server hjemme",
+      "items": [
+        {
+          "title": "Installer Docker",
+          "body": "Docker Engine på Linux, eller Docker Desktop på Windows og macOS. På Windows, del stasjonen som inneholder panelet med Docker Desktop."
+        },
+        {
+          "title": "Installer og åpne panelet",
+          "body": "Følg installasjonssiden for ditt system, deretter åpne panelet i en nettleser. Oppsettet sjekker Docker, oppretter administratorkontoen din, og spør om tidssonen din."
+        },
+        {
+          "title": "Opprett en server",
+          "body": "Veiviseren foreslår en gratis port og minne som passer maskinen din. Velg en servertype og trykk opprett."
+        },
+        {
+          "title": "Videresend spillporten",
+          "body": "Videresend serverens spillport på ruteren din, TCP og UDP, og send venner adressen fra Oversikt-fanen."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Spørsmål om hjemmehosting",
+      "items": [
+        {
+          "q": "Kan jeg hoste på samme PC som jeg spiller på?",
+          "a": "Ja, så lenge den har minne til begge deler. Gi serveren sin heap pluss ekstra plass for Java, og la nok være igjen for spillklienten. En vanilla-server for noen få venner trenger omtrent 4 GB til seg selv."
+        },
+        {
+          "q": "Hvorfor kan venner på Wi-Fi bli med, men venner utenfor kan ikke?",
+          "a": "Spillporten er ikke videresendt på ruteren din, eller en brannmur blokkerer den. Videresend serverens spillport over TCP og UDP til host-maskinen, og tillat den i maskinens brannmur."
+        },
+        {
+          "q": "Kan jeg kjøre panelets Docker-image på Windows eller macOS?",
+          "a": "Containerinstallasjonen er rettet mot Linux-verter. På Windows og macOS, kjør panelet fra kildekode med Node.js 24 ved siden av Docker Desktop, som fungerer på samme måte når det er i gang."
+        }
+      ]
+    },
+    "related": ["guidePi", "guideMulti", "serverVanilla"],
+    "cta": {
+      "title": "Begynn å hoste hjemme",
+      "body": "Gratis, åpen kildekode, og ingen konto hos noen. Serverne dine bor i én mappe på din egen maskin."
+    }
+  },
+  "guideHosting": {
+    "meta": {
+      "title": "Forlat betalt Minecraft-hosting: flytt din verden",
+      "description": "Flytt en Minecraft-server fra en betalt vert: ta med de riktige filene, ta med verden og plugins til ditt eget kontrollpanel, behold hvert inventar, og behold adressen."
+    },
+    "eyebrow": "Migrasjonsveiledning",
+    "title": "Flytt din Minecraft-server fra betalt hosting",
+    "intro": "Ta med deg verden, plugins og mods hjem med hvert inventar intakt. Ta en status først, kopier hele servermappen, bygg den på nytt i ditt eget kontrollpanel, og først da pek spillere mot den.",
+    "pills": ["docker", "paper", "fabric", "forge", "packs-curseforge", "packs-modrinth"],
+    "sections": [
+      {
+        "title": "Ta status før du laster ned",
+        "body": "Skriv ned disse mens den gamle serveren fortsatt kjører. Hver av dem har avsluttet en migrering dårlig når den ble antatt i stedet for sjekket. Online-modus betyr mest: hvis den gamle serveren kjørte med den av og den nye kjører med den på, eller omvendt, får hver spiller en annen identitet og et helt nytt, tomt inventar.",
+        "points": [
+          "Den nøyaktige Minecraft-versjonen og lasten. 1.20.1 NeoForge er ikke 1.20.1 Forge.",
+          "Liste over mods eller plugins, med versjoner.",
+          "Nivånavnet fra server.properties. Verdensmappen kalles ofte ikke world.",
+          "Online-modus, på eller av.",
+          "Alt som lever utenfor servermappen, for eksempel en plugins database."
+        ]
+      },
+      {
+        "title": "Ta hele mappen, ikke bare verden",
+        "body": "Bruk vertens filbehandler eller nedlastingsalternativ og ta hele serverkatalogen. Skaff deg selve plugin- og mod-jar-filene, ikke en liste over navn: versjonene betyr noe, og den nyeste er en annen fil neste måned. Last ned sikkerhetskopiene dine også. En sikkerhetskopi som bare eksisterer inne i kontrollpanelet du forlater, er ikke en sikkerhetskopi du eier. Stopp serveren ordentlig før den endelige nedlastingen slik at spillet tømmer verden til disk."
+      },
+      {
+        "title": "Bygg den på nytt i ditt eget kontrollpanel",
+        "body": "Opprett en server av samme type og nøyaktig samme versjon. Ta deretter med bitene. Verdenssiden tar imot verden din som et .zip- eller .tar-arkiv, finner verden inni den automatisk, og installerer den på serveren, og tar en sikkerhetskopi av den gjeldende først. På en plugin- eller mod-server, importer en zip av dine jar-filer: hver av dem blir identifisert, vurdert mot serveren, og installert hvis den passer. Konfigurasjoner og resten legges inn via filbehandleren, som redigerer og laster opp rett i nettleseren. Hvis den gamle serveren kjørte en publisert pakke, installer den samme pakken på samme versjon i stedet.",
+        "pills": ["zip", "mrpack", "cf-export"],
+        "points": [
+          "Last opp verden finner verden inne i arkivet ditt.",
+          "Importer Zip identifiserer hver jar-fil og sjekker den mot serveren.",
+          "Filbehandleren håndterer konfigurasjonsfiler, whitelister og ops-filer."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Behold adressen, behold spillerne",
+        "body": "Hvis spillere kobler seg til en ren IP-adresse, gjør hver bevegelse at de redigerer serverlisten sin, og noen gjør det aldri. Bruk et vertsnavn du kontrollerer og pek det mot din nye maskin. Å flytte blir da en DNS-endring. Senk postens tid til live en dag før byttet slik at endringen sprer seg raskt. En SRV-post lar spillere skrive inn et rent domene selv når serveren kjører på en annen port, det samme som verter gjør for å dele ut en spilleadresse."
+      }
+    ],
+    "steps": {
+      "title": "Byttet, i rekkefølge",
+      "items": [
+        {
+          "title": "Test på en privat port",
+          "body": "Start den nye serveren på en port spillere ikke kjenner, koble deg til selv, og sjekk en base du kjenner, inventaret ditt, og at hver plugin eller mod lastet inn."
+        },
+        {
+          "title": "Endelig kopi",
+          "body": "Annonser en omstart, stopp den gamle serveren ordentlig, last ned verden en gang til, og installer den kopien slik at de nyeste endringene følger med."
+        },
+        {
+          "title": "Bytt port og adresse",
+          "body": "Flytt serveren til dens offentlige port med Game Port-kortet, og pek deretter vertsnavnet ditt mot den nye maskinen."
+        },
+        {
+          "title": "Behold den gamle en stund",
+          "body": "Si opp den gamle planen først etter noen dager. Hold den stoppet, slik at ingen bygger på den forlatte kopien."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Migrasjonsspørsmål",
+      "items": [
+        {
+          "q": "Vil spillerne beholde inventarene sine?",
+          "a": "Ja, så lenge online-modus er den samme på begge serverne og du flyttet hele verdensmappen. Spillerdata lever inne i verden, nøkkelen er hver spillers identitet, og den identiteten endres hvis online-modus gjør det."
+        },
+        {
+          "q": "Verten min lar meg bare laste ned verden. Er det nok?",
+          "a": "For vanilla, stort sett. For en plugin- eller mod-server trenger du også jar-filene i deres nøyaktige versjoner, fordi verden ikke vil lastes riktig uten moddene som laget den. Spør verten din om hele serverkatalogen."
+        },
+        {
+          "q": "Hva erstatter kontrollpanelet fra vertens kontrollpanel?",
+          "a": "Konsollen, filbehandleren, sikkerhetskopier, tidsplaner, spilleradministrasjon, plugin- og mod-installasjoner, og modpack-installasjoner, pluss ting verter ofte tar ekstra betalt for, som flere servere eller flere sikkerhetskopieringsplasser. Grensen er din egen maskinvare."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverModpacks", "guideMulti"],
+    "cta": {
+      "title": "Ta med deg serveren hjem",
+      "body": "Installer kontrollpanelet, opprett en server som matcher din gamle, og last opp verden din. Gratis, åpen kildekode, og din til å beholde."
+    }
+  },
+  "guideMulti": {
+    "meta": {
+      "title": "Kjør flere Minecraft-servere på én maskin",
+      "description": "Kjør flere Minecraft-servere på én maskin: automatiske porter, minne per server, CPU- og diskbegrensninger, delte mods, og ett dashbord for hele flåten."
+    },
+    "eyebrow": "Veiledning for flere servere",
+    "title": "Kjør flere Minecraft-servere på én maskin, ryddig",
+    "intro": "En overlevelsesverden, en kreativ bygge-server og en modpack for helgen, alt på samme maskin. Hver får sin egen container, sin egen port og sine egne grenser, og du ser dem alle på ett dashbord.",
+    "pills": ["docker", "paper", "fabric", "forge", "vanilla"],
+    "sections": [
+      {
+        "title": "Porter sortert for deg",
+        "body": "Spillporter deles ut etter «først ledig», tellende opp fra 25565, med konsollporten 1000 over hver av dem. Ti servere bruker spillporter fra 25565 til 25574 og holder RCON i sin egen blokk, slik at du kan åpne ett sammenhengende spillområde i brannmuren din uten å noen gang eksponere RCON. En port regnes som opptatt hvis en annen server bruker den, en Docker-container på maskinen publiserer den, eller systemet rapporterer den som opptatt. Flytt en server senere med «Game Port»-kortet, og panelet sjekker den nye porten før det lagrer.",
+        "points": [
+          "Ett spill- og RCON-par per server, tildelt automatisk.",
+          "«Next Free Port» velger den laveste ledige.",
+          "Åpne kun spillområdet. RCON forblir lukket."
+        ]
+      },
+      {
+        "title": "Grenser slik at én server ikke kan sulte ut resten",
+        "body": "Hver server er sin egen Docker-container med en CPU-grense, en Java heap og en hard minnegrense over den. Docker kan ikke begrense diskbruken til en mappe, så panelet gjør det: hver server har en diskkvote, og en handling som ville ført en server forbi den, som å installere en mod eller laste opp en verden, blokkeres til plassen er frigjort. Slå på «Stop the Server When Over Quota» og en server som vokser mer enn 10 prosent forbi kvoten sin, stoppes og noteres i historikken.",
+        "points": [
+          "CPU, heap og minnegrense per server.",
+          "Panel-håndhevede diskkvoter.",
+          "Standardinnstillinger for nye servere tilpasses maskinens minne."
+        ],
+        "shot": "storage"
+      },
+      {
+        "title": "Del det som kan deles",
+        "body": "Mods du legger til lagres én gang i et delt bibliotek, dedupliseres med sha256, og lenkes inn i hver server som bruker dem, slik at ti servere som kjører samme mod ikke lagrer den ti ganger. Verdener går inn i et verdensbibliotek som enhver server kan installere fra. En blueprint fanger hele oppskriften til en server som én enkelt .mcserver.zip, og Clone bruker den til å lage en identisk server med nye porter.",
+        "shot": "blueprints"
+      },
+      {
+        "title": "Ett syn på flåten",
+        "body": "Dashbordet viser hver server på et øyeblikk: status, minne, spillere online, oppdateringer som venter, og nylig aktivitet. Tagger organiserer serverlisten. Globale tidsplaner kjører omstarter, sikkerhetskopier eller kommandoer på tvers av servere, og «Updates»-siden samler det som er utdatert på tvers av flåten. Tillatelser per server lar en venn kjøre sin egen server i panelet uten å se din.",
+        "shot": "dashboard"
+      }
+    ],
+    "steps": {
+      "title": "Planlegg en maskin for flere servere",
+      "items": [
+        {
+          "title": "Legg sammen minnet",
+          "body": "Summer hver servers Java heap og dens «headroom», og la deretter rom for systemet. Servere som er stoppet bruker ikke minne, så en helgepakke koster ingenting på hverdager."
+        },
+        {
+          "title": "Sett fornuftige standardinnstillinger",
+          "body": "En administrator setter heap, diskkvote og CPU-grense som hver ny server starter med under «Settings», «Defaults for New Servers»."
+        },
+        {
+          "title": "Åpne ett portområde",
+          "body": "Åpne et spillportområde dimensjonert for serverne du planlegger å kjøre, over TCP og UDP. La RCON-blokken være lukket."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Spørsmål om flere servere",
+      "items": [
+        {
+          "q": "Hvor mange servere kan én maskin kjøre?",
+          "a": "Minne bestemmer det først. Legg sammen hver kjørende servers heap og dens «headroom»: en liten vanilla- eller Paper-server trenger omtrent 4 GB totalt, en lett modpack omtrent 6 GB. Stoppede servere koster ingenting."
+        },
+        {
+          "q": "Kan hver server ha egne administratorer?",
+          "a": "Ja. Tillatelser per server gir visning, makt, konsoll, spillere, innhold, sikkerhetskopier, filer, innstillinger og sletting separat for hver server, og en server kan skjules helt for en bruker."
+        },
+        {
+          "q": "Kan spillere bytte mellom serverne mine i spillet?",
+          "a": "Ikke gjennom selve panelet. Hver server har sin egen adresse og port. Å koble sammen servere slik at spillere beveger seg mellom dem i spillet krever en proxy-server, som du ville kjørt ved siden av dem."
+        }
+      ]
+    },
+    "related": ["guideHome", "serversHub", "guideHosting"],
+    "cta": {
+      "title": "Kjør hele flåten din fra ett sted",
+      "body": "Installer panelet én gang og legg til servere etter behov. Ingen avgifter per server og ingen instansgrenser."
+    }
+  },
+  "compareHub": {
+    "meta": {
+      "title": "Sammenligning av Minecraft Server Panel: Pterodactyl, AMP, Crafty",
+      "description": "En rettferdig sammenligning av gratis og betalte Minecraft serverpaneler: Pterodactyl, Crafty Controller, AMP, MCSManager og PufferPanel, ved siden av Minecraft Server Manager."
+    },
+    "eyebrow": "Sammenlign paneler",
+    "title": "Sammenligning av Minecraft Server Panel",
+    "intro": "Flere gode paneler kan kjøre en Minecraft-server. Slik skiller Minecraft Server Manager seg fra hver av dem, med tilfeller der et annet panel er det bedre valget.",
+    "cards": {
+      "comparePtero": "Et gratis panel for flere spill, bygget for hosting-selskaper, med en separat daemon på hver maskin. Sammenlign oppsettinnsats og Minecraft-funksjoner.",
+      "compareCrafty": "Et gratis Minecraft-panel skrevet i Python som kjører servere som vanlige prosesser. Sammenlign hvordan servere er isolert og hvordan modpacks kommer inn.",
+      "compareAmp": "Et kommersielt panel for hundrevis av spill, solgt i lisensnivåer. Sammenlign pris, instansgrenser og Minecraft-dybde.",
+      "compareMcsm": "Et gratis, distribuert panel for Minecraft og Steam-spill. Sammenlign arkitektur, Docker-bruk og modpack-håndtering.",
+      "comparePuffer": "Et gratis, lettvekts panel for mange spill og mange maskiner, med servere som prosesser eller containere. Sammenlign isolasjon, noder og Minecraft-dybde."
+    },
+    "sections": [
+      {
+        "title": "Hvordan disse sammenligningene er skrevet",
+        "body": "Hver fakta om et annet panel kommer fra prosjektets egen nettside, dokumentasjon eller repository, og hver side sier når den ble sjekket. Der vi ikke kunne bekrefte noe, utelot vi det i stedet for å gjette. Hvis et fakta har endret seg, gi oss beskjed på Discord eller GitHub, så fikser vi siden.",
+        "points": [
+          "Hver side lister opp hva det andre panelet gjør bedre.",
+          "Priser og versjoner er sitert med datoen de ble sjekket.",
+          "Minecraft Server Manager er ikke tilknyttet noen av disse prosjektene. Navnene deres tilhører eierne."
+        ]
+      },
+      {
+        "title": "Hva Minecraft Server Manager er bygget for",
+        "body": "Én eier, eller et lite team, som kjører Minecraft Java-servere på sin egen maskin. Hver server er en Docker-container med ressursbegrensning, hele panelet lever i én mappe, og Minecraft-delene som er vanskelige andre steder er innebygd: fastlåste modpacks med tilbakerulling, fem mod-registre i ett søk, krasjdiagnostikk, et kart med ett klikk og bærbare maler.",
+        "pills": ["paper", "purpur", "fabric", "forge", "neoforge", "quilt", "vanilla"]
+      }
+    ],
+    "faq": {
+      "title": "Spørsmål om valg av panel",
+      "items": [
+        {
+          "q": "Hvilket panel bør jeg velge for én enkelt Minecraft-server hjemme?",
+          "a": "Hvis du bare kjører Minecraft Java og ønsker modpacks, sikkerhetskopier og et live kart uten å sette dem sammen selv, er Minecraft Server Manager laget for det. Hvis du også hoster andre spill eller administrerer mange maskiner, passer et panel for flere spill som Pterodactyl, MCSManager eller AMP bedre."
+        },
+        {
+          "q": "Er Minecraft Server Manager virkelig gratis?",
+          "a": "Ja. Den har MIT-lisens, ingen betalt nivå og bruker ingen betalte tjenester. CurseForge-nedlastinger krever en CurseForge API-nøkkel, som du legger inn under Innstillinger."
+        },
+        {
+          "q": "Kan jeg flytte min eksisterende verden til Minecraft Server Manager?",
+          "a": "Ja. Last opp verdenen på Verdens-siden og installer den på en ny server, eller importer en modpack-eksport eller en zip-fil med mod-filer når du oppretter serveren."
+        }
+      ]
+    },
+    "related": ["serversHub", "guideHosting"],
+    "cta": {
+      "title": "Prøv det på din egen maskin",
+      "body": "Installer panelet i tre trinn og opprett din første server fra veiviseren. Hele panelet ditt forblir i én mappe som du kan kopiere hvor som helst."
+    },
+    "table": {
+      "title": "Alle paneler på et øyeblikk",
+      "columns": [
+        "",
+        "Minecraft Server Manager",
+        "Pterodactyl",
+        "Crafty Controller",
+        "AMP",
+        "MCSManager",
+        "PufferPanel"
+      ],
+      "rows": [
+        {
+          "label": "Pris",
+          "values": ["Gratis.", "Gratis.", "Gratis.", "Betalte lisensnivåer.", "Gratis.", "Gratis."]
+        },
+        {
+          "label": "Lisens",
+          "values": ["MIT.", "MIT.", "GPL-3.0.", "Kommersiell, lukket kildekode.", "Apache-2.0.", "Apache-2.0."]
+        },
+        {
+          "label": "Spill",
+          "values": [
+            "Minecraft Java Edition.",
+            "Mange, via egg.",
+            "Minecraft Java og Bedrock.",
+            "Mer enn 200.",
+            "Minecraft og Steam-spill.",
+            "Mange, via maler."
+          ]
+        },
+        {
+          "label": "Spillservere kjører som",
+          "values": [
+            "Docker-containere.",
+            "Docker-containere.",
+            "Prosesser på verten.",
+            "Prosesser, eller Docker-containere når de er aktivert.",
+            "Containere eller prosesser.",
+            "Prosesser eller containere."
+          ]
+        },
+        {
+          "label": "Flere maskiner",
+          "values": [
+            "Nei. Ett panel per maskin.",
+            "Ja, med Wings-noder.",
+            "Ingen eksterne noder i dokumentasjonen.",
+            "Profesjonell lisens og oppover.",
+            "Ja, med daemons.",
+            "Ja, med noder."
+          ]
+        },
+        {
+          "label": "Vertssystemer",
+          "values": [
+            "Linux, Windows, macOS.",
+            "Linux.",
+            "Linux, Windows, macOS.",
+            "Linux, Windows.",
+            "Linux, Windows, macOS.",
+            "Linux."
+          ]
+        }
+      ],
+      "note": "Fakta sjekket mot hvert prosjekts egen dokumentasjon, oktober og november 2026. Hver sammenligningsside har detaljene."
+    }
+  },
+  "comparePtero": {
+    "meta": {
+      "title": "Pterodactyl-alternativ for Minecraft-servere",
+      "description": "Minecraft Server Manager sammenlignet med Pterodactyl: én prosess og én mappe i stedet for et panel, daemon, database og Redis, med innebygde Minecraft-funksjoner."
+    },
+    "eyebrow": "Pterodactyl-alternativ",
+    "title": "Et Pterodactyl-alternativ bygget kun for Minecraft",
+    "intro": "Pterodactyl er et gratis, åpen kildekode-panel som kjører mange spill for mange maskiner. Minecraft Server Manager gjør ett spill på én maskin, så det krever langt mindre å sette opp og har innebygde Minecraft-verktøy.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Side om side",
+      "columns": ["", "Minecraft Server Manager", "Pterodactyl"],
+      "rows": [
+        {
+          "label": "Pris og lisens",
+          "values": ["Gratis, MIT.", "Gratis, MIT."]
+        },
+        {
+          "label": "Hva du installerer",
+          "values": [
+            "Én Node.js-prosess, eller én Docker-container.",
+            "Et PHP (Laravel)-panel med en React-frontend, pluss Wings-daemonen skrevet i Go på hver node."
+          ]
+        },
+        {
+          "label": "Database og hurtigbuffer",
+          "values": [
+            "Innebygd SQLite-fil inne i datamappen. Ingenting annet å kjøre.",
+            "MySQL 5.7.22+ eller MariaDB 10.2+, Redis, en webserver og Composer."
+          ]
+        },
+        {
+          "label": "Spillservere kjører som",
+          "values": ["Docker-containere med ressursbegrensning.", "Isolerte Docker-containere (Docker er påkrevd)."]
+        },
+        {
+          "label": "Vertssystemer",
+          "values": [
+            "Linux, Windows og macOS. Bildet er bygget for amd64 og arm64.",
+            "Kun Linux: Ubuntu, Debian og RHEL-familieutgivelser. Wings kjører ikke på Windows."
+          ]
+        },
+        {
+          "label": "Maskiner administrert",
+          "values": [
+            "Én. Panelet og Docker kjører på samme vert.",
+            "Mange. Ett panel styrer Wings-noder på mange maskiner."
+          ]
+        },
+        {
+          "label": "Spill",
+          "values": [
+            "Minecraft Java Edition. Bedrock-spillere kan bli med via Geyser.",
+            "Mange spill via \"eggs\", inkludert Minecraft, Rust, Terraria og ARK."
+          ]
+        }
+      ],
+      "note": "Fakta sjekket oktober 2026 mot hvert prosjekts egen dokumentasjon."
+    },
+    "sections": [
+      {
+        "title": "Oppsett uten en stabel å sette sammen",
+        "body": "Pterodactyls egen dokumentasjon kaller det et svært komplekst system med flere avhengigheter: PHP, en databaseserver, Redis, en webserver, en køarbeider og Wings på hver node. Den designen er det som lar det betjene hosting-selskaper. Minecraft Server Manager er én prosess som snakker med Docker-sokkelen din og holder alt, inkludert databasen, i én mappe. På Linux setter ett installasjonsskript det opp, og installerer Docker hvis det mangler.",
+        "points": [
+          "Ingen separat daemon, databaseserver eller hurtigbuffer å holde kjørende.",
+          "Kopier datamappen for å flytte hele panelet til en ny maskin.",
+          "Kjører naturlig på Windows og macOS ved siden av Docker Desktop."
+        ],
+        "pills": ["docker", "portainer", "dockge", "pm2"]
+      },
+      {
+        "title": "Hvor Minecraft Server Manager er sterkere for Minecraft",
+        "body": "Fordi det kun kjører Minecraft, vet panelet hva en modpack, en mod jar og en krasjrapport er. Verktøyene en Minecraft-eier griper etter er en del av panelet, ikke noe man må finne og koble til.",
+        "points": [
+          "Modpacks er festet til en nøyaktig versjon, og oppgraderinger tar en sikkerhetskopi først og ruller tilbake med ett klikk.",
+          "Ett søk på tvers av fem registre, filtrert til serverens lastelaster og Minecraft-versjon.",
+          "Hver nedlasting er sjekket med kontrollsum før den når serveren.",
+          "Krasj oppdages, parses og kan deles til mclo.gs med ett klikk.",
+          "Et BlueMap livekart med ett klikk, bak panelets egen innlogging.",
+          "Alle innstillinger i itzg-bildet er forklart på enkelt norsk i veiviseren."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Når Pterodactyl er det bedre valget",
+        "body": "Pterodactyl er modent, aktivt vedlikeholdt og støttet av hosting-selskaper. Hvis noe av dette beskriver deg, er det det sterkere valget.",
+        "points": [
+          "Du kjører servere på flere maskiner og vil ha ett panel for alle.",
+          "Du hoster andre spill enn Minecraft.",
+          "Du selger eller deler hosting med mange separate kunder og trenger den skalerbarheten.",
+          "Du kjører allerede Pterodactyl og dets eggs dekker det du trenger."
+        ]
+      },
+      {
+        "title": "En merknad om Pelican",
+        "body": "Pelican Panel er en fork av Pterodactyl, lisensiert AGPL-3.0 og fortsatt på utgivelseskandidatstadiet da denne siden ble sjekket. Den beholder panelet pluss Wings-designet, legger til SQLite og PostgreSQL som databasealternativer, og har en plugin-hub der en tredjeparts plugin søker gjennom CurseForge og Modrinth modpacks."
+      }
+    ],
+    "faq": {
+      "title": "Pterodactyl-spørsmål",
+      "items": [
+        {
+          "q": "Kan jeg flytte en server fra Pterodactyl til Minecraft Server Manager?",
+          "a": "Ja. Last ned serverens verden fra Pterodactyl, opprett en server av samme type og Minecraft-versjon i Minecraft Server Manager, last deretter opp verdenen på Verdens-siden og installer den på den serveren. For modifiserte servere, importer pakken eller din zip med mod jars når du oppretter den."
+        },
+        {
+          "q": "Trenger Minecraft Server Manager en databaseserver som MySQL?",
+          "a": "Nei. Den bruker SQLite-motoren som er innebygd i Node.js 24 og lagrer databasefilen i datamappen sammen med alt annet."
+        },
+        {
+          "q": "Kan Minecraft Server Manager administrere flere maskiner som Wings-noder?",
+          "a": "Nei. Den administrerer Docker-daemonen på maskinen den kjører på. For flere maskiner, kjør ett panel på hver, eller velg et panel med flere noder."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareMcsm", "guideMulti"],
+    "cta": {
+      "title": "Kjør Minecraft uten den ekstra stabelen",
+      "body": "Installer Minecraft Server Manager i tre trinn og opprett din første server i veiviseren."
+    }
+  },
+  "compareCrafty": {
+    "meta": {
+      "title": "Crafty Controller vs Minecraft Server Manager",
+      "description": "Crafty Controller og Minecraft Server Manager er begge gratis kontrollpaneler for Minecraft. Sammenlign hvordan servere isoleres, hvordan modpacks installeres, og hvor de passer inn."
+    },
+    "eyebrow": "Alternativ til Crafty Controller",
+    "title": "Crafty Controller vs Minecraft Server Manager",
+    "intro": "Begge er gratis, selv-hostede paneler laget for Minecraft. Crafty kjører hver server som en prosess på verten, skrevet i Python. Minecraft Server Manager kjører hver server i sin egen Docker-container og bygger modpacks, mod-søk og krasjverktøy inn i panelet.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Side om side",
+      "columns": ["", "Minecraft Server Manager", "Crafty Controller"],
+      "rows": [
+        {
+          "label": "Pris og lisens",
+          "values": ["Gratis, MIT.", "Gratis, GPL-3.0."]
+        },
+        {
+          "label": "Skrevet i",
+          "values": ["Node.js 24.", "Python 3.10 til 3.12."]
+        },
+        {
+          "label": "Spillservere kjører som",
+          "values": [
+            "Docker-containere med ressursbegrensninger.",
+            "Prosesser på verten. Panelet kan også kjøre i Docker."
+          ]
+        },
+        {
+          "label": "Docker",
+          "values": ["Kreves på verten.", "Valgfritt."]
+        },
+        {
+          "label": "Vertssystemer",
+          "values": [
+            "Linux, Windows og macOS. Bildet er bygget for amd64 og arm64.",
+            "Linux, Windows, macOS og Raspberry Pi OS, pluss guider for Docker, UnRAID og CasaOS. Bildet dekker amd64 og arm64."
+          ]
+        },
+        {
+          "label": "Utgaver",
+          "values": [
+            "Java Edition. Bedrock-spillere kan bli med via Geyser.",
+            "Java Edition fra 1.8 til den nyeste, og Bedrock."
+          ]
+        },
+        {
+          "label": "Modpacks",
+          "values": [
+            "CurseForge, Modrinth, FTB og GT New Horizons-pakker fra veiviseren, festet til en nøyaktig versjon.",
+            "FAQ-en beskriver import av en pakke som en zip, eller Modrinth-pakker via mrpack-install."
+          ]
+        },
+        {
+          "label": "Sikkerhetskopier, tidsplaner, roller, 2FA",
+          "values": [
+            "Ja: beholdning per server, cron-tidsplaner, tre roller med tillatelser per server, TOTP.",
+            "Ja: en sikkerhetskopihåndterer, en oppgaveplanlegger, brukerroller og TOTP pluss passordnøkler."
+          ]
+        }
+      ],
+      "note": "Fakta sjekket oktober 2026 mot hvert prosjekts egen dokumentasjon."
+    },
+    "sections": [
+      {
+        "title": "Containere i stedet for vertsprosesser",
+        "body": "I Minecraft Server Manager er hver server sin egen Docker-container basert på det velkjente itzg Minecraft-bildet, med egne minne- og CPU-grenser og en diskkvote som panelet håndhever. Én server kan ikke spise opp maskinens minne eller fylle disken, og gjenoppbygging av en server påvirker aldri de andre. Ulempen er at Docker må installeres på verten.",
+        "points": [
+          "Minne-, CPU- og diskbegrensninger per server.",
+          "Graceful RCON-stopp før containeren stoppes, og krasjdeteksjon med tilbaketrekking.",
+          "Java velges per server av bildet, så blandede Minecraft-versjoner fungerer bare."
+        ],
+        "pills": ["docker", "amd64", "arm64"],
+        "shot": "overview"
+      },
+      {
+        "title": "Hvor Minecraft Server Manager er sterkere",
+        "body": "Veiviseren installerer modpacks og mods for deg og holder dem festet, slik at en omstart aldri stille oppgraderer en pakke.",
+        "points": [
+          "Installer CurseForge, Modrinth, FTB og GT New Horizons-pakker fra veiviseren.",
+          "Importer en Modrinth .mrpack, en CurseForge-eksport eller din egen zip med jar-filer, med hver jar identifisert.",
+          "Søk i fem registre samtidig, filtrert til serverens lastemaskin og versjon.",
+          "Oppgraderinger tar en sikkerhetskopi først og ruller tilbake med ett klikk.",
+          "Ett-klikks BlueMap live kart og mclo.gs krasjdeling.",
+          "Bærbare blåkopier: eksporter en servers oppskrift og få den samme serveren hvor som helst."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"]
+      },
+      {
+        "title": "Når Crafty Controller er det bedre valget",
+        "body": "Crafty er moden, aktivt vedlikeholdt og kjører flere steder uten Docker.",
+        "points": [
+          "Du vil kjøre servere uten å installere Docker, for eksempel direkte på Windows, macOS eller en Raspberry Pi.",
+          "Du kjører Bedrock Dedicated Server selv, ikke bare Java med Geyser.",
+          "Du ønsker innlogging med passordnøkkel."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Spørsmål om Crafty Controller",
+      "items": [
+        {
+          "q": "Kan jeg flytte Crafty-serveren min til Minecraft Server Manager?",
+          "a": "Ja. Opprett en server med samme type og Minecraft-versjon, last deretter opp verdenen som en zip på Worlds-siden og installer den på den serveren. For en modifisert server, importer pakken din eller en zip med mod-jar-filer når du oppretter den."
+        },
+        {
+          "q": "Kjører Minecraft Server Manager på en Raspberry Pi?",
+          "a": "Ja, på et 64-biters OS med Docker. Panelbildet er publisert for arm64 så vel som amd64."
+        },
+        {
+          "q": "Hvorfor trenger Minecraft Server Manager Docker?",
+          "a": "Hver server kjører i sin egen container, som er hvordan den får ressursbegrensninger, en ren gjenoppbygging og riktig Java-versjon for hver Minecraft-versjon."
+        }
+      ]
+    },
+    "related": ["compareHub", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Se det med din egen server",
+      "body": "Installer panelet i tre trinn, og opprett deretter en server fra en modpack i veiviseren."
+    }
+  },
+  "compareAmp": {
+    "meta": {
+      "title": "Gratis AMP-alternativ for Minecraft-servere",
+      "description": "Minecraft Server Manager sammenlignet med AMP fra CubeCoders: et gratis, MIT-lisensiert panel for Minecraft uten instansgrenser, ved siden av et kommersielt panel for flere spill."
+    },
+    "eyebrow": "AMP-alternativ",
+    "title": "Et gratis AMP-alternativ for Minecraft",
+    "intro": "AMP fra CubeCoders er et kommersielt panel for en svært lang liste med spill, solgt i lisensnivåer. Minecraft Server Manager er gratis og åpen kildekode, kjører kun Minecraft, og har ingen grense for hvor mange servere du oppretter.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Side om side",
+      "columns": ["", "Minecraft Server Manager", "AMP"],
+      "rows": [
+        {
+          "label": "Pris",
+          "values": [
+            "Gratis. Ingen nivåer.",
+            "Standard 7,50 £ / 10 $, Profesjonell 15 £ / 30 $, Avansert 30 £ / 40 $, Enterprise på et variabelt abonnement."
+          ]
+        },
+        {
+          "label": "Lisens og kildekode",
+          "values": [
+            "MIT, kildekode på GitHub.",
+            "Kommersiell og lukket kildekode. Dets offentlige GitHub-arkiv inneholder saker og dokumentasjon."
+          ]
+        },
+        {
+          "label": "Servere du kan opprette",
+          "values": [
+            "Ingen grense utover maskinvaren din.",
+            "5 instanser på Standard, 15 på Profesjonell, 50 på Avansert."
+          ]
+        },
+        {
+          "label": "Panelbrukere",
+          "values": [
+            "Ubegrenset, med roller som administrator, operatør og seer.",
+            "3 på Standard, ubegrenset fra Profesjonell."
+          ]
+        },
+        {
+          "label": "Kommersiell bruk",
+          "values": ["Tillatt av MIT-lisensen.", "Kun Enterprise-lisens."]
+        },
+        {
+          "label": "Flere maskiner",
+          "values": ["Én maskin per panel.", "Profesjonell og oppover."]
+        },
+        {
+          "label": "Vertssystemer",
+          "values": ["Linux, Windows og macOS. Bildet er bygget for amd64 og arm64.", "Windows og Linux."]
+        },
+        {
+          "label": "Spill",
+          "values": [
+            "Minecraft Java Edition. Bedrock-spillere kan bli med via Geyser.",
+            "Mer enn 200 spill og applikasjoner på kompatibilitetslisten, inkludert Minecraft Java og Bedrock."
+          ]
+        }
+      ],
+      "note": "Fakta sjekket oktober 2026 mot hvert prosjekts egen dokumentasjon. AMP-priser kommer fra CubeCoders' sammenligningsark for utgaver og kan endres."
+    },
+    "sections": [
+      {
+        "title": "Ingen lisens, ingen instansantall",
+        "body": "AMPs nivåer bestemmer hvor mange instanser og panelbrukere du får, og kun Enterprise-nivået tillater kommersiell bruk. Minecraft Server Manager har ingen nivåer: alle funksjoner, alle servere og alle brukerkontoer er gratis under MIT-lisensen, og den bruker ingen betalte tjenester. CurseForge-nedlastinger krever en CurseForge API-nøkkel, som du legger inn i Innstillinger.",
+        "points": [
+          "Opprett så mange servere som maskinen din kan håndtere.",
+          "Inviter hele teamet ditt med server-spesifikke tillatelser og tofaktorinnlogging.",
+          "Kildekoden er offentlig, så du kan lese, forke og bidra til den."
+        ]
+      },
+      {
+        "title": "Hvor Minecraft Server Manager er sterkere for Minecraft",
+        "body": "Et panel for ett spill kan gå dypt inn i det. Alle innstillinger som itzg Minecraft-bildet støtter, er i veiviseren med lettfattelig hjelp, og Minecraft-arbeidsflytene er innebygd.",
+        "points": [
+          "CurseForge, Modrinth, FTB og GT New Horizons modpacks, festet med ett-klikks tilbakestilling.",
+          "Én mod-søk på tvers av fem registre, med nedlastinger verifisert med kontrollsummer.",
+          "Kompatibilitetssjekker for versjoner før en Minecraft-oppgradering tilbys.",
+          "Krasjdiagnostikk med deling via mclo.gs, og et ett-klikks live kart med BlueMap.",
+          "Spilleranalyse, inventaranalyse og lagringsanalyse med diskkvoter."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "bluemap", "mclogs"],
+        "shot": "wizard"
+      },
+      {
+        "title": "Når AMP er det bedre valget",
+        "body": "AMP dekker langt mer enn et panel kun for Minecraft, og kommer med kommersiell støtte.",
+        "points": [
+          "Du hoster mange forskjellige spill fra ett panel.",
+          "Du trenger enkel pålogging via OIDC, egendefinert merkevarebygging eller distribusjonsmaler, som Avansert-nivået inkluderer.",
+          "Du driver en hostingvirksomhet og ønsker en kommersiell lisens med leverandørstøtte.",
+          "Du ønsker å kjøre Bedrock Dedicated Server selv."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "AMP-spørsmål",
+      "items": [
+        {
+          "q": "Er Minecraft Server Manager gratis for kommersiell bruk?",
+          "a": "MIT-lisensen tillater kommersiell bruk. Panelet er bygget for eiere og små team på én maskin, så sjekk at det passer for hvordan du hoster før du stoler på det for kunder."
+        },
+        {
+          "q": "Støtter Minecraft Server Manager andre spill enn Minecraft?",
+          "a": "Nei. Det kjører kun Minecraft Java Edition-servere, noe som er grunnen til at det kan gå dypt inn i modpacks, mods og krasjrapporter."
+        },
+        {
+          "q": "Kan jeg overføre en AMP Minecraft-instans?",
+          "a": "Ja. Opprett en server med samme type og Minecraft-versjon, last deretter opp instansens verden som en zip-fil på Verdens-siden og installer den på den serveren. Modifiserte servere kan starte fra en modpack, en pakkeeksport eller en zip-fil med mod-jar-filer."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideHosting"],
+    "cta": {
+      "title": "Alle funksjoner, gratis",
+      "body": "Installer Minecraft Server Manager i tre trinn. Det er ingenting å kjøpe og ingenting å låse opp."
+    }
+  },
+  "compareMcsm": {
+    "meta": {
+      "title": "MCSManager-alternativ for Minecraft-servere",
+      "description": "MCSManager og Minecraft Server Manager sammenlignet: et distribuert panel for Minecraft og Steam-spill, ved siden av et panel kun for Minecraft med innebygde modpacks."
+    },
+    "eyebrow": "MCSManager-alternativ",
+    "title": "Et MCSManager-alternativ fokusert på Minecraft",
+    "intro": "MCSManager er et gratis, åpen kildekode-panel for Minecraft og Steam-spill som kan administrere flere maskiner. Minecraft Server Manager kjører kun Minecraft på én maskin, med hver server i en Docker-container og Minecraft-verktøyene innebygd.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Side om side",
+      "columns": ["", "Minecraft Server Manager", "MCSManager"],
+      "rows": [
+        {
+          "label": "Pris og lisens",
+          "values": ["Gratis, MIT.", "Gratis, Apache-2.0."]
+        },
+        {
+          "label": "Skrevet i",
+          "values": ["Node.js 24.", "TypeScript på Node.js."]
+        },
+        {
+          "label": "Hva du installerer",
+          "values": ["Én prosess, eller én Docker-container.", "To tjenester: et webpanel og en daemon."]
+        },
+        {
+          "label": "Database",
+          "values": ["Innebygd SQLite-fil inne i datamappen.", "Ingen nødvendig."]
+        },
+        {
+          "label": "Spillservere kjører som",
+          "values": [
+            "Docker-containere med ressursbegrensning.",
+            "Docker-containere eller vanlige prosesser, ditt valg."
+          ]
+        },
+        {
+          "label": "Vertssystemer",
+          "values": [
+            "Linux, Windows og macOS. Bildet er bygget for amd64 og arm64.",
+            "Windows, Linux og macOS, med et installasjonsskript på én linje for Linux."
+          ]
+        },
+        {
+          "label": "Maskiner administrert",
+          "values": ["Én. Panelet og Docker kjører på samme vert.", "Mange, gjennom distribuerte daemons."]
+        },
+        {
+          "label": "Spill",
+          "values": [
+            "Minecraft Java Edition. Bedrock-spillere kan bli med gjennom Geyser.",
+            "Minecraft og Steam-spill som Palworld og Terraria, fra en innebygd markedsplass."
+          ]
+        }
+      ],
+      "note": "Fakta sjekket oktober 2026 mot hvert prosjekts egen dokumentasjon."
+    },
+    "sections": [
+      {
+        "title": "Hvor Minecraft Server Manager er sterkere for Minecraft",
+        "body": "MCSManager distribuerer mange typer spillservere. Minecraft Server Manager handler om ett spill, så veiviseren, mod-verktøyene og historikken snakker alle Minecraft.",
+        "points": [
+          "Alle innstillinger for itzg Minecraft-bildet, forklart på enkelt norsk i veiviseren.",
+          "CurseForge, Modrinth, FTB og GT New Horizons modpacks, festet med ett-klikks tilbakerulling.",
+          "Én mod-søk på tvers av fem registre, med kontrollsum-verifiserte nedlastinger.",
+          "Krasj-diagnostikk med mistenkte navngitt, og ett-klikks deling til mclo.gs.",
+          "Et ett-klikks BlueMap live kart, spilleranalyse og bærbare blåkopier.",
+          "Hele panelet, inkludert database, er én mappe du kan kopiere for å migrere."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "console"
+      },
+      {
+        "title": "Containere som standard",
+        "body": "Hver server i Minecraft Server Manager er en Docker-container med egne minne- og CPU-grenser, pluss en disk-kvote som panelet håndhever. Java velges per server, så en 1.12 modpack og den nyeste Paper-utgivelsen kjører side om side uten å måtte sjonglere Java-installasjoner. MCSManager lar deg velge mellom containere og vanlige prosesser, noe som er mer fleksibelt når Docker ikke er et alternativ.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "title": "Når MCSManager er det bedre valget",
+        "body": "MCSManager er svært aktivt utviklet og dekker mer enn bare Minecraft.",
+        "points": [
+          "Du administrerer servere på tvers av flere maskiner fra ett panel.",
+          "Du hoster også Steam-spill som Palworld eller Terraria.",
+          "Du ønsker å kjøre servere som vanlige prosesser, uten Docker.",
+          "Du ønsker et dra-og-slipp dashbord og en markedsplass med ferdige spillinstallasjoner."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "MCSManager-spørsmål",
+      "items": [
+        {
+          "q": "Kan jeg flytte en Minecraft-server fra MCSManager?",
+          "a": "Ja. Opprett en server med samme type og Minecraft-versjon i Minecraft Server Manager, last deretter opp verdenen som en zip-fil på Verdens-siden og installer den på den serveren. Moddede servere kan starte fra en modpack, en pakkeeksport eller en zip-fil med mod-jar-filer."
+        },
+        {
+          "q": "Trenger jeg Docker for Minecraft Server Manager?",
+          "a": "Ja. Docker kjører hver server. På Linux installerer installasjonsskriptet Docker for deg hvis det mangler."
+        },
+        {
+          "q": "Kan flere personer dele ett Minecraft Server Manager-panel?",
+          "a": "Ja. Det finnes administrator-, operatør- og seerroller, tillatelser per server, og valgfri tofaktor-pålogging for hver konto."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideMulti", "comparePuffer"],
+    "cta": {
+      "title": "Minecraft, gjort i dybden",
+      "body": "Installer panelet i tre trinn og opprett din første server fra veiviseren."
+    }
+  },
+  "comparePuffer": {
+    "meta": {
+      "title": "PufferPanel-alternativ for Minecraft-servere",
+      "description": "Minecraft Server Manager sammenlignet med PufferPanel: hver server i sin egen Docker-container og innebygde Minecraft-verktøy, mot et lett panel for mange spill og mange noder."
+    },
+    "eyebrow": "PufferPanel-alternativ",
+    "title": "Et PufferPanel-alternativ kun for Minecraft",
+    "intro": "PufferPanel er et gratis, åpen kildekode-panel for mange spill på én eller flere maskiner. Minecraft Server Manager kjører kun Minecraft på én maskin, alltid i Docker, med innebygde Minecraft-verktøy.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Side om side",
+      "columns": ["", "Minecraft Server Manager", "PufferPanel"],
+      "rows": [
+        {
+          "label": "Pris og lisens",
+          "values": ["Gratis, MIT.", "Gratis, Apache-2.0."]
+        },
+        {
+          "label": "Skrevet i",
+          "values": ["Node.js 24.", "Go."]
+        },
+        {
+          "label": "Hva du installerer",
+          "values": [
+            "Én prosess, eller én Docker-container.",
+            "Én tjeneste fra dens apt- eller yum-repository, eller dens Docker-image. En node på en annen maskin kjører den samme pakken."
+          ]
+        },
+        {
+          "label": "Database",
+          "values": [
+            "Innebygd SQLite-fil inne i data-mappen.",
+            "Ingen å sette opp for en grunnleggende installasjon. En guide dekker bruk av en ekstern database."
+          ]
+        },
+        {
+          "label": "Spillservere kjører som",
+          "values": [
+            "Ressursbegrensede Docker-containere, alltid.",
+            "Prosesser på verten (dens dokumentasjon sier at dette miljøet ikke har sikkerhetsfunksjoner) eller Docker-containere."
+          ]
+        },
+        {
+          "label": "Vertssystemer",
+          "values": [
+            "Linux, Windows og macOS. Imagen er bygget for amd64 og arm64.",
+            "Linux: pakker for Ubuntu 22.04 og 24.04 og Debian 10 og 11 på amd64 og arm64, Raspbian på arm64, og et yum-repository. 32-bit støttes ikke."
+          ]
+        },
+        {
+          "label": "Maskiner administrert",
+          "values": [
+            "Én. Panelet og Docker kjører på samme vert.",
+            "Mange. Noder på andre maskiner kjører servere for ett panel."
+          ]
+        },
+        {
+          "label": "Minecraft",
+          "values": [
+            "Java Edition, alle servertyper fra itzg-imagen, og CurseForge, Modrinth, FTB og GT New Horizons-pakker. Bedrock-spillere kobler til via Geyser.",
+            "Maler for Java- og Bedrock-servere, CurseForge- og FTB-pakker, og BungeeCord-, Velocity- og Waterfall-proxyer."
+          ]
+        }
+      ],
+      "note": "Fakta sjekket november 2026 mot PufferPanels dokumentasjon, dens repository og dens mal-repository."
+    },
+    "sections": [
+      {
+        "title": "Isolasjon uten en innstilling å huske",
+        "body": "PufferPanel lar deg velge et miljø per server. Standardinnstillingen kjører serveren som en prosess på verten, som samme bruker som panelet, og dens egen dokumentasjon sier at den ikke har sikkerhetsfunksjoner; Docker-versjonen isolerer den. Minecraft Server Manager har kun den andre typen. Hver server er sin egen container med en minne- og CPU-begrensning, en diskkvote som panelet håndhever, og ingenting delt med de andre unntatt mod-biblioteket.",
+        "points": [
+          "Én container per server, merket og begrenset.",
+          "Diskkvoter håndhevet av panelet.",
+          "En server som krasjer eller går tom for minne blir oppdaget og logget."
+        ],
+        "pills": ["docker"]
+      },
+      {
+        "title": "Hvor Minecraft Server Manager går dypere på Minecraft",
+        "body": "En mal starter en server; arbeidet kommer etterpå. Mods å finne og oppdatere, pakker som utvikler seg, krasj å lese, verdener å sikkerhetskopiere. Disse er innebygd i panelet her.",
+        "points": [
+          "Modpacks er festet til en eksakt versjon. Oppgraderinger og nedgraderinger tar en sikkerhetskopi først og ruller tilbake med ett klikk.",
+          "Én søk på tvers av fem registre, filtrert til serverens loader og Minecraft-versjon.",
+          "Hver nedlasting er sjekket med checksum før den når serveren.",
+          "En versjonssjekk viser hvilke fremtidige Minecraft-versjoner hver installerte mod allerede støtter.",
+          "Krasjrapporter oppdages, parses og kan deles til mclo.gs med ett klikk.",
+          "En BlueMap live-kart med ett klikk, bak panelets egen innlogging."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Når PufferPanel er det bedre valget",
+        "body": "PufferPanel er lett, gratis og har eksistert i årevis. Hvis noe av dette beskriver deg, velg det.",
+        "points": [
+          "Du hoster andre spill enn Minecraft.",
+          "Du kjører servere på flere maskiner og vil ha ett panel for alle.",
+          "Du vil ha en native Bedrock-server, eller et BungeeCord-, Velocity- eller Waterfall-proxy-nettverk.",
+          "Du vil helst ikke kjøre Docker i det hele tatt.",
+          "Du vil ha SFTP-tilgang til serverfiler."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "PufferPanel-spørsmål",
+      "items": [
+        {
+          "q": "Kan jeg flytte en Minecraft-server fra PufferPanel til Minecraft Server Manager?",
+          "a": "Ja. Last ned serverens verdensmappe, opprett en server av samme type og Minecraft-versjon, last deretter opp verdenen på Verdens-siden og installer den på den serveren. For en moddet server, importer pakken eller en zip-fil av mod-jar-filene når du oppretter den."
+        },
+        {
+          "q": "Trenger Minecraft Server Manager Docker?",
+          "a": "Ja. Hver Minecraft-server kjører som en Docker-container, som er hvordan den begrenser minne, CPU og disk per server. Selve panelet kan kjøre i Docker eller direkte fra Node.js."
+        },
+        {
+          "q": "Kan den kjøre servere på en annen maskin?",
+          "a": "Nei. Den administrerer Docker-daemonen på maskinen den kjører på. For to maskiner, kjør et panel på hver, eller velg et panel med noder som PufferPanel."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareCrafty", "compareMcsm"],
+    "cta": {
+      "title": "Hver server i sin egen container",
+      "body": "Installer panelet i tre trinn og opprett din første server i veiviseren."
+    }
   }
 }

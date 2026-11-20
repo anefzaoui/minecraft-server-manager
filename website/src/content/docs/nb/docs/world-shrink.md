@@ -1,6 +1,6 @@
 ---
 title: 'Krympe en verden'
-description: 'Over tid sprer en verden seg: ethvert sted en spiller noensinne har gått, flydd, eller'
+description: 'Krympe en Minecraft-verden ved å slette sjeldent besøkte biter (chunks) for å frigjøre diskplass og fremskynde sikkerhetskopiering.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: 'Világ méretének csökkentése'
-description: 'Idővel egy világ terjeszkedik: minden hely, ahol egy játékos valaha is járt, repült, vagy'
+description: 'Csökkentse egy Minecraft világ méretét a ritkán látogatott chunkok törlésével, hogy lemezterületet szabadítson fel és gyorsítsa a biztonsági mentéseket.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

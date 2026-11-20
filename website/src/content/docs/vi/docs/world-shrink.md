@@ -1,6 +1,6 @@
 ---
 title: 'Thu nhỏ thế giới'
-description: 'Theo thời gian, một thế giới sẽ lan rộng ra: mọi nơi người chơi từng đi bộ, bay hoặc'
+description: 'Thu nhỏ thế giới Minecraft bằng cách xóa các chunk ít được truy cập, để lấy lại dung lượng đĩa và tăng tốc sao lưu.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

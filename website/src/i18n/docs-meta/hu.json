@@ -9,15 +9,15 @@
   },
   "backups": {
     "title": "Biztonsági mentések",
-    "description": "A Biztonsági mentések oldal az összes pillanatfelvételt mutatja a teljes flottában, mérettel, okkal és korszakkal."
+    "description": "A Biztonsági mentések oldal az összes pillanatképét mutatja a teljes flottában, mérettel, okkal és korszakkal, kiszolgálónként és okonként szűrhetően."
   },
   "blueprints": {
     "title": "Sablonok",
-    "description": "Egy sablon rögzíti egy szerver teljes konfigurációját (típus, verzió, erőforrások, környezet, csomag rögzítése, és opcionálisan a konfigurációja és a világa) egyetlen po"
+    "description": "A sablonok megmentik egy Minecraft szerver teljes konfigurációját, mint új szerverek létrehozására alkalmas, újrafelhasználható receptet. Titkos kulcsok soha nem szerepelnek benne."
   },
   "chatbot": {
     "title": "Szerverenkénti Minecraft chatbot",
-    "description": "Ez a fork egy rendszergazda által konfigurálható chatbotot ad minden felügyelt Minecraft szerverhez."
+    "description": "A panel minden felügyelt Minecraft szerverhez egy rendszergazda által konfigurált chatbotot kínál, amely a szerver Beállítások → Chatbot lapján állítható be."
   },
   "console-and-chat": {
     "title": "Konzol és csevegési parancsok",
@@ -29,7 +29,7 @@
   },
   "getting-started": {
     "title": "Első lépések",
-    "description": "Amikor először megnyitja a panelt, létre kell hoznia egy rendszergazdai fiókot."
+    "description": "Telepítse a Minecraft Server Managert, és fejezze be az első indítási beállításokat: rendszerellenőrzés, időzóna és rendszergazdai fiók."
   },
   "index": {
     "title": "Dokumentáció",
@@ -37,27 +37,27 @@
   },
   "modpacks": {
     "title": "Modpackok",
-    "description": "A Modpackok oldal (és a létrehozási varázsló Modpackból fül) telepít egy modpackot szerverként, mindig egy pontos csomagverzióhoz rögzítve, így egy újraindítás képes"
+    "description": "Telepíts CurseForge, Modrinth, FTB és GT New Horizons modpackokat szerverként, mindig egy pontos csomagverzióhoz rögzítve."
   },
   "public-api": {
     "title": "Nyilvános API",
-    "description": "Egy kis, csak olvasható HTTP API a szerver állapotának lekérdezéséhez a panelen kívülről: a"
+    "description": "Egy kis, csak olvasható HTTP API a szerver állapotának lekérdezéséhez a panelen kívülről: állapot-kijelző, üzemidő-monitor, Discord bot, otthonautomatizálási szabály."
   },
   "integrations": {
     "title": "Integrációk",
-    "description": "Minden szerver a Beállítások csoportban tartja az integrációit: Discord, nyilvános Állapotoldal, egykattintásos Meghívók és az opcionális Chatbot fül."
+    "description": "Minden szerver integrációi a Beállítások csoport alatt találhatók: Discord, nyilvános Állapotoldal, egérkattintásos Meghívók és az opcionális Chatbot fül (csak adminoknak)."
   },
   "schedules": {
     "title": "Ütemezések",
-    "description": "Az Ütemezések oldal automatizálja az ismétlődő feladatokat cron kifejezésekkel."
+    "description": "Az Ütemezések oldal automatizálja az ismétlődő feladatokat cron kifejezésekkel. Nincs külső cron, nincsenek szkriptek."
   },
   "storage": {
     "title": "Tárhely",
-    "description": "A Tárhely oldal megmutatja, hogyan oszlik el a lemezterületed: kiszolgálónkénti használat és az időbeli trendek."
+    "description": "Tekintse meg, hol fogy a lemezterület, korlátozza a szervermappákat lemez kvótával, és törölje a felesleges fájlokat."
   },
   "servers": {
     "title": "Szerverek létrehozása és kezelése",
-    "description": "Kattintson a \"Szerver létrehozása\" gombra (felső sáv) vagy a \"Szerver létrehozása\" kártyára a varázsló megnyitásához."
+    "description": "Hozzon létre, indítson, állítson le, építsen újra és konfiguráljon Minecraft szervereket a panelen: a létrehozási varázsló, a beállítások, a memória és a játékkikötő segítségével."
   },
   "two-factor-authentication": {
     "title": "Kétfaktoros hitelesítés",
@@ -65,18 +65,46 @@
   },
   "updates": {
     "title": "Frissítések",
-    "description": "A Frissítések oldal egy helyen követi nyomon, hogy mi avult el a flottájában:"
+    "description": "Kövesse nyomon és alkalmazza a Minecraft verziók, modpackok, modok és bővítmények frissítéseit minden szerveren, szerverenkénti szabályzattal."
   },
   "users-and-roles": {
     "title": "Felhasználók és szerepkörök",
-    "description": "A panel több felhasználós."
+    "description": "Fiókok, az adminisztrátor, üzemeltető és megtekintő szerepkörök, valamint a Minecraft Server Manager szerverenkénti engedélyei."
   },
   "world-shrink": {
     "title": "Világ méretének csökkentése",
-    "description": "Idővel egy világ terjeszkedik: minden hely, ahol egy játékos valaha is járt, repült, vagy"
+    "description": "Csökkentse egy Minecraft világ méretét a ritkán látogatott chunkok törlésével, hogy lemezterületet szabadítson fel és gyorsítsa a biztonsági mentéseket."
   },
   "worlds-and-files": {
     "title": "Világok és fájlok",
-    "description": "A Világok oldal kezeli a szervereid világadatait: cseréld az aktív világot, tölts fel egy világot, vagy tölts le egyet."
+    "description": "A világkönyvtár, világfeltöltések és cserék, a modok és bővítmények lap, valamint a böngészőben elérhető fájlkezelő."
+  },
+  "guide-backups": {
+    "title": "Minecraft szervermentések, amelyek valóban visszaállíthatók",
+    "description": "Hogyan készítsünk Minecraft szervermentéseket, amelyek valóban visszaállíthatók: konzisztens másolatok, máshol tárolva, és legalább egyszer tesztelve."
+  },
+  "guide-choosing-a-loader": {
+    "title": "Vanilla, Paper, Fabric, Forge, NeoForge, Quilt: melyiket?",
+    "description": "Vanilla, Paper, Fabric, Forge, NeoForge vagy Quilt: melyik Minecraft szervertípus fusson, attól függően, mit telepítenek a játékosok."
+  },
+  "guide-moving-a-server": {
+    "title": "Minecraft szerver áthelyezése másik tárhelyre",
+    "description": "Egy világ áthelyezése egyszerű. Az a szerver áthelyezése, amelyre a játékosok továbbra is be tudnak jelentkezni, leltáraikkal, otthonaikkal és engedélyeikkel együtt, az, ami általában elromlik."
+  },
+  "guide-server-memory": {
+    "title": "Mennyi RAM-ra van szüksége egy Minecraft szervernek?",
+    "description": "Mennyi RAM-ra van szüksége egy Minecraft szervernek a vanilla, Paper, könnyű modok és nagy modpackok esetén, és mennyi maradjon a gépnek."
+  },
+  "guide-server-wont-start": {
+    "title": "A Minecraft szervered nem indul el",
+    "description": "Egy Minecraft szerver, ami nem indul el, valószínűségi sorrendben javítva: a napló, a Java verzió, a memória, az EULA és a port, valamint a modok."
+  },
+  "invites-and-status-page": {
+    "title": "Meghívók és állapotoldal",
+    "description": "Hívj meg barátokat egy szerverre a címmel, verzióval és egy kliens modpackkal, és ossz meg egy nyilvános állapotoldalt, amely csak azt mutatja, amit te választasz."
+  },
+  "live-map": {
+    "title": "Élő térkép",
+    "description": "Egykattintásos BlueMap élő 3D térkép a szerver világáról, kizárólag a panel bejelentkezésén keresztül elérhetően."
   }
 }

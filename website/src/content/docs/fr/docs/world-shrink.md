@@ -1,6 +1,6 @@
 ---
-title: 'Réduire une carte'
-description: "Avec le temps, une carte s'étend : chaque endroit où un joueur a marché, volé ou"
+title: "Réduire la taille d'un monde"
+description: "Réduisez la taille d'un monde Minecraft en supprimant les chunks rarement visités, afin de récupérer de l'espace disque et d'accélérer les sauvegardes."
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

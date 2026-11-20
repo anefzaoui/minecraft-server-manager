@@ -5,13 +5,16 @@
     "description": "Moddolható és vanilla Minecraft szerverek futtatása böngészőből. Modpackok pontos verziókhoz rögzítve, egykattintásos biztonsági mentések, ütemezések, élő térkép, játékos statisztikák. Ingyenes, nyílt forráskódú, és az egész vezérlőpultod egyetlen mappában elfér."
   },
   "nav": {
-    "home": "Kezdőlap",
+    "home": "Főoldal",
     "features": "Jellemzők",
     "screenshots": "Képernyőképek",
+    "servers": "Szerverek",
+    "guides": "Útmutatók",
     "install": "Telepítés",
     "docs": "Dokumentáció",
     "faq": "GYIK",
-    "changelog": "Változások",
+    "compare": "Összehasonlítás",
+    "changelog": "Változások naplója",
     "github": "GitHub",
     "discord": "Discord",
     "menu": "Menü",
@@ -22,11 +25,12 @@
   "hero": {
     "eyebrow": "Ingyenes és nyílt forráskódú. A saját gépeden fut.",
     "title": "Kezeld Minecraft szervereidet egy barátságos felületen.",
-    "subtitle": "A Minecraft Server Manager a Dockert otthonossá teszi a szervereid számára: modpackok, amelyek rögzítve maradnak, egykattintásos biztonsági mentések, ütemezések, élő térkép, játékosstatisztikák és egy konzol, amely érthetően beszél. Nincs számla, nincs bezártság, az egész panel egy mappában.",
-    "primary": "Kezdd el 3 lépésben",
+    "subtitle": "A Minecraft Server Manager a Dockert otthonossá varázsolja szervereid számára: modpackok, amelyek mindig kéznél vannak, egy kattintásos biztonsági mentések, ütemezések, élő térkép, játékosstatisztikák és egy közérthető konzol. Nincsenek számlák, nincs bezártság, az egész felület egyetlen mappában.",
+    "primary": "Kezdd el percek alatt",
     "secondary": "Fedezd fel a funkciókat",
     "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
-    "scroll": "Nézd meg a bemutatót"
+    "scroll": "Nézd meg a bemutatót",
+    "shotCaption": "A valódi felület: a műszerfala hat példaszerverrel, sötét témában."
   },
   "pillars": {
     "title": "Azoknak készült, akik szervereket futtatnak, nem jegyeket kezelnek",
@@ -60,13 +64,13 @@
         "items": [
           {
             "title": "Erőforrás-korlátozott konténerek",
-            "body": "Hozzon létre, indítson, állítson le, indítson újra, építsen újra és töröljön szervereket udvarias RCON leállítással és automatikus hibaészleléssel.",
+            "body": "Hozzon létre, indítson, állítson le, indítson újra, építsen újra és töröljön szervereket udvarias RCON leállásokkal és automatikus összeomlás-érzékeléssel.",
             "icon": "server",
             "pills": ["docker"]
           },
           {
             "title": "Vezetett létrehozási varázsló",
-            "body": "Egyszerű vagy haladó mód, minden képbeállítás érthetően elmagyarázva, mielőtt kiválasztaná.",
+            "body": "Egyszerű vagy Haladó mód, minden képbeállítás magyarázattal, mielőtt kiválasztaná.",
             "icon": "wand"
           },
           {
@@ -76,7 +80,7 @@
           },
           {
             "title": "Játékos moderálás",
-            "body": "Fehérlista, op-jogosultságok, kitiltások, IP-kitiltások és teleportálás, online RCON-on keresztül és offline JSON fájlokon keresztül.",
+            "body": "Fehérlista, op-jogosultságok, tiltások, IP-cím tiltások és teleportálás, online RCON-on keresztül és offline JSON fájlokon keresztül.",
             "icon": "users"
           }
         ]
@@ -85,14 +89,14 @@
         "title": "Modok és modpackok",
         "items": [
           {
-            "title": "Öt regisztráló egy böngészőben",
-            "body": "Keresés mind az ötből egy helyről. Háromhoz nincs szükség API kulcsra.",
+            "title": "Öt nyilvántartás egy böngészőben",
+            "body": "Keresse meg mind az ötöt egy helyről. Háromhoz nincs szükség API kulcsra.",
             "icon": "search",
             "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
           },
           {
             "title": "Hozzáadás linkkel",
-            "body": "Illesszen be egy projektoldalt, egy GitHub adattárat, egy slug-ot vagy egy közvetlen jar URL-t. A panel azonosítja azt.",
+            "body": "Illesszen be egy projektoldalt, egy GitHub adattárat, egy slugot vagy egy közvetlen jar URL-t. A panel felismeri.",
             "icon": "link"
           },
           {
@@ -103,19 +107,24 @@
           },
           {
             "title": "Ellenőrzött letöltések",
-            "body": "Fájl a szerverre érkezése előtt ellenőrizve, a legerősebb hash-sel kezdve. Egyezés hiánya soha nem kerül kiszállításra.",
+            "body": "Fájl a szerverre érkezése előtt ellenőrizve, a legerősebb hash-sel kezdve. Hiba nem kerül kiszállításra.",
             "icon": "shield",
             "pills": ["sha512", "sha256", "sha1", "md5"]
           },
           {
             "title": "Megosztott mod könyvtár",
-            "body": "Sha256 szerint deduplikálva és keményen hivatkozva a szerverekbe, így az egyéni modok túlélik a csomagfrissítéseket.",
+            "body": "Sha256 szerint deduplikálva és keményen hivatkozva a szerverekbe, így az egyedi modok túlélik a csomagfrissítéseket.",
             "icon": "library"
           },
           {
-            "title": "Mod-előnyben részesülő megoldó",
+            "title": "Modok elsőként választó megoldó",
             "body": "Válassza ki a kívánt modokat, és szerezze be a legújabb, teljesen kompatibilis betöltőt és Minecraft verziót.",
             "icon": "sparkles"
+          },
+          {
+            "title": "Bármilyen csomagverzió, bármilyen betöltő verzió",
+            "body": "Helyezzen át egy modcsomagot bármely közzétett verzióra, újabbra vagy régebbre, vagy váltson betöltő verziót. Először biztonsági mentés készül, és a sikertelen indítás visszavonja a változtatásokat.",
+            "icon": "refresh"
           }
         ]
       },
@@ -124,28 +133,28 @@
         "items": [
           {
             "title": "Biztonságos mentések",
-            "body": "Pillanatképek megtartási osztályokkal, helyreállítás a helyén, és opcionális világ zsugorítás a lemez visszanyeréséhez.",
+            "body": "Pillanatképek megtartási osztályokkal, helyreállítás a helyén, és opcionális világ zsugorítás a lemez helyének felszabadításához.",
             "icon": "archive"
           },
           {
             "title": "Cron ütemezések",
-            "body": "Újraindítások, mentések és RCON parancsok ütemezetten, a következő futás előre látható.",
+            "body": "Újraindítások, biztonsági mentések és RCON parancsok ütemezetten, a következő futás előre látható.",
             "icon": "clock"
           },
           {
-            "title": "Sablonok",
+            "title": "Blueprintok",
             "body": "Exportáljon egy szervert hordozható receptként, importálja bárhol, és kapja vissza ugyanazt a szervert.",
             "icon": "blueprint"
           },
           {
-            "title": "Összeomlás-elemzés",
+            "title": "Összeomlás-diagnosztika",
             "body": "Az összeomlások észlelése, elemzése és a gyanúsítottak megnevezése, egykattintásos megosztással és automatizált betekintésekkel.",
             "icon": "flame",
             "pills": ["mclogs"]
           },
           {
-            "title": "Frissítési követés",
-            "body": "Új szerver, csomag, kép és mod verziók követése, frissítés előtti mentésekkel és egykattintásos visszavonással.",
+            "title": "Frissítéskövetés",
+            "body": "Új szerver, csomag, kép és mod verziók követése, frissítés előtti biztonsági mentésekkel és egykattintásos visszavonással.",
             "icon": "refresh"
           }
         ]
@@ -155,13 +164,13 @@
         "items": [
           {
             "title": "Élő térkép",
-            "body": "Egy kattintás az élő térképhez, a panel hitelesített proxyján keresztül kiszolgálva.",
+            "body": "Egy kattintás az élő térképhez, a panel hitelesített proxyján keresztül.",
             "icon": "map",
             "pills": ["bluemap"]
           },
           {
             "title": "Elemzés és tárolás",
-            "body": "Játékidő, halálesetek és bányászati ​​eredményjelzők, leltár-elemzés, szerverenkénti lemezhasználat és kényszerített kvóták.",
+            "body": "Játékidő, halálesetek és bányászati ​​eredménytáblák, leltár-diagnosztika, szerverenkénti lemezhasználat és kényszerített kvóták.",
             "icon": "chart"
           },
           {
@@ -172,8 +181,14 @@
           },
           {
             "title": "Nyilvános állapotoldal és API",
-            "body": "Önkéntes állapotoldalak, meghívó blokkok, generált kliens .mrpack és egy csak olvasható, token-hitelesített API.",
+            "body": "Opcionális állapotoldalak, meghívó blokkok, generált kliens .mrpack, és egy csak olvasható token-hitelesített API.",
             "icon": "globe"
+          },
+          {
+            "title": "Hívja meg barátait",
+            "body": "Másoljon le egy meghívót a címmel és verzióval. Az Ön által választott modokból épített szerverhez adjon át barátainak egy .mrpack klienst, amely telepíti azokat, és hozzáadja a szervert a listájukhoz.",
+            "icon": "users",
+            "pills": ["mrpack"]
           },
           {
             "title": "Felhasználók, szerepkörök és 2FA",
@@ -186,53 +201,66 @@
   },
   "screenshots": {
     "title": "Egy panel, amit öröm használni",
-    "intro": "Asztali számítógép és telefon. A panel keskeny-első dizájnnal készült, így minden oldal működik telefonon.",
-    "desktop": "Asztali számítógép",
+    "intro": "Asztali számítógép és telefon. A panel keskeny-első kialakítású, így minden oldal működik telefonon.",
+    "desktop": "Asztali számítógépen",
     "mobile": "Telefonon",
     "items": {
       "dashboard": "Az irányítópult: minden szerver, játékosszám és legutóbbi tevékenység egy pillantásra.",
       "wizard": "A létrehozási varázsló minden beállítást elmagyaráz, mielőtt kiválasztanád.",
       "overview": "Egy szerver áttekintése erőforrás-mérőkkel és gyors műveletekkel.",
       "console": "Az élő konzol RCON parancssávval és naplószűrőkkel.",
-      "mods": "Modok öt nyilvántartásból, a szerver betöltőjéhez és verziójához szűrve.",
+      "mods": "Modok öt nyilvántartásból, a szerver betöltőjére és verziójára szűrve.",
+      "modpacks": "Modpackok: keresés a CurseForge és a Modrinth oldalon, és minden csomag telepítése egy pontos verzióra rögzítve.",
       "worlds": "Világok cseréje és fájlok kezelése a böngészőből.",
-      "backups": "Biztonsági mentések megtartási osztályokkal és helyszíni visszaállítással.",
+      "backups": "Biztonsági mentések megtartási osztályokkal és helyben történő visszaállítással.",
       "schedules": "Cron ütemezések újraindításokhoz, biztonsági mentésekhez és parancsokhoz.",
       "blueprints": "Blueprintok: hordozható szerverreceptek.",
-      "storage": "Tárhely-analitika és kényszerített kvóták."
+      "storage": "Tárhelyelemzés és kényszerített kvóták."
     }
   },
   "install": {
     "title": "Telepítés",
-    "intro": "Válaszd ki a hosztodnak megfelelő opciót. Minden út ugyanazt a panelt adja.",
+    "intro": "Válaszd ki a hosztodnak megfelelő opciót. Minden elérési út ugyanazt a panelt adja.",
     "requirements": "Követelmények",
     "reqItems": [
       "Docker Engine (Linux) vagy Docker Desktop (Windows, macOS).",
-      "Node.js 24 vagy újabb a forrásból történő telepítéshez. A Docker kép saját magát tartalmazza.",
+      "Node.js 24 vagy újabb a forrásból történő telepítéshez. A Docker kép tartalmazza a sajátját.",
       "Néhány gigabájt lemezterület a szerverképeknek és a világoknak."
     ],
     "docker": {
       "title": "1. opció: Docker",
-      "body": "Minden kiadáskor egy előre összeállított, többarchitektúrás kép kerül közzétételre a GHCR-en. Töltsd le a compose fájlt, állíts be egy változót, és indítsd el.",
+      "body": "Minden kiadáskor egy előre összeállított, többarchitektúrás képet teszünk közzé a GHCR-en. Töltsd le a compose fájlt, állíts be egy változót, és indítsd el.",
       "after": "Ezután nyisd meg a http://your-host:25564 címet. A Portainerben vagy a Dockge-ban illeszd be a compose fájlt egy stack-ként, és állítsd be a DATA_DIR_HOST értéket a stack környezeti változóiban.",
-      "warning": "A panel a hoszt Docker démonját vezérli a csatlakoztatott socket-en keresztül, ami a hoszton root-jogokkal egyenértékű. Kezeld ennek megfelelően az admin bejelentkezést, és soha ne tedd a panelt közvetlenül az internetre."
+      "warning": "A panel a hoszt Docker démonját vezérli a csatlakoztatott socket-en keresztül, ami a hoszton root-jogokkal egyenértékű. Kezeld ennek megfelelően a rendszergazdai bejelentkezést, és soha ne tedd közvetlenül elérhetővé a panelt az interneten."
     },
     "source": {
       "title": "2. opció: Forrásból",
-      "body": "Bármilyen operációs rendszeren, beleértve a Windows és macOS rendszereket Docker Desktop-pal.",
-      "after": "Nyisd meg a http://localhost:25564 címet. Az első indítás végigvezet egy rendszerellenőrzésen, az időzónád beállításán és az admin fiók létrehozásán."
+      "body": "Bármilyen operációs rendszeren, beleértve a Windows és macOS rendszereket is Docker Desktop-pal.",
+      "after": "Nyisd meg a http://localhost:25564 címet. Az első indítás végigvezet egy rendszerellenőrzésen, az időzónád beállításán és a rendszergazdai fiók létrehozásán."
     },
     "next": "Következő lépések",
-    "nextBody": "Az első lépések útmutató lefedi az első indítási beállítást, az első szerver létrehozását, és azt, hogy hol található minden.",
-    "nextCta": "Olvasd el az első lépéseket",
-    "compose": "Töltsd le a docker-compose.yml fájlt",
-    "windows": "Megjegyzések Windowsra",
+    "nextBody": "Az útmutató ismerteti az első indítás beállításait, az első szerver létrehozását, és hogy hol található minden.",
+    "nextCta": "Olvassa el az útmutatót",
+    "compose": "Töltse le a docker-compose.yml fájlt",
+    "windows": "Megjegyzések Windows-hoz",
     "windowsItems": [
       "A Docker Desktopnak futnia kell, mielőtt elindítanád vagy létrehoznál szervereket.",
       "Oszd meg a projekt meghajtódat a Docker Desktop-pal (Beállítások, Erőforrások, Fájlmegosztás), hogy a bind mount-ok működjenek.",
       "A Docker kép Linux hosztokat céloz meg; Windows és macOS rendszereken futtasd a panelt forrásból."
     ],
-    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []],
+    "options": {
+      "title": "Telepítő opciók",
+      "intro": "A Linux telepítő a bash -s -- után veszi át az opciókat, így a pipe-on keresztül is működnek. Futtasd újra ugyanazokkal az opciókkal a frissítéshez; az adatmappád, a .env és a compose szerkesztései megmaradnak.",
+      "items": {
+        "port": "A panel más porton történő kiszolgálása.",
+        "proxy": "Csak a 127.0.0.1 címen figyeljen, egy fordított proxy számára TLS-sel az elején.",
+        "tag": "Egy kiadás rögzítése az új legújabb követése helyett.",
+        "dir": "Telepítés máshová, mint /opt/msm.",
+        "uninstall": "A panel eltávolítása, az adatok megtartásával. Pipe-on keresztül nincs billentyűzet a kérdés megválaszolásához, ezért adj hozzá --yes; adj hozzá --purge-ot is az adat mappa törléséhez.",
+        "help": "Minden opció, az alapértelmezett értékével."
+      }
+    }
   },
   "faq": {
     "title": "Gyakran ismételt kérdések",
@@ -243,12 +271,12 @@
       },
       {
         "q": "Működik Raspberry Pi-n vagy más ARM gépen?",
-        "a": "Igen. A Docker kép mindkét architektúrára publikálva van, és a forrásból történő telepítés bárhol fut, ahol a Node.js 24 és a Docker fut.",
+        "a": "Igen. A Docker kép mindkét architektúrára publikálva van, és a forrásból történő telepítés bárhol fut, ahol a Node.js 24 és a Docker elérhető.",
         "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
       },
       {
-        "q": "Milyen szervertípusok támogatottak?",
-        "a": "Minden, amit az itzg kép támogat, plusz a nagy négy forrás modpackjai.",
+        "q": "Milyen szervertípusokat támogat?",
+        "a": "Mindazokat, amelyeket az itzg kép támogat, plusz a nagy négy forrásból származó modpackokat.",
         "pills": [
           "vanilla",
           "paper",
@@ -264,32 +292,41 @@
         ]
       },
       {
-        "q": "Hogyan költöztethetem át a panelt egy új gépre?",
+        "q": "Hogyan vihetem át a panelt egy új gépre?",
         "a": "Másold át az adatmappát. Ez tartalmazza az adatbázist, minden szerver világát, biztonsági mentéseit és a mod könyvtárat. Indítsd el a panelt az új gépen, erre a mappára mutatva."
       },
       {
         "q": "Több ember is kezelhet szervereket?",
-        "a": "Igen. A panel rendelkezik adminisztrátori, üzemeltetői és nézői szerepkörökkel, és minden fiók bekapcsolhatja a kétfaktoros hitelesítést."
+        "a": "Igen. A panel rendelkezik adminisztrátori, üzemeltetői és megtekintő szerepkörökkel, és minden fiók bekapcsolhatja a kétfaktoros hitelesítést."
       },
       {
-        "q": "Kell, hogy internetre legyen kapcsolva?",
-        "a": "Nem. A játékosok a játékkapukhoz csatlakoznak, nem a panelhez. Tartsd a panelt a helyi hálózatodon, vagy VPN vagy hitelesítéssel rendelkező fordított proxy mögött."
+        "q": "Hogyan csatlakozhatnak barátok az otthonomon kívül?",
+        "a": "A szerver játékportját (25565-től felfelé) továbbítsd az útválasztódon keresztül arra a gépre, amelyen fut, vagy használj alagutat, ha az internetszolgáltatód nem engedélyezi a porttovábbítást. A szerver Meghívók lapja mutatja a megosztandó címet, és elkészíti számodra a meghívó szövegét. Tartsd zárva a panel saját portját."
+      },
+      {
+        "q": "Kell, hogy internetre legyen exponálva?",
+        "a": "Nem. A játékosok a játékportokhoz csatlakoznak, nem a panelhez. Tartsd a panelt a LAN-on, vagy VPN vagy hitelesítéssel rendelkező fordított proxy mögött."
       },
       {
         "q": "Mi a helyzet a Bedrock játékosokkal?",
-        "a": "Mindkettő telepíthető, mint bármely más plugin vagy mod, és a panel hozzáférhetővé teszi a szükséges beállításokat.",
+        "a": "Mindkettő telepíthető, mint bármely más plugin vagy mod, és a panel hozzáférést biztosít a szükséges beállításokhoz.",
         "pills": ["geyser", "floodgate"]
       },
       {
-        "q": "Hol kaphatok segítséget?",
-        "a": "A Discord szerveren van egy támogatási fórum és valódi emberek. Hibák és funkciókérések a GitHub issue-kra kerülnek."
+        "q": "Mesterséges intelligencia (MI) segítségével készült?",
+        "a": "Részben, és nyíltan. A kód nagy részét a Claude Code írta, a karbantartó pedig minden funkciót tervez, felülvizsgál és tesztel. A tárban található MI nyilatkozat leírja, hogyan."
+      },
+      {
+        "q": "Hol kapok segítséget?",
+        "a": "A Discord szerveren van egy támogatási fórum és valódi emberek. A hibák és funkciókérések a GitHub issue-kra kerülnek."
       }
     ]
   },
   "changelog": {
     "title": "Változások naplója",
     "intro": "Minden kiadás, legújabb elöl. A kiadási megjegyzések angolul jelennek meg.",
-    "releases": "Összes kiadás a GitHubon"
+    "releases": "Összes kiadás a GitHubon",
+    "feed": "Kiadási hírcsatorna (Atom)"
   },
   "community": {
     "title": "Gyere és köszönts minket",
@@ -301,37 +338,43 @@
     "tagline": "Ingyenes és nyílt forráskódú az MIT licenc alatt.",
     "product": "Termék",
     "community": "Közösség",
-    "resources": "Erőforrások",
+    "resources": "Források",
     "issues": "Hibák",
-    "releases": "Verziók",
+    "releases": "Kiadások",
     "contributing": "Közreműködés",
     "license": "Licenc",
-    "notAffiliated": "Nem hivatalos Minecraft termék. Nem hagyta jóvá és nem áll kapcsolatban a Mojanggal vagy a Microsof-tal."
+    "notAffiliated": "Nem hivatalos Minecraft termék. Nem hagyta jóvá a Mojang vagy a Microsoft, és nem áll kapcsolatban velük.",
+    "serverTypes": "Szervertípusok",
+    "guides": "Útmutatók",
+    "compare": "Összehasonlítás",
+    "roadmap": "Ütemterv",
+    "ai": "Hogyan használjuk az AI-t",
+    "conduct": "Magatartási kódex"
   },
   "meta": {
     "home": {
-      "title": "Ingyenes, saját üzemeltetésű Minecraft szerver vezérlőpult",
-      "description": "Futtass vanilla és moddolt Minecraft szervereket a böngésződből. Docker alapú, modpackok pontos verziókhoz rögzítve, biztonsági mentések, ütemezések, élő térkép, játékos analitika. Ingyenes, nyílt forráskódú, három lépésben üzembe helyezhető."
+      "title": "Ingyenes, saját üzemeltetésű Minecraft szerver panel",
+      "description": "Futtass vanilla és moddolható Minecraft szervereket a böngésződből egy ingyenes, saját üzemeltetésű Docker panel segítségével: rögzített modpackok, biztonsági mentések, ütemezések és élő térkép."
     },
     "features": {
-      "title": "Jellemzők",
-      "description": "A Minecraft Server Manager minden funkciója: konténerizált szerverek, öt mod regisztráló, ellenőrzőösszeg-ellenőrzött letöltések, biztonságos mentések, ütemezések, blueprintok, összeomlás-diagnosztika, élő térkép, szerepkörök és kétfaktoros hitelesítés."
+      "title": "Minecraft szerver panel funkciói",
+      "description": "A Minecraft Server Manager minden funkciója: Docker szerverek, öt mod regisztráció, ellenőrzött letöltések, biztonsági mentések, ütemezések, összeomlás-diagnosztika, élő térkép és 2FA."
     },
     "screenshots": {
-      "title": "Képernyőképek",
+      "title": "Minecraft szerver panel képernyőképek",
       "description": "Képernyőképek a Minecraft Server Manager panelről asztali számítógépen és telefonon: irányítópult, varázsló, konzol, modok, világok, biztonsági mentések, ütemezések és még sok más."
     },
     "install": {
-      "title": "Telepítés",
+      "title": "Minecraft szerver panel telepítése Dockerrel",
       "description": "Telepítsd a Minecraft Server Managert Dockerrel három paranccsal, vagy forrásból Windows, macOS és Linux rendszereken."
     },
     "faq": {
-      "title": "GYIK",
-      "description": "Válaszok a költségekről, támogatott szervertípusokról, ARM támogatásról, migrációról, szerepkörökről és az internetre való kitettségről."
+      "title": "Minecraft szerver panel GYIK",
+      "description": "Válaszok a költségekről, támogatott szervertípusokról, Raspberry Pi-ről és ARM-ról, új gépre költözésről, szerepkörökről, Bedrock játékosokról és a panel internetre való kitételéről."
     },
     "changelog": {
-      "title": "Változások naplója",
-      "description": "Kiadási megjegyzések a Minecraft Server Manager minden verziójához."
+      "title": "Változások naplója és kiadási megjegyzések",
+      "description": "Kiadási megjegyzések a Minecraft Server Manager, az ingyenes, saját üzemeltetésű Minecraft szerver panel minden verziójához."
     },
     "notFound": {
       "title": "Az oldal nem található",
@@ -345,16 +388,70 @@
   },
   "langNotice": "Ez az oldal angolul jelenik meg, amíg a fordítása el nem készül.",
   "tutorial": {
-    "title": "Három lépésben üzembe helyezve",
-    "intro": "Válaszd ki, hogyan szeretnéd futtatni a panelt. Töltsd ki a két mezőt, és az alatta lévő parancsok automatikusan frissülnek a gépedhez.",
+    "title": "Pár perc alatt működésre kész",
+    "intro": "Válaszd ki a gépedet és másold be a parancsokat. A Speciális rész minden más módszert tartalmaz a panel futtatására, a parancsok a saját mappádra és címedre írva.",
+    "modes": {
+      "simple": "Egyszerű",
+      "advanced": "Speciális"
+    },
+    "simple": {
+      "linux": {
+        "label": "Linux",
+        "steps": [
+          {
+            "title": "Futtasd a telepítőt",
+            "body": "Bármilyen 64 bites Linux gépen működik, a VPS-től a Raspberry Pi 4 vagy 5-ig. Telepíti a Dockert, ha hiányzik, beállítja a panelt az /opt/msm mappába, és elindítja. Később újra futtatva frissíthető."
+          },
+          {
+            "title": "Nyisd meg a panelt",
+            "body": "A telepítő kiírja a címet és egy egyszer használatos PIN kódot. Nyisd meg a címet egy böngészőben, add meg a PIN kódot, és hozd létre az admin fiókodat."
+          }
+        ]
+      },
+      "windows": {
+        "label": "Windows",
+        "steps": [
+          {
+            "title": "Telepítsd a Docker Desktopot, a Node.js-t, a Git-et és a pnpm-et",
+            "body": "Soronként egy parancs PowerShell-ben. Indítsd el a Docker Desktopot telepítés után, és hagyd futni."
+          },
+          {
+            "title": "Töltsd le a panelt és indítsd el",
+            "body": "Nyiss egy új terminált, hogy felismerje az épp telepített eszközöket."
+          },
+          {
+            "title": "Nyisd meg a panelt",
+            "body": "Az első indítás végigvezet egy rendszerellenőrzésen, az időzónád beállításán és az admin fiók létrehozásán."
+          }
+        ]
+      },
+      "macos": {
+        "label": "macOS",
+        "steps": [
+          {
+            "title": "Telepítsd a Docker Desktopot, a Node.js-t, a Git-et és a pnpm-et",
+            "body": "Homebrew segítségével. Indítsd el a Docker Desktopot telepítés után, és hagyd futni."
+          },
+          {
+            "title": "Töltsd le a panelt és indítsd el",
+            "body": "A telepítési lépés össze is állítja a panelt. Nincs fordítanivaló natív modul."
+          },
+          {
+            "title": "Nyisd meg a panelt",
+            "body": "Az első indítás végigvezet egy rendszerellenőrzésen, az időzónád beállításán és az admin fiók létrehozásán."
+          }
+        ]
+      }
+    },
+    "advancedIntro": "Töltsd ki a két mezőt, és az alatta lévő parancsok maguktól átíródnak a gépedhez.",
     "dataDir": "Adatkönyvtár a gazdagépen",
-    "dataDirHint": "Abszolút elérési út. A világok, biztonsági mentések, modok és az adatbázis mind itt találhatók.",
+    "dataDirHint": "Abszolút elérési út. A világok, mentések, modok és az adatbázis mind itt találhatók.",
     "host": "Gazdagép neve vagy IP címe",
-    "hostHint": "Ahonnan a panelt böngészőből el fogod érni.",
+    "hostHint": "Honnan fogod megnyitni a panelt böngészőből.",
     "then": "Ezután nyisd meg a panelt",
     "copy": "Másolás",
     "copied": "Másolva!",
-    "firstRun": "Az első indítás során rendszerellenőrzés, az időzóna beállítása és az adminisztrátori fiók létrehozása történik.",
+    "firstRun": "Az első indítás végigvezet egy rendszerellenőrzésen, az időzónád beállításán és az admin fiók létrehozásán.",
     "tabs": {
       "compose": {
         "label": "Docker Compose",
@@ -364,8 +461,8 @@
             "body": "Egyetlen mappa tárol mindent, ami a panel tulajdona."
           },
           {
-            "title": "Töltsd le a compose fájlt, és mutass rá erre a mappára",
-            "body": "A DATA_DIR_HOST-nak a gazdagépen lévő abszolút útvonalnak kell lennie, mert a Docker a gazdagép szemszögéből csatolja be."
+            "title": "Töltsd le a compose fájlt és mutass rá erre a mappára",
+            "body": "A DATA_DIR_HOST-nak az abszolút elérési útnak kell lennie a gazdagépen, mert a Docker a gazdagép szemszögéből csatolja be."
           },
           {
             "title": "Indítsd el a panelt",
@@ -378,15 +475,15 @@
         "steps": [
           {
             "title": "Hozd létre az adatkönyvtárat a gazdagépen",
-            "body": "Ugyanaz a szabály a mappára: abszolút útvonal, azon a gépen, amelyen a Docker fut."
+            "body": "Ugyanaz a mappaszabály: abszolút elérési út, azon a gépen, amelyik futtatja a Dockert."
           },
           {
             "title": "Adj hozzá egy stack-et a compose fájlból",
             "body": "Másold be a compose fájl tartalmát egy új stack-be. A nyers fájl itt található:"
           },
           {
-            "title": "Állítsd be a környezeti változót és vezesd be",
-            "body": "Add hozzá a stack környezeti részében, majd vezesd be."
+            "title": "Állítsd be a környezeti változót és deploy-olj",
+            "body": "Add hozzá a stack környezeti részében, majd deploy-olj."
           }
         ]
       },
@@ -395,15 +492,15 @@
         "steps": [
           {
             "title": "Ellenőrizd a követelményeket",
-            "body": "Node.js 24 vagy újabb, pnpm és futó Docker (Docker Desktop Windows és macOS alatt)."
+            "body": "Node.js 24 vagy újabb, pnpm, és futó Docker (Docker Desktop Windows és macOS alatt)."
           },
           {
-            "title": "Klónozd és telepítsd",
-            "body": "A telepítési lépés felépíti a panel CSS-ét is. Nincsenek natív modulok, amelyeket fordítani kellene."
+            "title": "Klónozás és telepítés",
+            "body": "A telepítési lépés összeállítja a panel CSS-ét is. Nincs fordítanivaló natív modul."
           },
           {
             "title": "Indítsd el a panelt",
-            "body": "Alapértelmezetten csak a localhost-ot figyel. Állítsd be a PANEL_HOST=0.0.0.0 értéket, hogy elérhető legyen a hálózatod más gépeiről."
+            "body": "Alapértelmezetten csak a localhost-ot figyel. Állítsd be a PANEL_HOST=0.0.0.0-t, hogy elérhető legyen a hálózatod más gépeiről."
           }
         ]
       },
@@ -412,11 +509,11 @@
         "steps": [
           {
             "title": "Indítás forrásból telepített verzióval",
-            "body": "Futtasd ezt a klónozott mappából. A PM2 a Node verziójával indítja az alkalmazásokat, amellyel a daemonja elindult, ezért rögzítsd az értelmezőt."
+            "body": "Futtasd ezt a klónozott mappából. A PM2 a Node verziójával indítja az alkalmazásokat, amellyel az indítódaemonja futott, ezért rögzítsd az értelmezőt."
           },
           {
             "title": "Mentsd el a folyamatlistát és engedélyezd az indítást",
-            "body": "A `pm2 startup` parancs kiad egy parancsot, amit sudo-val kell futtatni; futtasd egyszer."
+            "body": "A `pm2 startup` kiír egy parancsot, amit sudo-val kell futtatni; futtasd egyszer."
           },
           {
             "title": "A systemd-t részesíted előnyben?",
@@ -436,5 +533,1647 @@
     "checksums": "Ellenőrző összegek",
     "integrations": "Integrációk",
     "keyless": "kulcs nélküli"
+  },
+  "landing": {
+    "breadcrumb": "Útvonal",
+    "install": "Telepítse a panelt",
+    "docs": "Olvassa el a dokumentációt",
+    "related": "További olvasnivaló",
+    "open": "Megnyitás",
+    "docsGuides": "További útmutatók a dokumentációban",
+    "docsGuidesIntro": "Rövid, gyakorlati válaszok a szervergazdák leggyakoribb kérdéseire, a dokumentáció mellett."
+  },
+  "serversHub": {
+    "meta": {
+      "title": "Minecraft szervertípusok: Paper, Fabric, Forge",
+      "description": "Futtass Paper, Purpur, Fabric, Quilt, Forge, NeoForge, vanilla vagy teljes modpack szervert egyetlen, saját üzemeltetésű panelről. Válaszd ki a szerver típusát, és nézd meg, mit kapsz."
+    },
+    "eyebrow": "Minden szervertípus",
+    "title": "Egy panel mindenféle Minecraft szerverhez",
+    "intro": "Pluginok, modok, az eredeti játék, vagy egy teljes modpack. Válaszd ki, mit szeretnél futtatni, és a panel elintézi neked a Java verziót, a letöltéseket és a rögzítést.",
+    "pills": [
+      "vanilla",
+      "paper",
+      "purpur",
+      "fabric",
+      "quilt",
+      "forge",
+      "neoforge",
+      "packs-curseforge",
+      "packs-modrinth",
+      "ftb",
+      "gtnh"
+    ],
+    "cards": {
+      "serverPaper": "Paper és Purpur plugin szerverek, négy nyilvántartásból származó pluginekkel, és a játékosok módosítatlan klienssel csatlakozhatnak.",
+      "serverFabric": "Fabric és Quilt szerverek könnyű, gyorsan frissülő modokhoz, minden Minecraft frissítés előtt verzióellenőrzéssel.",
+      "serverForge": "Forge és NeoForge nagyméretű modokhoz, az 1.7.10-es klasszikusoktól a jelenlegi csomagokig, a számodra megfelelő Java verzió kiválasztásával.",
+      "serverVanilla": "Az eredeti játék, a snapshotoktól a régi béta verziókig, világvezérlőkkel, biztonsági mentésekkel és játékosstatisztikákkal körülötte.",
+      "serverModpacks": "CurseForge, Modrinth, FTB és GT New Horizons csomagok pontos verzióhoz rögzítve, plusz a saját zip vagy .mrpack fájlod."
+    },
+    "sections": [
+      {
+        "title": "Nem vagy biztos, melyiket válaszd?",
+        "body": "A alapján válassz, hogy a játékosaidnak mit kell telepíteniük, ne aszerint, hogy mi hangzik a leggyorsabbnak. Ha senkinek semmit sem kell telepítenie, futtass vanilla vagy Paper szervert. Ha egy közzétett csomagot telepítesz, a csomag határozza meg a betöltőt és a Minecraft verzióját. Ha magad építesz modolt szervert, a Fabric és a NeoForge a legtöbb modern modot lefedi, a Forge pedig a régebbi korszakokat. ",
+        "points": [
+          "Túlélés barátokkal, semmi rendkívüli: vanilla.",
+          "Nyilvános szerver rangokkal, jogokkal és moderálással: Paper.",
+          "Egy specifikus csomag a CurseForge-ról vagy a Modrinth-ről: amit a csomag mond.",
+          "Egy modern csomag, amit magad állítasz össze: Fabric vagy NeoForge.",
+          "Egy régi csomag az 1.7-től 1.12-ig terjedő korszakból: Forge."
+        ]
+      }
+    ],
+    "related": ["guidesHub", "serverModpacks"],
+    "cta": {
+      "title": "Indítsd el az első szerveredet",
+      "body": "Telepítsd a panelt, nyisd meg az alkotó varázslót, és válassz egy szervertípust. Minden típus ingyenes, és a saját gépeden fut."
+    }
+  },
+  "serverPaper": {
+    "meta": {
+      "title": "Paper szerver panel: bővítmények, önállóan üzemeltetett",
+      "description": "Egy ingyenes, önállóan üzemeltetett Paper és Purpur szerver panel. Keress bővítményeket a Hangar, SpigotMC és Modrinth oldalakon, ellenőrizz minden letöltést, és tartsd naprakészen őket."
+    },
+    "eyebrow": "Paper és Purpur",
+    "title": "Önállóan üzemeltetett Paper szerver panel valódi bővítményböngészővel",
+    "intro": "Futtass Paper vagy Purpur szervert saját Docker konténerben, keress bővítményeket négy nyilvántartásból anélkül, hogy elhagynád a panelt, és engedd, hogy a játékosok a már meglévő játékukkal csatlakozzanak.",
+    "pills": ["paper", "purpur", "hangar", "spigotmc", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Miért Paper egy nyilvános szerverhez",
+        "body": "A bővítmények csak a szerveren futnak, így a játékosok egy szokásos, módosítatlan klienssel csatlakoznak, és soha semmit sem kell telepíteniük. Minden, ami szabályokkal, engedélyekkel, gazdaságokkal, területrögzítésekkel, minijátékokkal vagy moderálással kapcsolatos, az egy bővítmény, és ezért szinte minden nyilvános szerver Paper-t futtat. Évek teljesítményfejlesztése áll mögötte, és szinte minden adminisztrátort irritáló viselkedéshez van beállítás. A Purpur a Paper egy elágazása, még több kapcsolóval, beleértve a játékmeneti kapcsolókat is. Mindkettő a varázsló Vanilla fülén található.",
+        "points": [
+          "A játékosok a normál játékkal csatlakoznak. Nincsenek modok, nincs launcher beállítás.",
+          "A Bukkit korszak legtöbb bővítménye továbbra is működik.",
+          "A Purpur-t csak akkor válaszd, ha a további kapcsolóit szeretnéd használni; egyébként a Paper-t."
+        ]
+      },
+      {
+        "title": "Négy bővítmény-nyilvántartás egy keresésben",
+        "body": "A bővítmény szerver Modok fülén kereshetsz a Hangar (a PaperMC saját bővítmény-nyilvántartása), a SpigotMC, a Modrinth és a CurseForge oldalakon, szűrve a szerver Minecraft verziójára. Csak a CurseForge igényel API kulcsot. Beilleszthetsz projektoldalt, GitHub adattárat vagy kiadást, vagy közvetlen jar linket is, és a panel megtalálja a megfelelő buildet. Minden nyilvántartásból származó letöltést a nyilvántartás által közzétett legerősebb ellenőrzőösszeggel ellenőrzünk, mielőtt a szerverre kerülne, így soha nem érkezik sérült vagy manipulált fájl.",
+        "pills": ["hangar", "spigotmc", "modrinth", "curseforge", "github-releases", "sha512", "sha256"],
+        "points": [
+          "A szerveren már meglévő eredmények 'Telepítve' jelvényt kapnak.",
+          "Ha egy SpigotMC erőforrás máshol van tárolva, a panel ezt előre jelzi, és felajánlja az oldal megnyitását és a jar feltöltésként történő elfogadását.",
+          "A feltöltött jarkkal azonosítva vannak, így megőrzik valós nevüket és naprakészen ellenőrizhetők maradnak."
+        ],
+        "shot": "mods"
+      },
+      {
+        "title": "Bővítményfrissítések találgatás nélkül",
+        "body": "Minden hozzáadott bővítményt naponta ellenőrzünk a forrásával szemben, és igény szerint. Frissíts egy bővítményt, hagyj figyelmen kívül egy nem kívánt verziót, vagy nyomd meg a 'Mindent frissít' gombot az összes frissítés egyetlen újraindítással történő alkalmazásához. Ha egy frissítés rosszul sül el, térj vissza az előző buildhez a megosztott könyvtárból. Kapcsold be az 'Értesíts' opciót a szerver frissítési szabályzatában, és a függőben lévő frissítések jelvényként és a Frissítések oldalon jelennek meg.",
+        "points": [
+          "Napi ellenőrzések a Hangar, SpigotMC, Modrinth, CurseForge és GitHub Releases ellen.",
+          "A visszaállítás az előző buildet helyezi vissza a könyvtárból.",
+          "Ha rögzítesz egy Paper buildet, a Frissítések oldal tájékoztat, ha egy újabb érkezik."
+        ]
+      },
+      {
+        "title": "Futtasd úgy, mint egy közösségi szervert",
+        "body": "A Paper szerverek ugyanazokat az eszközöket kapják, mint minden más szerver a panelen: élő konzol RCON parancssávval, fehérlista, operátorok, tiltások és IP-cím tiltások, teleportok, valamint egyedi csevegési parancsok visszaszámlálókkal. Adj a személyzetednek fiókokat szerverenkénti engedélyekkel, így egy moderátor futtathatja a konzolt anélkül, hogy a biztonsági mentéseket vagy fájlokat érintené. Egy kattintással hozzáadható egy BlueMap élő térkép, amelyet csak a panel saját bejelentkezésén keresztül szolgálnak ki, és a Discord riasztások tájékoztatnak, ha valami figyelmet igényel.",
+        "pills": ["bluemap", "discord"],
+        "shot": "console"
+      }
+    ],
+    "steps": {
+      "title": "Indíts el egy Paper szervert három lépésben",
+      "items": [
+        {
+          "title": "Válaszd a Paper-t a Varázslóban",
+          "body": "Nyisd meg a 'Szerver létrehozása' opciót, maradj a Vanilla fülön, válaszd a Paper vagy Purpur lehetőséget, és válassz egy Minecraft verziót. Egy ingyenes játékkapu és ésszerű memória lesz előre kitöltve."
+        },
+        {
+          "title": "Add hozzá a Bővítményeidet",
+          "body": "A szerver Modok fülén keress a Hangar, SpigotMC, Modrinth vagy CurseForge oldalakon, vagy illessz be egy linket. A telepítések letöltés közben ellenőrzésre kerülnek."
+        },
+        {
+          "title": "Oszd meg a Címet",
+          "body": "Az Áttekintés fül mutatja a címet, amit a játékosoknak adhatsz. A már meglévő játékukkal csatlakoznak."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Paper Szerver Kérdések",
+      "items": [
+        {
+          "q": "Hozzáadhatok modokat egy Paper szerverhez?",
+          "a": "Nem. A Paper bővítményeket tölt be, amelyek csak a szerveren futnak. A modok magát a játékot változtatják meg, és szükségük van egy mod betöltőre, mint például a Fabric vagy NeoForge, mind a szerveren, mind minden kliensen. Ha mindkettőt szeretnéd, futtass egy modolt szervert és egy bővítmény szervert egymás mellett, ahelyett, hogy egy hibridet használnál."
+        },
+        {
+          "q": "Szükségem van SpigotMC fiókra vagy API kulcsra a bővítmények telepítéséhez?",
+          "a": "Nem. A SpigotMC, a Hangar és a Modrinth mind kulcs nélkül működik. Csak a CurseForge kér API kulcsot, amit egyszer adsz meg a Beállítások, API kulcsok alatt."
+        },
+        {
+          "q": "Egy videóból származó vöröskő farm nem működik a szerveren. Miért?",
+          "a": "A Paper a teljesítmény nevében alapértelmezetten megváltoztat néhány vanilla viselkedést. Ez általában az ok, és általában a Paper konfigurációjának egy beállítása, amit a szerver fájlkezelőjében szerkeszthetsz."
+        },
+        {
+          "q": "A régi Bukkit és Spigot bővítményeim továbbra is működni fognak?",
+          "a": "A legtöbbjük, igen. A Paper a Spigot egy elágazása, és megtartja a bővítmény API-t, így a Bukkit és Spigot számára írt bővítmények nagyrészt változatlanul futnak. Ellenőrizd minden bővítmény oldalán a támogatott Minecraft verziókat."
+        }
+      ]
+    },
+    "related": ["serverFabric", "serverVanilla", "guideMulti"],
+    "cta": {
+      "title": "Futtasd a Paper Szerveredet Otthon",
+      "body": "Telepítsd a panelt bármilyen gépre Dockerrel, majd hozz létre egy Paper szervert a varázslóval. Ingyenes, nyílt forráskódú és a tiéd."
+    }
+  },
+  "serverFabric": {
+    "meta": {
+      "title": "Saját üzemeltetésű Fabric szerver modböngészővel",
+      "description": "Házigazdálkodj saját magad egy Fabric vagy Quilt Minecraft szerverrel. Keress a Modrinth és CurseForge oldalakon, tűzz ki egy betöltő verziót, és ellenőrizz minden modot frissítés előtt."
+    },
+    "eyebrow": "Fabric és Quilt",
+    "title": "Egy saját üzemeltetésű Fabric szerver, amely tudja, mit támogatnak a modjaid",
+    "intro": "Hozzon létre egy Fabric vagy Quilt szervert a kívánt modokból, tartsa a betöltő verzióját ott, ahol van, és csak akkor lépjen új Minecraft verzióra, ha minden mod követni tudja.",
+    "pills": ["fabric", "quilt", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Miért Fabric",
+        "body": "A Fabric kicsi, napokon belül követi az új Minecraft verziókat, és a legtöbb modern teljesítménynövelő modnak ad otthont. Ha a cél egy gyors szerver kevés életminőség-javító moddal, ezt a betöltőt válassza. Szinte minden Fabric modhoz szükség van a Fabric API-ra is, amely egy külön letöltés, amit bármelyik másik modként ad hozzá. A Quilt a Fabric egy elágazása, amely a legtöbb Fabric modot futtatja; válassza ezt, ha van rá konkrét oka, egyébként válassza a Fabricot.",
+        "points": [
+          "Gyorsan követi az új Minecraft kiadásokat.",
+          "A legtöbb modern teljesítménynövelő mod otthona.",
+          "A Quilt szerverek automatikusan látják a Fabric verziókat, mivel a Quilt futtatja a Fabric modokat."
+        ]
+      },
+      {
+        "title": "Kezdje a kívánt modokkal",
+        "body": "A varázsló „Modokból” lapja kiválasztja a betöltőt, a Minecraft verziót és egy betöltő verziót: a legfrissebbet vagy egy Ön által rögzítettet. Fordítva is csinálhatja. Válassza ki először a modokat, és a megoldó javasolja a legújabb betöltőt és Minecraft verziót, amelyet mindegyik támogat, majd telepíti a készletet a szerver létrehozásakor.",
+        "points": [
+          "Rögzítsen egy Fabric vagy Quilt betöltő verziót a legfrissebb követése helyett.",
+          "A Frissítések oldal újabb verziókat kínál egy rögzített betöltőhöz.",
+          "A modböngésző betöltő szerint szűr, így egy Forge jar véletlenül sem kerülhet egy Fabric szerverre."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Verzióellenőrzés minden frissítés előtt",
+        "body": "Egy Fabric szerver „Modok” lapján található egy „Verziók” al-lap. Ellenőrzi az összes telepített modot a Modrinth és a CurseForge ellen, és jelentést készít a legmagasabb Minecraft verzióról, amelyhez mindegyiknek van verziója, valamint egy részletes kimutatást arról, hogy mit hagyna hátra egy újabb verzió. Újabb Minecraft verzió csak akkor kínálkozik, ha az ellenőrzés azt alátámasztja, és soha, amíg egy jar nem azonosítható.",
+        "pills": ["modrinth", "curseforge"]
+      },
+      {
+        "title": "Megbízható és visszavonható modok",
+        "body": "Minden regisztrációs letöltés ellenőrzésre kerül a legerősebb ellenőrzőösszeggel, amelyet a regisztráció közzétesz, mielőtt a szerverre kerülne. Az Ön által hozzáadott modok egy megosztott könyvtárban élnek, sha256 szerint deduplikálva, így tíz szerver, amely ugyanazt a modot futtatja, egyszer tárolja. Frissítsen egy modot, hagyjon figyelmen kívül egy verziót, vagy térjen vissza az előző verzióra, amikor egy frissítés rosszul sül el. Importáljon egy Modrinth .mrpack-ot vagy egy jar-okból álló zip-et, és minden jar azonosításra kerül, és ellenőrzésre a szerverrel szemben, mielőtt bármi települne.",
+        "pills": ["mrpack", "zip", "sha512", "sha256"],
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Indítson el egy Fabric szervert három lépésben",
+      "items": [
+        {
+          "title": "Válassza a Fabricot a „Modokból” lapon",
+          "body": "Válassza a Fabricot vagy a Quilt-et, egy Minecraft verziót, és a legfrissebb betöltő verziót vagy egy rögzítettet."
+        },
+        {
+          "title": "Keressen és adjon hozzá modokat",
+          "body": "Keressen a Modrinth vagy CurseForge oldalon, adja hozzá a Fabric API-t, és adja hozzá a többit. Minden letöltés ellenőrzésre kerül."
+        },
+        {
+          "title": "Hívja meg a játékosokat",
+          "body": "A Meghívók lap elkészít egy beilleszthető meghívót és egy kliens .mrpack-ot a hozzáadott modokból, a szerverével már a játékbeli szerverlistában."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Fabric szerverrel kapcsolatos kérdések",
+      "items": [
+        {
+          "q": "A játékosoknak is telepíteniük kell ugyanazokat a modokat?",
+          "a": "Igen, minden olyan mod esetében, amely tartalmat ad hozzá. A modok magát a játékot változtatják meg, ezért az ügyfélnek ugyanazokat kell betöltenie. A Meghívók lap elkészít egy kliens .mrpack-ot a hozzáadott modokból, a szerverével már a játékbeli szerverlistában, amelyet a játékosok importálnak egy indítóba, mint például a Prism vagy a Modrinth App."
+        },
+        {
+          "q": "Valóban szükségem van a Fabric API-ra?",
+          "a": "Szinte mindig. Szinte minden Fabric mod ettől függ, és ez egy külön letöltés. Adja hozzá a modböngészőből, mint bármelyik másik modot."
+        },
+        {
+          "q": "Honnan tudhatom, hogy a modjaim működni fognak a következő Minecraft verzióval?",
+          "a": "Nyissa meg a szerver „Modok” lapját, majd a „Verziók” lapot. Megmutatja a legmagasabb Minecraft verziót, amelyhez minden telepített modnak van verziója, és azt, hogy mit hagyna hátra egy újabb verzió."
+        },
+        {
+          "q": "Egy mod frissítése tönkretette a szervert. Visszamehetek?",
+          "a": "Igen. Visszaállíthatja a modot a Modok lapon lévő sorából, és az előző verzió visszajön a megosztott könyvtárból."
+        }
+      ]
+    },
+    "related": ["serverForge", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Üzemeltesse Fabric szerverét saját maga",
+      "body": "Telepítse a panelt, nyissa meg a „Modokból” lapot, és válassza ki a modjait. Nincs előfizetés és nincs korlátozás arra, hogy hány szervert futtat."
+    }
+  },
+  "serverForge": {
+    "meta": {
+      "title": "Forge és NeoForge moddolós szerver panel",
+      "description": "Futtass saját magad Forge vagy NeoForge moddolós Minecraft szervert. A megfelelő Java verziót kiválasztja neked, a betöltő verziók rögzíthetők, és a összeomlások gyanúsítottakat neveznek meg."
+    },
+    "eyebrow": "Forge és NeoForge",
+    "title": "Egy Forge moddolós szerver panel, amely kiválasztja a megfelelő Java verziót",
+    "intro": "Az 1.7.10-es klasszikusoktól az aktuális NeoForge csomagokig hozz létre szervert, állítsd be a memóriát, és találd meg az összeomlás mögötti modot anélkül, hogy a stack trace-t sorról sorra olvasnád.",
+    "pills": ["forge", "neoforge", "curseforge", "modrinth"],
+    "sections": [
+      {
+        "title": "Forge vagy NeoForge?",
+        "body": "A NeoForge az a hely, ahol a régi Forge ökoszisztéma most dolgozik az aktuális verziókhoz. Az 1.20.1-es verzió során vált el a Forge-tól, és a legtöbb nagy, 1.20.2-es és újabb verziókhoz készült csomag erre irányul, ezért indíts új, nagyteljesítményű szervert a NeoForge-on. A Forge még mindig a múltat birtokolja: minden, ami az 1.7.10, 1.12.2 és 1.16.5 korszakból származik, Forge, és ez rengeteg a legkedveltebb csomagból. Az egyik betöltőhöz készült modok nem futnak a másikon, és egy 1.20.1-es NeoForge csomag nem fut 1.20.1-es Forge-on.",
+        "points": [
+          "Új, nagyteljesítményű szerver: NeoForge.",
+          "1.7.10, 1.12.2 vagy 1.16.5 korszak: Forge.",
+          "Egy publikált csomag: bármi, amit a csomag felsorol, pontosan."
+        ]
+      },
+      {
+        "title": "A Megfelelő Java, Minden Alkalommal",
+        "body": "A Minecraft Java követelményei a játékkal együtt mozognak, és a rossz verzió egy haszontalan UnsupportedClassVersionError hibát ad ahelyett, hogy egyértelmű üzenetet kapnál. A régi csomagok valóban Java 8-at igényelnek, az aktuális verziók pedig 21-et vagy újakat. A létrehozási varázsló elolvassa a kiválasztott Minecraft verziót, és maga választja ki a futtatókörnyezetet, így a nem egyezés soha nem történik meg véletlenül. Egy csomag frissítése újra feloldja a Java verziót, ha az új verzió másikat igényel.",
+        "points": ["1.16.5 és korábbi: Java 8.", "1.18-tól 1.20.4-ig: Java 17.", "1.20.5-től 1.21-ig: Java 21."]
+      },
+      {
+        "title": "Memória Méretezve Modokhoz",
+        "body": "Minden szervernek két száma van: a Java heap és a konténer memóriahatára. A Java-nak a heap-en kívül is szüksége van memóriára, nagy modcsomagok esetén körülbelül 1,5-2 GB, és egy korlátokkal rendelkező konténer leáll, amint a Java eléri azt. A varázsló a határt a heap 50%-kal magasabbra állítja, és a panel megtagadja a konténerhatárt, ha az nem magasabb a heap-nél. Egy 150-300 modot tartalmazó, mindent bele csomag 6-8 GB heap-et igényel.",
+        "points": [
+          "Egy memóriahiány miatt leállt szerver pontosan így kerül rögzítésre a történetében.",
+          "Állíts be kisebb kezdeti heap-et, hogy a memória kövesse a valós használatot."
+        ]
+      },
+      {
+        "title": "Összeomlások, Amelyek Megnevezik Gyanúsítottjaikat",
+        "body": "A összeomlási jelentéseket automatikusan felveszi és egy soros összefoglalóvá dolgozza fel a kivétellel és a mögötte legvalószínűbb modokkal. Nyisd meg a beépített nézőt, másold ki a stack trace-t, vagy egy explicit megerősítés után oszd meg az mclo.gs-en, és kapj automatizált betekintést: ismert problémák javasolt javításokkal, közvetlenül a panelen megjelenítve. Az automatikus újraindítás összeomlás esetén növekvő várakozási időkkel próbálkozik újra, és kihagyja azokat az összeomlásokat, amelyekhez először javításra van szükség, mint például a rossz Java vagy a memória hiánya.",
+        "pills": ["mclogs"],
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Indíts Forge Szervert Három Lépésben",
+      "items": [
+        {
+          "title": "Válaszd ki a Betöltőt és a Verziót",
+          "body": "A varázsló Modok fülén válaszd ki a Forge vagy NeoForge, a Minecraft verziót, és a legújabb betöltő verziót vagy egy rögzítettet."
+        },
+        {
+          "title": "Adj neki Elég Memóriát",
+          "body": "Állítsd be a Java heap-et a modlistád méretének megfelelően. A konténerhatár követi, 50%-kal felette."
+        },
+        {
+          "title": "Adj Hozzá Modokat vagy Importálj Egy Zip Fájlt",
+          "body": "Keress a CurseForge és Modrinth oldalakon, vagy importálj egy CurseForge exportot vagy egy zip fájlt a jar-okból. Minden jar azonosítva van és először ellenőrizve a szerverrel szemben."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Forge Szerver Kérdések",
+      "items": [
+        {
+          "q": "Futtathatok még mindig egy 1.12.2 vagy 1.7.10-es csomagot?",
+          "a": "Igen. Válaszd ki a verziót és a Forge-ot a varázslóban, és a panel Java 8-on futtatja, amihez ezek a verziók szükségesek. A GT New Horizons, az 1.7.10-es expert csomag, a Modpackok oldalról telepíthető a saját Java választásával."
+        },
+        {
+          "q": "Mennyi memóriára van szüksége egy Forge szervernek?",
+          "a": "Egy könnyű, 40-80 modos csomag jól fut egy 4 GB heap-en egy 6 GB-os konténerben. Egy 150-300 modos csomag 6-8 GB heap-et és körülbelül 10 GB-ot igényel a konténerhez."
+        },
+        {
+          "q": "Rögzíthetek egy specifikus Forge build-et?",
+          "a": "Igen. A varázsló betöltő verzióválasztója a legújabb vagy egy specifikus build-et fogad el, és a Frissítések oldal újabb build-eket kínál egy rögzített verzióhoz anélkül, hogy azokat önállóan alkalmazná."
+        },
+        {
+          "q": "A szerverem összeomlott induláskor. Hová nézzek?",
+          "a": "Nyisd meg a Felügyeletet, majd a Történetet. Az összeomlási jelentés kártya felsorolja a kivételt és a gyanús modokat, az Elemzés pedig futtatja az mclo.gs betekintést az ismert problémák és javítások érdekében."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "serverFabric", "guideHome"],
+    "cta": {
+      "title": "Futtasd Saját Moddolós Szerveredet",
+      "body": "Telepítsd a panelt egy elegendő memóriával rendelkező gépre, majd hozz létre egy Forge vagy NeoForge szervert a varázslóval."
+    }
+  },
+  "serverVanilla": {
+    "meta": {
+      "title": "Vanilla Minecraft szerver panel, saját tárhelyű",
+      "description": "Házigazdálkodj saját Minecraft szerverrel: bármilyen verzió a régi bétáktól a legújabb snapshotig, világvezérléssel, napi biztonsági mentésekkel és játékosstatisztikákkal."
+    },
+    "eyebrow": "Az érintetlen játék",
+    "title": "Egy vanilla Minecraft szerver minden körítéssel",
+    "intro": "Tartsd a játékot pontosan úgy, ahogy a Mojang kiadta, és a panelről kapj biztonsági mentéseket, világkezelő eszközöket, moderálást és játékosstatisztikákat, a bővítmények helyett.",
+    "pills": ["vanilla", "docker"],
+    "sections": [
+      {
+        "title": "Bármilyen verzió, amit szeretnél",
+        "body": "Válaszd a legújabb kiadást, egy snapshotot vagy egy konkrét verziót, beleértve a régi bétákat és alfákat is. A panel kiválasztja a Java futtatókörnyezetet, amire az adott verziónak szüksége van, letölti a képet, és elindítja a szervert. Senkinek sem kell semmit telepítenie a csatlakozáshoz: a játékosok a már meglévő játékukkal kapcsolódnak.",
+        "points": [
+          "Legújabb kiadás, snapshotok vagy egy konkrét verzió.",
+          "Régi béták és alfák egy nosztalgikus szerverhez.",
+          "Minden verzióhoz a megfelelő Java kiválasztva."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Világvezérlés parancsok gépelése nélkül",
+        "body": "A Világvezérlés minden szerverlapon jelen van: a játékon belüli óra, az időjárás és az általános gamerules kapcsolókkal vezérelhetők, minden más szabály pedig egy kattintásra van. A Világok lap visszaállítja az aktív világot egy új, megőrzött vagy egyedi seeddel, előtte biztonsági mentést készítve. Duplikálj egy világot, őrizz meg befejezetteket a világkönyvtárban, vagy tölts fel egy már meglévő világot .zip vagy .tar archívumként.",
+        "points": [
+          "Visszaállítás új seeddel, ugyanazzal a seeddel vagy egy általad beírt seeddel.",
+          "Minden szerver által megosztott világkönyvtár.",
+          "Szerkeszd a server.properties fájlt a böngészőben; a lemezen lévő érték érvényesül."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Biztonsági mentések az első naptól",
+        "body": "Minden új szerver automatikusan kap egy napi biztonsági mentési ütemtervet. A biztonsági mentések mentésbiztosak: a panel leállítja a mentést, kiüríti a világot, becsomagolja, és ellenőrzi, hogy az archívum megnyitható-e, mielőtt rögzítené. A visszaállítás pontosan olyan állapotba állítja vissza a szervert, amilyen volt, és először biztonsági mentést készít az aktuális adatokról.",
+        "shot": "backups"
+      },
+      {
+        "title": "Moderálás és statisztikák bővítmények nélkül",
+        "body": "A Vanilla nem rendelkezik engedélyrendszerrel, így a panel biztosítja a moderációs eszközöket: fehérlista, operátorok minden szinten, tiltások és IP-cím tiltások, valamint teleportálás, élőben, amíg a szerver fut, és közvetlenül a fájlokba, amíg leállt. A játék saját statisztikái ütemezetten kerülnek beolvasásra játékosprofilokba és egy eredménytáblába: játékidő, halálesetek, ölések, bányászott blokkok és gyémántok, megtett távolság. Az aktivitási idővonal kereshetővé teszi a csevegéseket, csatlakozásokat, haláleseteket és elért eredményeket."
+      }
+    ],
+    "faq": {
+      "title": "Vanilla Szerver Kérdések",
+      "items": [
+        {
+          "q": "Futtathatok snapshot szervert?",
+          "a": "Igen. Válaszd a snapshotot Minecraft verzióként a varázslóban. Készíts biztonsági mentést minden új snapshot előtt, mert a snapshot világok nem nyithatók meg régebbi verzióban."
+        },
+        {
+          "q": "Lehet egy vanilla szervernek élő térképe?",
+          "a": "Vanillában nem. A BlueMap futtatásához bővítmény vagy mod betöltő szükséges. Egy Paper szerver egyetlen kattintással kap egyet, és a játékosok továbbra is módosítatlan klienssel csatlakoznak."
+        },
+        {
+          "q": "Visszaállíthatom a világot, de megtarthatom a seedet?",
+          "a": "Igen. Állítsd vissza az aktív világot a Világok lapról, és válaszd a jelenlegi seed megtartását. A panel először biztonsági mentést kínál a régi világról."
+        },
+        {
+          "q": "Hány játékost tud kezelni egy vanilla szerver?",
+          "a": "A Vanilla lassabb sok játékossal, mint a Paper. Egy baráti társaságnak rendben van. Egy forgalmas nyilvános szerverhez a Paper ugyanezt a játékot futtatja, rengeteg éves teljesítményfejlesztéssel."
+        }
+      ]
+    },
+    "related": ["serverPaper", "guidePi", "guideHome"],
+    "cta": {
+      "title": "Indíts el egy Vanilla Szervert",
+      "body": "Telepítsd a panelt, válaszd a Vanilla-t a varázslóban, és oszd meg a címet. Ingyenes és nyílt forráskódú."
+    }
+  },
+  "serverModpacks": {
+    "meta": {
+      "title": "Minecraft modpack szerver: egykattintásos telepítés",
+      "description": "Futtass Minecraft modpack szervert CurseForge, Modrinth, FTB vagy GT New Horizons csomagokból. A csomagok rögzítve maradnak, minden frissítés biztonsági mentéssel és visszaállítással jár."
+    },
+    "eyebrow": "Modpack szerverek",
+    "title": "Egy Minecraft modpack szerver, ami sosem frissül a hátad mögött",
+    "intro": "Telepíts egy csomagot név alapján, rögzíts egy pontos verziót, és csak akkor frissíts, amikor te döntesz, előtte biztonsági mentéssel és egykattintásos visszaállítással, ha az új verzió nem indul el.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"],
+    "sections": [
+      {
+        "title": "Minden nagy csomagforrás",
+        "body": "A Modpackok oldal és a varázsló „Modpackból” lapja telepít csomagokat CurseForge és Modrinthról név alapján keresve, FTB csomagokat a csomag- és verzióazonosítójukkal, valamint GT New Horizons csomagot saját kiadási indexéből. Egyáltalán nem publikált csomag? Tölts fel egy Modrinth .mrpack fájlt, egy CurseForge modpack exportot, vagy bármilyen mod jar fájlokból álló zipet. A manifest, vagy az azonosított jar fájlok többségi szavazata határozza meg a betöltőt és a Minecraft verziót.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export", "zip"],
+        "points": [
+          "A CurseForge API kulcsot igényel, amit egyszer kell hozzáadni a Beállítások, API kulcsok alatt.",
+          "Azok a modok, amelyek szerzői nem engedélyezik az automatizált letöltéseket, egy linkkel és egy feltöltési hellyel jelennek meg a telepítés sikertelensége helyett.",
+          "A GT New Horizons csomaghoz a Java verziója és ésszerű memória- és lemezminimumok kerülnek beállításra."
+        ]
+      },
+      {
+        "title": "Rögzítve egy pontos verzióhoz",
+        "body": "Amikor kiválasztasz egy csomagot, a panel feloldja a pontos verziót, rögzíti azt, és azt telepíti. Egy újraindítás soha nem frissítheti csendben a csomagot. Te döntöd el, hogyan értesüljön minden szerver az új verziókról: a „Csak manuális” teljesen érintetlenül hagyja, az „Értesíts” egy jelvényt mutat, és felsorolja a Frissítések oldalon, az „Automatikus frissítés” pedig a napi ellenőrzés után alkalmazza a csomagfrissítéseket ugyanazon a védett útvonalon keresztül. Azok a frissítések, amelyek egy világot más Minecraft verzióra váltanának, mindig kihagyásra kerülnek, mert a világ konvertálása a te döntésed.",
+        "points": [
+          "Az alapértelmezett a „Csak manuális”.",
+          "A stabil kiadásokat követő szerverek soha nem kapnak béta verziót.",
+          "Az „Automatikus frissítés” soha nem lép át Minecraft verziót."
+        ]
+      },
+      {
+        "title": "Frissítések visszaúttal",
+        "body": "Egy csomag frissítése egyetlen művelet. A panel biztonsági mentést készít, finoman leállítja a szervert, kicseréli a rögzített verziót, újraépíti a szervert a megfelelő Java verzióval az új verzióhoz, és figyeli az első indítást, bőséges időt hagyva a nagy csomagoknak, amelyek gigabájtokat töltenek le az első indításkor. Ha az új verzió nem indul el, egy kattintással visszaállíthatod.",
+        "shot": "backups"
+      },
+      {
+        "title": "Saját modok felül",
+        "body": "Azok a modok, amelyeket egy csomagszerverhez adsz, egy megosztott könyvtárban élnek, és be vannak linkelve a szerverbe, így túlélik a csomagfrissítéseket. Tilts le egy csomagmodot, amit nem akarsz, adj hozzá egy teljesítménynövelő modot, ami hiányzik a csomagból, és tartsd meg mindkettőt a következő frissítésig. A játékosok ugyanazt a csomagot telepítik ugyanazon a verzióval a CurseForge-ról vagy a Modrinthról, és a Meghívók lapon találsz egy beilleszthető meghívót a címmel és a verzióval.",
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Indíts modpack szervert három lépésben",
+      "items": [
+        {
+          "title": "Keresd meg a csomagot",
+          "body": "Keress a CurseForge vagy a Modrinth oldalon a Modpackok oldalon, vagy tölts fel egy .mrpack, egy CurseForge export vagy egy zip fájlt a jar fájlokból."
+        },
+        {
+          "title": "Válaszd ki a verziót és a memóriát",
+          "body": "Válaszd ki a pontos csomagverziót. Adj elegendő helyet a Java heapnek a modok száma alapján; a konténer korlátja követi."
+        },
+        {
+          "title": "Hozd létre és figyeld az indítást",
+          "body": "A panel telepíti a csomagot, rögzíti azt, és elindítja a szervert. Egy nagy csomag első indítása sokáig tart; a konzol minden sort mutat."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Modpack szerver kérdések",
+      "items": [
+        {
+          "q": "Frissíti a szerver újraindítása a modpackomat?",
+          "a": "Nem. A csomag rögzítve van a telepített pontos verzióhoz. Csak akkor változik, amikor te frissíted, vagy a napi ellenőrzés után, ha a szervert „Automatikus frissítésre” állítottad."
+        },
+        {
+          "q": "Miért kér API kulcsot a CurseForge, amikor a Modrinth nem?",
+          "a": "A CurseForge csak olyan kérésekre válaszol, amelyek tartalmaznak egy kulcsot. Szerezhetsz egyet a CurseForge konzolról, és egyszer hozzáadhatod a Beállítások, API kulcsok alatt. A Modrinth kulcs nélkül is működik."
+        },
+        {
+          "q": "Néhány mod a csomagomban nem tölthető le. Mi a teendő?",
+          "a": "A szerzőik nem engedélyezik az automatizált letöltéseket. A panel felsorolja mindegyiket egy linkkel az oldalára és egy feltöltési hellyel, így letöltheted a jar fájlt a böngésződben, és bedobhatod."
+        },
+        {
+          "q": "Telepíthetek FTB csomagot?",
+          "a": "Igen, az FTB API-n keresztül a csomag numerikus azonosítójával és egy explicit verzióazonosítóval. A panel még nem ellenőrzi az FTB csomagokat frissítésekre."
+        }
+      ]
+    },
+    "related": ["guideFriends", "serverForge", "serverFabric"],
+    "cta": {
+      "title": "Futtasd modpack szerveredet otthon",
+      "body": "Telepítsd a panelt, nyisd meg a Modpackok oldalt, és válassz egy csomagot. Az általad választott verzión marad, amíg te másként nem döntesz."
+    }
+  },
+  "guidesHub": {
+    "meta": {
+      "title": "Útmutatók: saját Minecraft szerver üzemeltetése",
+      "description": "Útmutatók Minecraft szerverek saját magad általi üzemeltetéséhez: modpack szerver barátoknak, Raspberry Pi, otthoni PC, fizetett tárhely elhagyása, és sok szerver egy gépen."
+    },
+    "eyebrow": "Útmutatók",
+    "title": "Útmutatók Minecraft szerverek saját magad általi üzemeltetéséhez",
+    "intro": "Gyakorlati útmutatók a ténylegesen futtatott beállításokhoz, egy polcon lévő Raspberry Pi-től egy szerverekkel teli gépig.",
+    "cards": {
+      "guideFriends": "Üzemeltess egy CurseForge vagy Modrinth modpackot barátaidnak, a megfelelő memóriával és egy meghívóval, amit követni tudnak.",
+      "guidePi": "Alakíts át egy Raspberry Pi 4 vagy 5-öt Minecraft szerverré egy webes panellel, és méretezd meg becsületesen.",
+      "guideHome": "Üzemeltess Minecraft szervert otthon Windows, macOS vagy Linux alatt, és engedd, hogy barátaid biztonságosan csatlakozzanak.",
+      "guideHosting": "Vidd át a világodat, plugineidet és modjaidat egy fizetett tárhelyről anélkül, hogy egyetlen leltárt is elveszítenél.",
+      "guideMulti": "Futtass több Minecraft szervert egy gépen anélkül, hogy a portok, a memória vagy a lemez akadályozná egymást."
+    },
+    "related": ["serversHub"],
+    "cta": {
+      "title": "Valami hiányzik innen?",
+      "body": "A dokumentáció mélyebben tárgyalja az összes funkciót, és a Discordon igazi emberek vannak, akik szervereket futtatnak."
+    }
+  },
+  "guideFriends": {
+    "meta": {
+      "title": "Modpack szerver üzemeltetése barátoknak",
+      "description": "Üzemeltess CurseForge vagy Modrinth modpack szervert a barátaidnak a saját gépeden: válaszd ki a csomagot, adj neki elég memóriát, hívj meg barátokat, és készíts biztonsági mentéseket."
+    },
+    "eyebrow": "Modpack szerver útmutató",
+    "title": "Hogyan üzemeltess modpack szervert a barátaidnak",
+    "intro": "A saját géped is tudja futtatni azt a modpackot, amit a barátaiddal játszol. Telepítsd a panelt, hozd létre a szervert a modpackból, adj neki annyi memóriát, amennyi kell neki, és küldj a barátaidnak egy meghívót, amit követni tudnak.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "docker"],
+    "sections": [
+      {
+        "title": "Válaszd ki a modpackot az varázslóból",
+        "body": "A Modpackok oldal és a létrehozási varázsló Modpackból fül a CurseForge és a Modrinth keresőjében név alapján keres; a varázsló azonosító alapján FTB csomagokat, vagy egy már meglévő csomag exportot is elfogad. Válaszd ki azt a verziót, amit a barátaid játszani fognak. A panel pontosan azt a verziót telepíti, és azt tartja ott: egy újraindítás soha nem frissíti a csomagot a hátad mögött. A CurseForge-hoz egy ingyenes API kulcs szükséges, amit egyszer a Beállítások, API kulcsok alatt kell hozzáadni; a Modrinthhez nincs szükség kulcsra.",
+        "points": [
+          "Keress a CurseForge és a Modrinth oldalon, vagy tölts fel egy .mrpack fájlt, egy CurseForge exportot vagy mod fájlok zip-jét.",
+          "A modpack verziója rögzítve van, így mindenki ugyanazt játssza.",
+          "A Java verzióját a modpack Minecraft verziója határozza meg."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "mrpack", "cf-export"],
+        "shot": "modpacks"
+      },
+      {
+        "title": "Adj neki elegendő memóriát",
+        "body": "A modpackok sokkal több memóriát igényelnek, mint egy alap vanilla szerver, és egy szervernek két memóriaszáma van: a Java heap, és a körülötte lévő konténer limit, amelynek nagyobbnak kell lennie, mert a Java a heapen kívül is használ memóriát. Egy könnyű, 40-80 modot tartalmazó csomag 4 GB heapet igényel egy 6 GB-os konténerben; egy nagy, mindent tartalmazó csomag 6-8 GB heapet egy 10 GB-os konténerben. A panel megkülönbözteti a leállt szervert a memóriahiány miatt a összeomlástól, így tudod, melyik beállítást kell módosítanod.",
+        "points": [
+          "Állítsd be a memóriát a varázslóban, és később módosíthatod a szerver beállításaiban.",
+          "Hagyj memóriát az operációs rendszernek és a panelnek.",
+          "A Figyelés fül mutatja, mit használ valójában a szerver."
+        ]
+      },
+      {
+        "title": "Küldj a barátaidnak egy meghívót, amit követni tudnak",
+        "body": "A barátaid telepítsék ugyanazt a modpackot ugyanabban a verzióban a saját launcherükben: a CurseForge app, a Modrinth App vagy a Prism Launcher. A szerver Meghívók fülén, a Beállítások alatt, másolhatod a megosztandó címet és egy meghívó szöveget a Minecraft verziójával. A hálózatodon lévő barátok a helyi címet használják. Más helyen lévő barátoknak továbbítsd a játékkikötőt a routereden, vagy használj alagút szolgáltatást, ha a szolgáltatód nem engedélyezi.",
+        "points": [
+          "A Meghívók fül kínálja a helyi címet, a publikus címedet és egy egyéni címet.",
+          "Ha a fehérlista be van kapcsolva, először add hozzá minden barátodat a Játékosok fülön.",
+          "Azoknak a szervereknek, amelyek általad kiválasztott modokból épültek, a Meghívók fül egy kliens .mrpack fájlt is létrehoz, amely telepíti azokat, és hozzáadja a szervert a többjátékos listához."
+        ],
+        "pills": ["mrpack"]
+      },
+      {
+        "title": "Tartsd biztonságban a világot",
+        "body": "Minden új szerver kap egy napi biztonsági mentési ütemtervet. Mielőtt egy modpack frissül, a panel készít egy újabb biztonsági mentést, újraépíti a szervert az új verzióra, és figyeli az első indítást; ha nem indul el, egy kattintással visszaállítható. A modpackra rárakott modok a frissítések során is megmaradnak.",
+        "points": [
+          "Napi biztonsági mentések az első naptól kezdve.",
+          "Modpack frissítések és visszaminősítések biztonsági mentéssel és visszaállítással.",
+          "Összeomlási jelentések észlelése, magyarázata és megoszthatósága."
+        ],
+        "shot": "backups"
+      }
+    ],
+    "steps": {
+      "title": "Üzemeltess modpack szervert",
+      "items": [
+        {
+          "title": "Telepítsd a panelt",
+          "body": "Linuxon az egysoros telepítő beállítja a Dockert és a panelt. Windows és macOS alatt futtasd a panelt Node.js-szel a Docker Desktop mellett."
+        },
+        {
+          "title": "Adj hozzá egy CurseForge API kulcsot",
+          "body": "Csak CurseForge modpackokhoz: adj hozzá egy ingyenes kulcsot a Beállítások, API kulcsok alatt."
+        },
+        {
+          "title": "Hozd létre a szervert a modpackból",
+          "body": "Nyisd meg a varázsló Modpackból fülét, keresd meg a modpackot, válaszd ki a verzióját és a memóriát, majd hozd létre a szervert."
+        },
+        {
+          "title": "Hívd meg a barátaidat",
+          "body": "Indítsd el a szervert, nyisd meg a Beállítások, Meghívók menüt, és küldd el a meghívó szöveget. A barátaid telepítsék ugyanazt a modpack verziót a launcherükbe, és csatlakozzanak."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Modpack szerverrel kapcsolatos kérdések",
+      "items": [
+        {
+          "q": "Mennyi RAM-ra van szüksége egy modpack szervernek?",
+          "a": "Körülbelül 6 GB egy könnyű, 40-80 modot tartalmazó csomaghoz, és 10 GB egy nagy, 150-300 modot tartalmazó csomaghoz, mindegyik kisebb Java heap-pel. Speciális csomagok, mint például a GregTech New Horizons, 16 GB-ot igényelnek. Hagyj helyet az operációs rendszernek is."
+        },
+        {
+          "q": "Szükségük van a barátaimnak ugyanarra a modpack verzióra?",
+          "a": "Igen. A szerver egy rögzített modpack verziót futtat, és egy eltérő mod verziókkal rendelkező kliens általában elutasításra kerül vagy összeomlik. Mondd el a barátaidnak a szerver Áttekintés fülén látható verziót."
+        },
+        {
+          "q": "Csatlakozhatnek a barátaim port forwarding nélkül?",
+          "a": "Igen, ha ugyanazon a hálózaton vannak. Más helyről érkezőknek továbbítsd a játékkikötőt a routereden, vagy használj egy alagút szolgáltatást, ami akkor is működik, ha a szolgáltatód blokkolja a port forwardingot."
+        },
+        {
+          "q": "Mi történik, ha a modpack frissül?",
+          "a": "Az Értesíts engem szabályzattal a Frissítések oldal mutatja. A frissítés alkalmazása biztonsági mentést készít, újraépíti a szervert, figyeli az első indítást, és egy visszaállítás egy kattintással elérhető. A barátaidnak is frissíteniük kell a modpackot a launcherükben."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "guideHome", "guidePi"],
+    "cta": {
+      "title": "Játssz a modpackoddal a saját szerveren",
+      "body": "Ingyenes, nyílt forráskódú, és nem kell hozzá fiókod senkinél. Telepítsd a panelt, és hozd létre a szervert a modpackból a varázsló segítségével."
+    }
+  },
+  "guidePi": {
+    "meta": {
+      "title": "Minecraft szerver Raspberry Pi-n webpanellel",
+      "description": "Állíts be egy Raspberry Pi Minecraft szervert egy ingyenes webpanellel. Milyen hardverre van szükséged, hogyan telepítsd egyetlen paranccsal, és hogyan méretezd a memóriát."
+    },
+    "eyebrow": "Raspberry Pi útmutató",
+    "title": "Futtass Minecraft szervert Raspberry Pi-n egy igazi webpanellel",
+    "intro": "Egy Raspberry Pi 4 vagy 5 csendes, alacsony fogyasztású otthont biztosít egy kis Minecraft szervernek. Itt olvashatsz arról, mit vegyél, hogyan telepítsd a panelt egyetlen paranccsal, és meddig mehetsz el vele.",
+    "pills": ["arm64", "linux", "docker", "paper", "fabric"],
+    "sections": [
+      {
+        "title": "Amire Szükséged Lesz",
+        "body": "A panel és a szerverképe arm64-re van kiadva, így egy 64 bites Raspberry Pi úgy futtatja őket, mint bármely más Linux gépet. A memória a legfontosabb korlátozó tényező: egy vanilla vagy Paper szerver akár tíz játékos számára 2 GB Java heapet igényel egy 4 GB-os gépen, egy könnyű modpack pedig 4 GB heapet egy 6 GB-os gépen. Ez a 4 GB-os Pi-t a kisebb, a 8 GB-os Pi-t pedig a kényelmes középmezőnybe helyezi.",
+        "points": [
+          "Egy Raspberry Pi 4 vagy 5, 4 GB memóriával vagy több. 8 GB, ha modokat szeretnél.",
+          "Egy 64 bites operációs rendszer, például a 64 bites Raspberry Pi OS.",
+          "Egy SSD USB-n keresztül, ne az SD kártya legyen. A világok folyamatosan olvasnak és írnak, és egy lassú tárolón lévő világ akadozik a chunk betöltésekor.",
+          "Vezetékes hálózati kapcsolat, ha lehetséges."
+        ]
+      },
+      {
+        "title": "Válassz egy Pi-hez illő szervertípust",
+        "body": "A Minecraft sokkal jobban törődik azzal, hogy egy mag milyen gyors, mint azzal, hogy mennyi van belőle, és a Pi magjai szerények. A Paper ugyanazt a játékot futtatja, mint a vanilla, rengeteg teljesítményoptimalizálással, és a játékosok továbbra is módosítatlan klienssel csatlakoznak. Ha modokat szeretnél, egy kevés teljesítmény- és minőségjavító moddal ellátott Fabric jobb választás, mint egy nagy Forge csomag. Egy 200 modos \"kitchen-sink\" csomag nem való egy Pi-re.",
+        "pills": ["paper", "purpur", "fabric"],
+        "points": [
+          "Kis csoport, változatlan játék: Paper.",
+          "Néhány mod: Fabric.",
+          "Csökkentsd a nézet távolságát; a 12-ről 8 chunkra való csökkentés sok memóriát takarít meg, és alig észrevehető játék közben."
+        ]
+      },
+      {
+        "title": "Tartsd szemmel",
+        "body": "A szerver \"Monitoring\" (Felügyelet) lapja mutatja a másodpercenkénti tickeket és a tickenkénti ezredmásodperceket, így láthatod, mikor marad le a Pi. A memóriamérő mutatja, mit használ valójában a konténer. A Java alapértelmezetten előre lefoglalja a teljes heapet; ha inkább azt szeretnéd látni, hogy a memória követi a valós használatot, állíts be kisebb kezdeti heapet a szerver \"Resources\" (Erőforrások) kártyáján. A napi biztonsági mentések az első naptól be vannak kapcsolva.",
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Telepítsd a panelt egy Raspberry Pi-re",
+      "items": [
+        {
+          "title": "Flash-elj egy 64 bites OS-t",
+          "body": "Telepíts 64 bites Raspberry Pi OS-t (vagy egy másik 64 bites Linuxot), indíts az SSD-ről, ha tudsz, és frissítsd a rendszert."
+        },
+        {
+          "title": "Futtasd az egysoros telepítőt",
+          "body": "A Telepítés oldalon található telepítő telepíti a Dockert, ha hiányzik, beállítja a panelt a /opt/msm mappába, elindítja, és megvárja, amíg válaszol. Magától felismeri az arm64-et."
+        },
+        {
+          "title": "Befejezés a böngészőben",
+          "body": "Nyisd meg a Pi címét a 25564-es porton egy másik számítógépről. Mivel a panel elérhető a hálózatodról, a telepítés egy 6 számjegyű PIN-kódot kér, amit a telepítő kiír neked."
+        },
+        {
+          "title": "Hoz létre egy kis szervert",
+          "body": "Válaszd a Paper vagy a Fabric lehetőséget a varázslóban. Az alapértelmezett memória alkalmazkodik a Pi RAM-jához; hagyj helyet a rendszernek és más szolgáltatásoknak."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Raspberry Pi Kérdések",
+      "items": [
+        {
+          "q": "Működni fog egy Raspberry Pi 3?",
+          "a": "Nem jó választás. Egy Pi 3-nak 1 GB memóriája van, míg még egy kis vanilla vagy Paper szerver is 2 GB heapet igényel egy 4 GB-os gépen. Használj Pi 4-et vagy 5-öt 4 GB vagy több memóriával."
+        },
+        {
+          "q": "Szükségem van 64 bites operációs rendszerre?",
+          "a": "Igen. A panelképet és a telepítőt arm64 és amd64 architektúrára építették, és a telepítő megáll minden más architektúrán."
+        },
+        {
+          "q": "Futtathatok nagy modpackot egy Pi-n?",
+          "a": "A nagy csomagok 6-8 GB Java heapet és összesen körülbelül 10 GB memóriát igényelnek, ami több, mint amennyi bármelyik Pi-ben van. Maradj a Paper vagy egy könnyű Fabric beállításnál."
+        },
+        {
+          "q": "Hogyan csatlakozhatnak a játékosok az otthonomon kívülről?",
+          "a": "A játékkikötőt (alapértelmezetten a 25565-ös TCP és UDP portot) továbbítsd az útválasztódon keresztül a Pi-re. Soha ne továbbítsd a panel vagy az RCON portjait; a panelt VPN-en vagy egy fordított proxy-n keresztül érheted el TLS-sel."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverPaper", "serverFabric"],
+    "cta": {
+      "title": "Alakítsd át a Pi-det szerverré",
+      "body": "Egyetlen parancs telepít mindent. A panel ingyenes, nyílt forráskódú, és teljes egészében a Pi-n fut."
+    }
+  },
+  "guideHome": {
+    "meta": {
+      "title": "Minecraft szerver üzemeltetése otthon, lépésről lépésre",
+      "description": "Hozzon létre Minecraft szervert otthon Windows, macOS vagy Linux rendszeren egy ingyenes webes panellel. Telepítse, tartsa privátan a panelt, és engedje, hogy barátai biztonságosan csatlakozzanak."
+    },
+    "eyebrow": "Otthoni szerver útmutató",
+    "title": "Minecraft szerver üzemeltetése otthon Windows, macOS vagy Linux rendszeren",
+    "intro": "Bármelyik számítógép, amely képes futtatni a Dockert, üzemeltetheti a szervereit. Telepítse a panelt, tartsa privátan, csak a játékkikötőt nyissa meg, és barátai bárhonnan csatlakozhatnak.",
+    "pills": ["windows", "macos", "linux", "docker", "nodejs"],
+    "sections": [
+      {
+        "title": "Kétféle telepítési mód",
+        "body": "Linux gépen az egysoros telepítő mindent elvégez: telepíti a Dockert, ha hiányzik, futtatja a panelt konténerként, és újraindítás után újra elindítja. Windows és macOS rendszereken futtassa a panelt közvetlenül a Node.js 24 segítségével a Docker Desktop mellett. A panel világos üzenetet jelenít meg, és leáll, ha a Node.js túl régi, és ha a Docker még nem fut, akkor is megkapja a teljes panelt; a szerverek amint a Docker elindul, elindulnak.",
+        "pills": ["linux", "docker", "windows", "macos", "nodejs"],
+        "points": [
+          "Linux: a telepítő, vagy a compose fájl a Portainerben vagy a Dockge-ban.",
+          "Windows: Docker Desktop WSL2 backenddel, majd a panel forrásból.",
+          "macOS: Docker Desktop, majd a panel forrásból.",
+          "PM2 vagy systemd alatt a panel túléli az újraindításokat."
+        ]
+      },
+      {
+        "title": "Tartsa privátan a panelt",
+        "body": "A játékosok soha nem beszélnek a panellel. A játékkikötőhöz csatlakoznak. A forrásból történő friss telepítés csak azon a gépen válaszol, amelyen fut, a localhost 25564-es porton. Ahhoz, hogy otthoni hálózatán egy másik számítógépről elérje, állítsa be, hogy a hálózaton figyeljen; a beállítás ezután egy egyszeri PIN-kódot kér, így egy idegen, aki elsőként éri el a portot, nem tudja igényelni az admin fiókot. Soha ne továbbítsa a panel portját az internetre. Az otthonától távol eső szerverek kezeléséhez használjon VPN-t, SSH alagutat vagy fordított proxy-t TLS-sel.",
+        "points": [
+          "Kezdetben csak localhost.",
+          "Beállítási PIN, amikor a panel elérhető a hálózatról.",
+          "Kétfaktoros hitelesítés minden fiókhoz."
+        ]
+      },
+      {
+        "title": "Engedje, hogy a barátok csatlakozzanak",
+        "body": "Minden szerver kap egy játékkikötőt, amely 25565-től kezdődik és felfelé számol. Az útválasztón továbbítsa ezt a portot, mind TCP, mind UDP protokollon keresztül, a szervereket futtató számítógépre. Hagyja a távoli konzolkikötőket, minden játékkikötő felett 1000-rel, zárva: a panel a konténeren belülről éri el őket, és soha nincs rájuk szükség nyitva. Adjon a játékosoknak egy általuk irányított hosztnevet az otthoni címe helyett, így a címváltozás DNS-változás, és nem üzenet minden játékosnak.",
+        "points": [
+          "Csak a játékkikötőket továbbítsa, TCP és UDP.",
+          "Tartsa zárva az RCON-t és a panel portját.",
+          "Az Áttekintés lap mutatja a megosztandó címet."
+        ],
+        "shot": "overview"
+      },
+      {
+        "title": "Tegye úgy, mintha szerver lenne",
+        "body": "Egy otthoni számítógép, amely alszik, magával viszi a szervert is, ezért kapcsolja ki az alvó üzemmódot a gépen, amelyen fut. Jelölje be a 'Start on Panel Boot' (Indítás a panel indításakor) lehetőséget egy szerver beállításaiban, és az a panel mellett újraindul. Az automatikus újraindítás meghibásodás esetén a hibás szervert újraindítja, egyre növekvő várakozási időkkel az egyes próbálkozások között. Minden új szerverhez napi biztonsági mentések vannak ütemezve, és az ütemezések csendes órákban újraindíthatják a szervereket.",
+        "shot": "schedules"
+      }
+    ],
+    "steps": {
+      "title": "Üzemeltessen első szerverét otthon",
+      "items": [
+        {
+          "title": "Telepítse a Dockert",
+          "body": "Docker Engine Linuxon, vagy Docker Desktop Windows és macOS rendszeren. Windows rendszeren ossza meg a panelt tartalmazó meghajtót a Docker Desktop-pal."
+        },
+        {
+          "title": "Telepítse és nyissa meg a panelt",
+          "body": "Kövesse a rendszerére vonatkozó Telepítés oldalt, majd nyissa meg a panelt egy böngészőben. A beállítás ellenőrzi a Dockert, létrehozza az admin fiókját, és megkérdezi az időzónáját."
+        },
+        {
+          "title": "Hozzon létre egy szervert",
+          "body": "Az varázsló javasol egy ingyenes portot és memóriát, amely illeszkedik a gépéhez. Válasszon ki egy szervertípust, és nyomja meg a létrehozás gombot."
+        },
+        {
+          "title": "Továbbítsa a játékkikötőt",
+          "body": "Továbbítsa a szerver játékkikötőjét az útválasztón, TCP és UDP protokollon keresztül, és küldje el barátainak a címet az Áttekintés lapról."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Otthoni üzemeltetéssel kapcsolatos kérdések",
+      "items": [
+        {
+          "q": "Tudok játszani azon a PC-n is, amelyen a szervert futtatom?",
+          "a": "Igen, amíg elegendő memóriája van mindkettőhöz. Adjon a szervernek elegendő memóriát a Java számára, és hagyjon elegendő helyet a játékkliensnek is. Egy alap vanilla szerver néhány barát számára körülbelül 4 GB-ot igényel magának."
+        },
+        {
+          "q": "Miért tudnak csatlakozni a barátaim a Wi-Fi-n keresztül, de a kívülállók nem?",
+          "a": "A játékkikötő nincs továbbítva az útválasztón, vagy egy tűzfal blokkolja. Továbbítsa a szerver játékkikötőjét TCP és UDP protokollon keresztül a hosztoló gép felé, és engedélyezze azt a gép tűzfalában."
+        },
+        {
+          "q": "Futtathatom a panel Docker képét Windows vagy macOS rendszeren?",
+          "a": "A konténeres telepítés Linux hosztokat céloz meg. Windows és macOS rendszeren futtassa a panelt forrásból a Node.js 24 segítségével a Docker Desktop mellett, ami ugyanúgy működik, amint elindul."
+        }
+      ]
+    },
+    "related": ["guidePi", "guideMulti", "serverVanilla"],
+    "cta": {
+      "title": "Kezdje el az otthoni üzemeltetést",
+      "body": "Ingyenes, nyílt forráskódú, és nincs szükség fiókra senkinél. A szerverei egy mappában élnek a saját gépén."
+    }
+  },
+  "guideHosting": {
+    "meta": {
+      "title": "Elköltözés fizetős Minecraft hosztingról: vidd magaddal a világodat",
+      "description": "Minecraft szerver áthelyezése fizetős hosztingról: vidd el a megfelelő fájlokat, hozd el a világot és a plugineket a saját kezelőfelületedre, tartsd meg minden leltáradat, és őrizd meg a címedet."
+    },
+    "eyebrow": "Migrációs útmutató",
+    "title": "Vidd át a Minecraft szerveredet a fizetős hosztingról",
+    "intro": "Hozd haza a világodat, plugineidet és modjaidat, minden leltárad érintetlenül. Először mérd fel a helyzetet, másold le a teljes szervermappát, építsd újjá a saját kezelőfelületeden, és csak azután irányítsd rá a játékosokat.",
+    "pills": ["docker", "paper", "fabric", "forge", "packs-curseforge", "packs-modrinth"],
+    "sections": [
+      {
+        "title": "Mérd fel a helyzetet a letöltés előtt",
+        "body": "Jegyezd fel ezeket, amíg a régi szerver még fut. Mindegyik rosszul végződött migrációt okozott, amikor feltételezték, ahelyett, hogy ellenőrizték volna. Az Online mód a legfontosabb: ha a régi szerver kikapcsolt online móddal futott, és az új bekapcsolttal, vagy fordítva, minden játékos más identitást és egy teljesen új, üres leltárt kap.",
+        "points": [
+          "A pontos Minecraft verzió és betöltő. A 1.20.1 NeoForge nem 1.20.1 Forge.",
+          "A modok vagy pluginek listája, verziókkal.",
+          "A level-name a server.properties fájlból. A világmappa gyakran nem world.",
+          "Online mód, be- vagy kikapcsolva.",
+          "Bármi, ami a szervermappán kívül él, például egy plugin adatbázisa."
+        ]
+      },
+      {
+        "title": "Vidd el a teljes mappát, ne csak a világot",
+        "body": "Használd a hoszt fájlkezelőjét vagy letöltési opcióját, és vidd el a teljes szerverkönyvtárat. Szerezd meg magukat a plugin és mod jar fájlokat, ne csak egy nevek listáját: a verziók számítanak, és a legújabb holnap egy másik fájl lesz. Töltsd le a biztonsági mentéseidet is. Egy biztonsági mentés, ami csak a távozó kezelőfelületen létezik, nem egy általad birtokolt biztonsági mentés. Állítsd le rendesen a szervert a végső letöltés előtt, hogy a játék kiírja a világot a lemezre."
+      },
+      {
+        "title": "Építsd újjá a saját kezelőfelületeden",
+        "body": "Hoz létre egy szervert ugyanolyan típusú és pontosan ugyanolyan verziójú. Aztán hozd be a darabokat. A Világok oldal a világodat .zip vagy .tar archívumként fogadja, automatikusan megtalálja benne a világot, és telepíti a szerverre, előtte biztonsági mentést készítve az aktuálisról. Egy plugin vagy mod szerveren importálj egy zip-et a jar fájlaidból: mindegyiket azonosítja, összeveti a szerverrel, és ha illeszkedik, telepíti. A konfigok és a többi a fájlkezelőn keresztül kerül be, ami közvetlenül a böngészőben szerkeszt és tölt fel. Ha a régi szerver egy publikált csomagot futtatott, telepítsd ugyanazt a csomagot ugyanazon a verzión.",
+        "pills": ["zip", "mrpack", "cf-export"],
+        "points": [
+          "A Világ feltöltése megtalálja a világot az archívumban.",
+          "A Zip importálás azonosítja az összes jar fájlt és ellenőrzi a szerverrel.",
+          "A fájlkezelő kezeli a konfigokat, a fehérlistát és az ops fájlokat."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Tartsd meg a címet, tartsd meg a játékosokat",
+        "body": "Ha a játékosok egy sima IP címhez csatlakoznak, minden mozgás arra készteti őket, hogy szerkesztniük kelljen a szerverlistájukat, és néhányan soha nem teszik meg. Használj egy általad irányított hosztnevet, és irányítsd az új gépedre. Az áthelyezés így egy DNS-módosítássá válik. Csökkentsd az időt (time to live) a rekordban a váltás előtt egy nappal, hogy a változás gyorsan terjedjen. Egy SRV rekord lehetővé teszi a játékosoknak, hogy egy sima domént írjanak be akkor is, ha a szerver más porton fut, ugyanazt, amit a hosztok is tesznek, hogy megosszák a játékcímet."
+      }
+    ],
+    "steps": {
+      "title": "Az átállás, sorrendben",
+      "items": [
+        {
+          "title": "Tesztelés privát porton",
+          "body": "Indítsd el az új szervert egy olyan porton, amit a játékosok nem ismernek, csatlakozz magad, és ellenőrizz egy ismert bázist, a leltáradat, és hogy minden plugin vagy mod betöltődött-e."
+        },
+        {
+          "title": "Végső másolás",
+          "body": "Jelents be egy újraindítást, állítsd le rendesen a régi szervert, töltsd le még egyszer a világot, és telepítsd azt a másolatot, hogy a legújabb változások is benne legyenek."
+        },
+        {
+          "title": "Váltás a porton és a címen",
+          "body": "Mozgasd a szervert a nyilvános portjára a Játékkikötő kártyával, majd irányítsd a hosztnevedet az új gépre."
+        },
+        {
+          "title": "Tartsd meg a régit egy ideig",
+          "body": "Csak néhány nap elteltével mondd fel a régi tervet. Tartsd leállítva, hogy senki se építsen az elhagyott másolatra."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Migrációs kérdések",
+      "items": [
+        {
+          "q": "Megtartják a játékosok a leltárukat?",
+          "a": "Igen, amíg az online mód ugyanaz mindkét szerveren, és elvitted a teljes világmappát. A játékos adatok a világon belül élnek, minden játékos identitása által kulcsolva, és ez az identitás megváltozik, ha az online mód is megváltozik."
+        },
+        {
+          "q": "A hosztom csak a világ letöltését engedi. Ez elég?",
+          "a": "Vaníliához, nagyrészt. Plugin vagy mod szerverhez szükséged van a jar fájlokra is a pontos verzióikban, mert a világ nem fog helyesen betöltődni a modok nélkül, amelyek létrehozták. Kérd el a hosztodtól a teljes szerverkönyvtárat."
+        },
+        {
+          "q": "Mit pótol a kezelőfelület a hosztom vezérlőpultjából?",
+          "a": "A konzolt, fájlkezelőt, biztonsági mentéseket, ütemezéseket, játékoskezelést, plugin és mod telepítéseket, valamint modpack telepítéseket, plusz olyan dolgokat, amelyekért a hosztok gyakran extra díjat számítanak fel, mint például több szerver vagy több biztonsági mentési hely. A határ a saját hardvered."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverModpacks", "guideMulti"],
+    "cta": {
+      "title": "Hozd haza a szerveredet",
+      "body": "Telepítsd a kezelőfelületet, hozz létre egy szervert, ami megegyezik a régivel, és töltsd fel a világodat. Ingyenes, nyílt forráskódú, és a tiéd, hogy megtartsd."
+    }
+  },
+  "guideMulti": {
+    "meta": {
+      "title": "Több Minecraft szerver futtatása egy gépen",
+      "description": "Több Minecraft szerver futtatása egy gépen: automatikus portok, szerverenkénti memória-, CPU- és lemezkorlátok, megosztott modok, és egy irányítópult az egész flottához."
+    },
+    "eyebrow": "Több szerver útmutató",
+    "title": "Több Minecraft szerver futtatása egy gépen, tisztán",
+    "intro": "Egy túlélő világ, egy kreatív építőszerver és egy modpack a hétvégére, mind ugyanazon a gépen. Mindegyik saját konténert, saját portot és saját korlátokat kap, és mindet egy irányítópulton láthatod.",
+    "pills": ["docker", "paper", "fabric", "forge", "vanilla"],
+    "sections": [
+      {
+        "title": "Portok rendezve neked",
+        "body": "A játék portjait az első szabad porttól felfelé osztja ki, 25565-től kezdve, a távoli konzol pedig 1000-rel magasabban van mindegyiknél. Tíz szerver a 25565-től 25574-ig terjedő játék portokat használja, és az RCON-t a saját blokkjában tartja, így egy összefüggő játéktartományt nyithatsz meg a tűzfaladon anélkül, hogy valaha is kitennéd az RCON-t. Egy port akkor számít foglaltnak, ha egy másik szerver használja, bármelyik Docker konténer a gépen közzéteszi, vagy a rendszer foglaltnak jelzi. Később áthelyezheted a szervert a Játék Port kártyával, és a panel mentés előtt ellenőrzi az új portot.",
+        "points": [
+          "Szerverenként egy játék és RCON pár, automatikusan hozzárendelve.",
+          "A 'Következő Szabad Port' választja a legkisebb szabadot.",
+          "Csak a játéktartományt nyissa meg. Az RCON zárt marad."
+        ]
+      },
+      {
+        "title": "Korlátok, hogy egy szerver ne éheztethesse a többit",
+        "body": "Minden szerver a saját Docker konténere, amelynek van CPU-korlátja, Java heap-je és egy kemény memória-korlátja felette. A Docker nem tudja korlátozni egy mappa lemezhasználatát, ezért a panel megteszi: minden szervernek van lemezkvótája, és minden olyan művelet, amely a szervert túllépi, mint például egy mod telepítése vagy egy világ feltöltése, blokkolva van, amíg nem szabadítanak fel helyet. Kapcsold be a 'Szerver leállítása kvóta túllépésekor' opciót, és egy szerver, amely több mint 10 százalékkal lépi túl a kvótáját, leáll és rögzítésre kerül a történetében.",
+        "points": [
+          "Szerverenkénti CPU, heap és memória korlát.",
+          "Panel által érvényesített lemezkvóták.",
+          "Az új szerverek alapértékei igazodnak a gép memóriájához."
+        ],
+        "shot": "storage"
+      },
+      {
+        "title": "Oszd meg, amit lehet",
+        "body": "Az általad hozzáadott modok egyszer tárolódnak egy megosztott könyvtárban, sha256 szerint deduplikálva, és be vannak linkelve minden szerverbe, amelyik használja őket, így tíz szerver, amely ugyanazt a modot futtatja, nem tárolja azt tízszer. A világok egy világkönyvtárba kerülnek, ahonnan bármelyik szerver telepíthet. Egy blueprint egy szerver teljes receptjét egyetlen .mcserver.zip fájlként rögzíti, és a 'Clone' (Másolás) ezt használja egy azonos szerver létrehozására friss portokkal.",
+        "shot": "blueprints"
+      },
+      {
+        "title": "Egy nézet a flottáról",
+        "body": "Az irányítópult egy pillantásra megmutatja az összes szervert: állapot, memória, online játékosok, várakozó frissítések és a legutóbbi tevékenységek. Címkék rendezik a szerverek listáját. Globális ütemezések futtatnak újraindításokat, biztonsági mentéseket vagy parancsokat a szervereken keresztül, és a 'Frissítések' oldal összegyűjti, hogy mi avult el a flottában. Szerverenkénti engedélyek lehetővé teszik egy barátodnak, hogy futtassa a saját szerverét a panelen anélkül, hogy a tiédet látná.",
+        "shot": "dashboard"
+      }
+    ],
+    "steps": {
+      "title": "Tervezz egy több szerveres gépet",
+      "items": [
+        {
+          "title": "Add össze a memóriát",
+          "body": "Add össze minden szerver Java heap-jét és a hozzá tartozó tartalékot, majd hagyj helyet a rendszernek. A leállított szerverek nem használnak memóriát, így egy hétvégi csomag hétköznap nem kerül semmibe."
+        },
+        {
+          "title": "Állíts be ésszerű alapértékeket",
+          "body": "Egy rendszergazda állítja be a heap-et, a lemezkvótát és a CPU-korlátot, amellyel minden új szerver indul a 'Beállítások', 'Új szerverek alapértékei' alatt."
+        },
+        {
+          "title": "Nyiss meg egy port tartományt",
+          "body": "Nyiss meg egy játék port tartományt, amely a futtatni tervezett szerverek méretének megfelelő, TCP és UDP protokollon. Hagyd a RCON blokkot zártan."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Több szerveres kérdések",
+      "items": [
+        {
+          "q": "Hány szervert futtathat egy gép?",
+          "a": "Először a memória dönt. Add össze minden futó szerver heap-jét és a hozzá tartozó tartalékot: egy kis vanilla vagy Paper szerver körülbelül 4 GB-ot igényel összesen, egy könnyű modpack körülbelül 6 GB-ot. A leállított szerverek semmibe sem kerülnek."
+        },
+        {
+          "q": "Lehet minden szervernek saját admintja?",
+          "a": "Igen. A szerverenkénti engedélyek külön-külön biztosítanak megtekintési, vezérlési, konzol-, játékos-, tartalom-, biztonsági mentési-, fájl-, beállítási és törlési jogokat minden szerverhez, és egy szerver teljesen elrejthető egy felhasználó elől."
+        },
+        {
+          "q": "A játékosok át tudnak váltani a szervereim között?",
+          "a": "Nem magán a panelen keresztül. Minden szervernek saját címe és portja van. A szerverek összekapcsolása, hogy a játékosok át tudjanak lépni közöttük, egy proxy szervert igényel, amelyet mellettük futtatnál."
+        }
+      ]
+    },
+    "related": ["guideHome", "serversHub", "guideHosting"],
+    "cta": {
+      "title": "Futtasd az egész flottádat egy helyről",
+      "body": "Telepítsd a panelt egyszer, és adj hozzá szervereket, ahogy szükséged van rájuk. Nincsenek szerverenkénti díjak és nincsenek példánykorlátok."
+    }
+  },
+  "compareHub": {
+    "meta": {
+      "title": "Minecraft szerver panel összehasonlítás: Pterodactyl, AMP, Crafty",
+      "description": "Ingyenes és fizetős Minecraft szerver panelek méltányos összehasonlítása: Pterodactyl, Crafty Controller, AMP, MCSManager és PufferPanel, a Minecraft Server Manager mellett."
+    },
+    "eyebrow": "Panelek összehasonlítása",
+    "title": "Minecraft szerver panel összehasonlítás",
+    "intro": "Számos jó panel képes Minecraft szervert futtatni. Íme, hogyan különbözik a Minecraft Server Manager mindegyiktől, kiemelve azokat az eseteket, amikor egy másik panel a jobb választás.",
+    "cards": {
+      "comparePtero": "Egy ingyenes, többjátékos panel, amelyet tárhelyszolgáltató cégek számára terveztek, minden gépen külön daemonnal. Hasonlítsd össze a beállítási erőfeszítést és a Minecraft specifikus funkciókat.",
+      "compareCrafty": "Egy ingyenes, Pythonban írt Minecraft panel, amely a szervereket egyszerű folyamatokként futtatja. Hasonlítsd össze a szerverek izolációját és a modpackok telepítését.",
+      "compareAmp": "Egy kereskedelmi panel több száz játékhoz, licenckategóriákban értékesítve. Hasonlítsd össze az árat, az példánykorlátokat és a Minecraft specifikus mélységet.",
+      "compareMcsm": "Egy ingyenes, elosztott panel Minecraft és Steam játékokhoz. Hasonlítsd össze az architektúrát, a Docker használatát és a modpack kezelést.",
+      "comparePuffer": "Egy ingyenes, könnyű panel sok játékhoz és sok géphez, szerverekkel mint folyamatok vagy konténerek. Hasonlítsd össze az izolációt, a node-okat és a Minecraft specifikus mélységet."
+    },
+    "sections": [
+      {
+        "title": "Hogyan készültek ezek az összehasonlítások",
+        "body": "Minden tény egy másik panelről az adott projekt saját weboldaláról, dokumentációjából vagy adattárából származik, és minden oldal jelzi, mikor lett ellenőrizve. Ahol nem tudtunk megerősíteni valamit, ott kihagytuk a találgatás helyett. Ha egy tény megváltozott, jelezd nekünk Discordon vagy GitHubon, és mi javítjuk az oldalt.",
+        "points": [
+          "Minden oldal felsorolja, mit csinál jobban a másik panel.",
+          "Az árak és verziók az ellenőrzés dátumával vannak feltüntetve.",
+          "A Minecraft Server Manager nem áll kapcsolatban egyik projekttel sem. A neveik a tulajdonosaikat illetik."
+        ]
+      },
+      {
+        "title": "Mire készült a Minecraft Server Manager",
+        "body": "Egy tulajdonos vagy egy kis csapat számára, akik a saját gépükön futtatnak Minecraft Java szervereket. Minden szerver egy erőforrás-korlátozott Docker konténer, az egész panel egyetlen mappában él, és a Minecraft specifikus, máshol bonyolult részek beépítettek: rögzített modpackok visszavonással, öt mod regisztráció egy keresésben, összeomlás-diagnosztika, egy kattintásos élő térkép és hordozható sablonok.",
+        "pills": ["paper", "purpur", "fabric", "forge", "neoforge", "quilt", "vanilla"]
+      }
+    ],
+    "faq": {
+      "title": "Kérdések a panel kiválasztásáról",
+      "items": [
+        {
+          "q": "Melyik panelt válasszam egyetlen Minecraft szerverhez otthon?",
+          "a": "Ha csak Minecraft Java-t futtatsz és modpackokat, biztonsági mentéseket és élő térképet szeretnél anélkül, hogy magadnak kellene összeállítanod, a Minecraft Server Manager erre készült. Ha más játékokat is hostolsz, vagy sok gépet kezel, egy többjátékos panel, mint a Pterodactyl, MCSManager vagy AMP jobban illeszkedik."
+        },
+        {
+          "q": "A Minecraft Server Manager tényleg ingyenes?",
+          "a": "Igen. MIT licencelt, nincs fizetős szintje és nem használ fizetős szolgáltatásokat. A CurseForge letöltésekhez CurseForge API kulcs szükséges, amit a Beállításokban adhatsz meg."
+        },
+        {
+          "q": "Át tudom vinni a meglévő világomat a Minecraft Server Managerbe?",
+          "a": "Igen. Töltsd fel a világot a Világok oldalon, és telepítsd egy új szerverre, vagy importálj egy modpack exportot vagy egy zip fájlt a modokkal a szerver létrehozásakor."
+        }
+      ]
+    },
+    "related": ["serversHub", "guideHosting"],
+    "cta": {
+      "title": "Próbáld ki a saját gépeden",
+      "body": "Telepítsd a panelt három lépésben, és hozz létre első szerveredet az útmutató segítségével. Az egész panel egyetlen mappában marad, amit bárhová másolhatsz."
+    },
+    "table": {
+      "title": "Minden panel áttekintése",
+      "columns": [
+        "",
+        "Minecraft Server Manager",
+        "Pterodactyl",
+        "Crafty Controller",
+        "AMP",
+        "MCSManager",
+        "PufferPanel"
+      ],
+      "rows": [
+        {
+          "label": "Ár",
+          "values": ["Ingyenes.", "Ingyenes.", "Ingyenes.", "Fizetős licenckategóriák.", "Ingyenes.", "Ingyenes."]
+        },
+        {
+          "label": "Licenc",
+          "values": ["MIT.", "MIT.", "GPL-3.0.", "Kereskedelmi, zárt forráskódú.", "Apache-2.0.", "Apache-2.0."]
+        },
+        {
+          "label": "Játékok",
+          "values": [
+            "Minecraft Java Edition.",
+            "Sok, 'egg'-eken keresztül.",
+            "Minecraft Java és Bedrock.",
+            "Több mint 200.",
+            "Minecraft és Steam játékok.",
+            "Sok, sablonokon keresztül."
+          ]
+        },
+        {
+          "label": "Játékszerverek futtatása mint",
+          "values": [
+            "Docker konténerek.",
+            "Docker konténerek.",
+            "Folyamatok a hoszton.",
+            "Folyamatok, vagy Docker konténerek, ha bekapcsolva.",
+            "Konténerek vagy folyamatok.",
+            "Folyamatok vagy konténerek."
+          ]
+        },
+        {
+          "label": "Több gép",
+          "values": [
+            "Nem. Egy panel gépenként.",
+            "Igen, Wings node-okkal.",
+            "Nincs távoli node a dokumentációjában.",
+            "Professzionális licenc és felette.",
+            "Igen, daemonokkal.",
+            "Igen, node-okkal."
+          ]
+        },
+        {
+          "label": "Hosztrendszerek",
+          "values": [
+            "Linux, Windows, macOS.",
+            "Linux.",
+            "Linux, Windows, macOS.",
+            "Linux, Windows.",
+            "Linux, Windows, macOS.",
+            "Linux."
+          ]
+        }
+      ],
+      "note": "Tények ellenőrizve az egyes projektek saját dokumentációja alapján, 2026. október és november. Minden összehasonlító oldal tartalmazza a részleteket."
+    }
+  },
+  "comparePtero": {
+    "meta": {
+      "title": "Pterodactyl alternatíva Minecraft szerverekhez",
+      "description": "Minecraft Server Manager összehasonlítása a Pterodactyl-lel: egyetlen folyamat és egyetlen mappa a panel, a daemon, az adatbázis és a Redis helyett, beépített Minecraft funkciókkal."
+    },
+    "eyebrow": "Pterodactyl alternatíva",
+    "title": "Egy Pterodactyl alternatíva, ami csak Minecraftra épül",
+    "intro": "A Pterodactyl egy ingyenes, nyílt forráskódú panel, amely sokféle játékot futtat sokféle gépen. A Minecraft Server Manager egyetlen játékot futtat egyetlen gépen, így jóval kevesebb beállítást igényel, és a Minecraft eszközei beépítve érkeznek.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Összehasonlítás",
+      "columns": ["", "Minecraft Server Manager", "Pterodactyl"],
+      "rows": [
+        {
+          "label": "Ár és licenc",
+          "values": ["Ingyenes, MIT.", "Ingyenes, MIT."]
+        },
+        {
+          "label": "Mit kell telepíteni",
+          "values": [
+            "Egyetlen Node.js folyamat, vagy egyetlen Docker konténer.",
+            "Egy PHP (Laravel) panel React frontenddel, plusz a Go-ban írt Wings daemon minden node-on."
+          ]
+        },
+        {
+          "label": "Adatbázis és gyorsítótár",
+          "values": [
+            "Beépített SQLite fájl az adatmappában. Nincs más futtatandó.",
+            "MySQL 5.7.22+ vagy MariaDB 10.2+, Redis, webszerver és Composer."
+          ]
+        },
+        {
+          "label": "Játékszerverek futtatása mint",
+          "values": ["Erőforrás-korlátozott Docker konténerek.", "Izolált Docker konténerek (Docker szükséges)."]
+        },
+        {
+          "label": "Támogatott rendszerek",
+          "values": [
+            "Linux, Windows és macOS. A kép amd64 és arm64 architektúrákra épül.",
+            "Csak Linux: Ubuntu, Debian és RHEL család kiadásai. A Wings nem fut Windows-on."
+          ]
+        },
+        {
+          "label": "Kezelt gépek",
+          "values": [
+            "Egy. A panel és a Docker ugyanazon a gépen fut.",
+            "Sok. Egy panel vezérel Wings node-okat sok gépen."
+          ]
+        },
+        {
+          "label": "Játékok",
+          "values": [
+            "Minecraft Java Edition. A Bedrock játékosok Geyser segítségével csatlakozhatnak.",
+            "Sok játék \"tojások\" (eggs) segítségével, beleértve a Minecraft, Rust, Terraria és ARK."
+          ]
+        }
+      ],
+      "note": "Az információk 2026. októberében ellenőrizve a projektek saját dokumentációja alapján."
+    },
+    "sections": [
+      {
+        "title": "Beállítás egyetlen, összeillesztendő rendszercsomag nélkül",
+        "body": "A Pterodactyl saját dokumentációja szerint egy rendkívül összetett rendszer, számos függőséggel: PHP, adatbázisszerver, Redis, webszerver, sorban álló feldolgozó és Wings minden node-on. Ez a kialakítás teszi lehetővé, hogy hosting cégeket szolgáljon ki. A Minecraft Server Manager egyetlen folyamat, amely kommunikál a Docker socket-eddel, és mindent, beleértve az adatbázist is, egyetlen mappában tart. Linuxon egy telepítő szkript állítja be, és ha hiányzik, telepíti a Dockert.",
+        "points": [
+          "Nincs külön daemon, adatbázisszerver vagy gyorsítótár, amit futtatni kell.",
+          "Másold az adatmappát a teljes panel áthelyezéséhez egy új gépre.",
+          "Natívan fut Windows-on és macOS-en a Docker Desktop mellett."
+        ],
+        "pills": ["docker", "portainer", "dockge", "pm2"]
+      },
+      {
+        "title": "Hol erősebb a Minecraft Server Manager a Minecraft számára",
+        "body": "Mivel csak Minecraftot futtat, a panel tudja, mi az a modpack, mod jar és crash report. Azok az eszközök, amelyekhez egy Minecraft tulajdonos nyúl, a panel részei, nem pedig valamit, amit meg kell találni és be kell vezetni.",
+        "points": [
+          "A Modpackok pontos verzióhoz vannak rögzítve, és a frissítések biztonsági mentést készítenek, majd egy kattintással visszaállítanak.",
+          "Egyetlen keresés öt nyilvántartáson keresztül, szűrve a szerver betöltőjére és a Minecraft verziójára.",
+          "Minden letöltés ellenőrzött ellenőrzőösszeggel rendelkezik, mielőtt a szerverre kerülne.",
+          "A leállások észlelhetők, elemezhetők és egy kattintással megoszthatók a mclo.gs oldalon.",
+          "Egy kattintással elérhető BlueMap élő térkép, a panel saját bejelentkezése mögött.",
+          "Az itzg kép minden beállítása világosan el van magyarázva a varázslóban."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Mikor jobb választás a Pterodactyl",
+        "body": "A Pterodactyl érett, aktívan karbantartott, és hosting cégek támogatják. Ha ezek közül bármelyik igaz rád, akkor ez az erősebb választás.",
+        "points": [
+          "Több gépen futtatsz szervereket, és egyetlen panelt szeretnél mindegyikhez.",
+          "Más játékokat is hostolsz, mint a Minecraft.",
+          "Sok különálló ügyfélnek adsz el vagy osztasz meg hostingot, és szükséged van erre a skálázhatóságra.",
+          "Már futtatod a Pterodactyl-t, és annak tojásai (eggs) lefedik, amire szükséged van."
+        ]
+      },
+      {
+        "title": "Megjegyzés a Pelican-ról",
+        "body": "A Pelican Panel a Pterodactyl egy forkja, AGPL-3.0 licenc alatt, és még kiadás előtti fázisban volt, amikor ezt az oldalt ellenőriztük. Megtartja a panel és a Wings kialakítást, hozzáadja az SQLite és PostgreSQL adatbázis opciókat, és rendelkezik egy plugin hub-bal, ahol egy harmadik féltől származó plugin böngészi a CurseForge és Modrinth modpackokat."
+      }
+    ],
+    "faq": {
+      "title": "Pterodactyl Kérdések",
+      "items": [
+        {
+          "q": "Át tudok helyezni egy szervert a Pterodactyl-ről a Minecraft Server Manager-re?",
+          "a": "Igen. Töltsd le a szerver világát a Pterodactyl-ről, hozz létre egy azonos típusú és Minecraft verziójú szervert a Minecraft Server Manager-ben, majd töltsd fel a világot a Világok oldalon, és telepítsd azt a szerverre. Moddolt szerverek esetén importáld a packot vagy a mod jar fájlok zip-jét, amikor létrehozod."
+        },
+        {
+          "q": "Szüksége van a Minecraft Server Manager-nek adatbázisszerverre, mint a MySQL?",
+          "a": "Nem. A Node.js 24 beépített SQLite motorját használja, és az adatbázisfájlt az adatmappában tárolja minden mással együtt."
+        },
+        {
+          "q": "Képes a Minecraft Server Manager több gépet kezelni, mint a Wings node-ok?",
+          "a": "Nem. A futtatott gépen lévő Docker demont kezeli. Több gép esetén futtass egy panelt minden gépen, vagy válassz egy több node-os panelt."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareMcsm", "guideMulti"],
+    "cta": {
+      "title": "Futtass Minecraftot a plusz rendszercsomag nélkül",
+      "body": "Telepítsd a Minecraft Server Manager-t három lépésben, és hozz létre első szerveredet a varázslóban."
+    }
+  },
+  "compareCrafty": {
+    "meta": {
+      "title": "Crafty Controller vs Minecraft Server Manager",
+      "description": "A Crafty Controller és a Minecraft Server Manager is ingyenes, helyben hosztolt Minecraft panel. Hasonlítsd össze, hogyan vannak izolálva a szerverek, hogyan telepíthetők a modpackok, és hol illeszkedik a képbe mindegyik."
+    },
+    "eyebrow": "Crafty Controller alternatíva",
+    "title": "Crafty Controller vs Minecraft Server Manager",
+    "intro": "Mindkettő ingyenes, helyben hosztolt panel, amelyet Minecrafthoz készítettek. A Crafty a szervereket a gazdagépen futó folyamatként kezeli, Pythonban íródott. A Minecraft Server Manager minden szervert saját Docker-konténerben futtat, és a panelbe építi a modpackokat, a modkeresést és a hibakereső eszközöket.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Összehasonlítás",
+      "columns": ["", "Minecraft Server Manager", "Crafty Controller"],
+      "rows": [
+        {
+          "label": "Ár és licenc",
+          "values": ["Ingyenes, MIT.", "Ingyenes, GPL-3.0."]
+        },
+        {
+          "label": "Fejlesztési nyelv",
+          "values": ["Node.js 24.", "Python 3.10 - 3.12."]
+        },
+        {
+          "label": "Játékszerverek futtatása mint",
+          "values": [
+            "Erőforrás-korlátozott Docker-konténerek.",
+            "Folyamatok a gazdagépen. Maga a panel is futhat Dockerben."
+          ]
+        },
+        {
+          "label": "Docker",
+          "values": ["Szükséges a gazdagépen.", "Opcionális."]
+        },
+        {
+          "label": "Gazdagép rendszerek",
+          "values": [
+            "Linux, Windows és macOS. A kép amd64 és arm64 architektúrákra épül.",
+            "Linux, Windows, macOS és Raspberry Pi OS, valamint Docker, UnRAID és CasaOS útmutatók. A kép lefedi az amd64 és arm64 architektúrákat."
+          ]
+        },
+        {
+          "label": "Kiadások",
+          "values": [
+            "Java Edition. A Bedrock játékosok Geyser segítségével csatlakozhatnak.",
+            "Java Edition 1.8-tól a legújabbig, és Bedrock."
+          ]
+        },
+        {
+          "label": "Modpackok",
+          "values": [
+            "CurseForge, Modrinth, FTB és GT New Horizons csomagok az installáló varázslón keresztül, pontos verzióhoz rögzítve.",
+            "GYIK leírja egy csomag zipként való importálását, vagy Modrinth csomagokat a mrpack-install segítségével."
+          ]
+        },
+        {
+          "label": "Biztonsági mentések, ütemezések, szerepkörök, 2FA",
+          "values": [
+            "Igen: megtartási idő szerverenként, cron ütemezések, három szerepkör szerver-specifikus engedélyekkel, TOTP.",
+            "Igen: biztonsági mentéskezelő, feladatütemező, felhasználói szerepkörök, valamint TOTP és jelszómentes belépés."
+          ]
+        }
+      ],
+      "note": "Tények ellenőrizve 2026 októberében, mindkét projekt saját dokumentációja alapján."
+    },
+    "sections": [
+      {
+        "title": "Konténerek a gazdagép folyamatok helyett",
+        "body": "A Minecraft Server Managerben minden szerver a saját Docker-konténerében fut a jól ismert itzg Minecraft képen, saját memória- és CPU-korlátokkal, valamint egy lemezkvótával, amelyet a panel érvényesít. Egy szerver nem tudja felemészteni a gép memóriáját vagy megtölteni a lemezét, és egy szerver újjáépítése soha nem érinti a többit. Az ár, hogy a Dockert telepíteni kell a gazdagépre.",
+        "points": [
+          "Memória-, CPU- és lemezkorlátok szerverenként.",
+          "Elegáns RCON leállítás a konténer leállítása előtt, és összeomlás-észlelés visszalépéssel.",
+          "A Java-t a kép választja ki szerverenként, így a vegyes Minecraft verziók egyszerűen működnek."
+        ],
+        "pills": ["docker", "amd64", "arm64"],
+        "shot": "overview"
+      },
+      {
+        "title": "Hol erősebb a Minecraft Server Manager",
+        "body": "A varázsló telepíti a modpackokat és modokat az Ön számára, és rögzítve tartja őket, így az újraindítás soha nem frissíti csendesen a csomagot.",
+        "points": [
+          "Telepítsen CurseForge, Modrinth, FTB és GT New Horizons csomagokat a varázslóból.",
+          "Importáljon egy Modrinth .mrpack-ot, egy CurseForge exportot vagy saját jar-ok zip-jét, minden jar azonosítva.",
+          "Keressen egyszerre öt nyilvántartásban, szűrve a szerver betöltőjére és verziójára.",
+          "A frissítések először biztonsági másolatot készítenek, és egy kattintással visszaállítják.",
+          "Egykattintásos BlueMap élő térkép és mclo.gs összeomlás-megosztás.",
+          "Hordozható blueprintok: exportálja a szerver receptjét, és kapja meg ugyanazt a szervert bárhol."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"]
+      },
+      {
+        "title": "Mikor jobb választás a Crafty Controller",
+        "body": "A Crafty érett, aktívan karbantartott, és több helyen fut Docker nélkül.",
+        "points": [
+          "Szervereket szeretne futtatni Docker telepítése nélkül, például közvetlenül Windows, macOS vagy Raspberry Pi rendszeren.",
+          "Ön maga futtatja a Bedrock Dedicated Servert, nem csak a Java-t Geyserrel.",
+          "Jelszómentes belépést szeretne."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Crafty Controller Kérdések",
+      "items": [
+        {
+          "q": "Át tudom költöztetni a Crafty szerveremet a Minecraft Server Managerbe?",
+          "a": "Igen. Hozzon létre egy szervert azonos típusú és Minecraft verzióval, majd töltse fel a világot zip-ként a Világok oldalon, és telepítse azt a szerverre. Moddolt szerver esetén importálja a csomagot vagy a mod jar-ok zip-jét a létrehozáskor."
+        },
+        {
+          "q": "A Minecraft Server Manager fut Raspberry Pi-n?",
+          "a": "Igen, egy 64 bites operációs rendszeren Dockerrel. A panel kép arm64 és amd64 architektúrákra is elérhető."
+        },
+        {
+          "q": "Miért van szüksége a Minecraft Server Managernek Dockerre?",
+          "a": "Minden szerver a saját konténerében fut, így kapja meg az erőforrás-korlátokat, a tiszta újjáépítést és a megfelelő Java verziót minden Minecraft verzióhoz."
+        }
+      ]
+    },
+    "related": ["compareHub", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Tekintse meg a saját szerverével",
+      "body": "Telepítse a panelt három lépésben, majd hozzon létre egy szervert egy modpackból a varázsló segítségével."
+    }
+  },
+  "compareAmp": {
+    "meta": {
+      "title": "Ingyenes AMP alternatíva Minecraft szerverekhez",
+      "description": "Minecraft Server Manager összehasonlítása a CubeCoders AMP-jával: egy ingyenes, MIT-licencelt Minecraft panel példányszám-korlátozás nélkül, egy kereskedelmi multi-game panel mellett."
+    },
+    "eyebrow": "AMP alternatíva",
+    "title": "Ingyenes AMP alternatíva Minecrafthoz",
+    "intro": "Az AMP a CubeCoders-től egy kereskedelmi panel rengeteg játékhoz, licenckategóriákban értékesítve. A Minecraft Server Manager ingyenes és nyílt forráskódú, csak Minecraftot futtat, és nincs korlátozás a létrehozható szerverek számára.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Összehasonlítás",
+      "columns": ["", "Minecraft Server Manager", "AMP"],
+      "rows": [
+        {
+          "label": "Ár",
+          "values": [
+            "Ingyenes. Nincsenek kategóriák.",
+            "Standard 7,50 font / 10 dollár, Professional 15 font / 30 dollár, Advanced 30 font / 40 dollár, Enterprise változó előfizetéssel."
+          ]
+        },
+        {
+          "label": "Licenc és forrás",
+          "values": [
+            "MIT, forrás a GitHubon.",
+            "Kereskedelmi és zárt forráskódú. Nyilvános GitHub repója tartalmazza az issue-kat és a dokumentációt."
+          ]
+        },
+        {
+          "label": "Létrehozható szerverek",
+          "values": ["Nincs korlátozás a hardveren túl.", "5 példány Standard, 15 Professional, 50 Advanced."]
+        },
+        {
+          "label": "Panel felhasználók",
+          "values": [
+            "Korlátlan, adminisztrátori, operátori és megtekintői szerepkörökkel.",
+            "3 Standard, korlátlan Professional-től."
+          ]
+        },
+        {
+          "label": "Kereskedelmi használat",
+          "values": ["Az MIT licenc engedélyezi.", "Csak Enterprise licenc."]
+        },
+        {
+          "label": "Több gép",
+          "values": ["Egy gép panelenként.", "Professional és afeletti."]
+        },
+        {
+          "label": "Támogatott rendszerek",
+          "values": ["Linux, Windows és macOS. A kép amd64 és arm64 architektúrákra épül.", "Windows és Linux."]
+        },
+        {
+          "label": "Játékok",
+          "values": [
+            "Minecraft Java Edition. A Bedrock játékosok Geyser segítségével csatlakozhatnak.",
+            "Több mint 200 játék és alkalmazás a kompatibilitási listán, beleértve a Minecraft Java és Bedrock kiadásokat is."
+          ]
+        }
+      ],
+      "note": "Az információk 2026. októberében ellenőrizve, az egyes projektek saját dokumentációja alapján. Az AMP árai a CubeCoders kiadások összehasonlító lapjáról származnak, és változhatnak."
+    },
+    "sections": [
+      {
+        "title": "Nincs licenc, nincs példányszám-korlátozás",
+        "body": "Az AMP kategóriái határozzák meg, hány példányt és panel felhasználót kap, és csak az Enterprise kategória engedélyezi a kereskedelmi használatot. A Minecraft Server Managernek nincsenek kategóriái: minden funkció, minden szerver és minden felhasználói fiók ingyenes az MIT licenc alatt, és nem használ fizetős szolgáltatásokat. A CurseForge letöltésekhez CurseForge API kulcs szükséges, amit a Beállításokban adhat meg.",
+        "points": [
+          "Hozzon létre annyi szervert, amennyit a gépe elbír.",
+          "Hívja meg teljes csapatát szerver-specifikus engedélyekkel és kétfaktoros bejelentkezéssel.",
+          "A forrás nyilvános, így elolvashatja, elágaztathatja és hozzájárulhat."
+        ]
+      },
+      {
+        "title": "Hol erősebb a Minecraft Server Manager Minecraft esetén",
+        "body": "Egy játékra optimalizált panel mélyebbre tud menni benne. Minden olyan beállítás, amit az itzg Minecraft kép támogat, elérhető a varázslóban, egyszerű nyelvezetű segítséggel, és a Minecraft munkafolyamatok beépítettek.",
+        "points": [
+          "CurseForge, Modrinth, FTB és GT New Horizons modpackok, egy kattintásos visszavonással.",
+          "Egyetlen modkeresés öt nyilvántartáson keresztül, ellenőrzőösszeg-ellenőrzött letöltésekkel.",
+          "Verziókompatibilitási ellenőrzések a Minecraft frissítésének felajánlása előtt.",
+          "Összeomlás-diagnosztika mclo.gs megosztással, és egy kattintásos BlueMap élő térkép.",
+          "Játékos-analitika, leltár-diagnosztika és tárolási analitika lemezkvótákkal."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "bluemap", "mclogs"],
+        "shot": "wizard"
+      },
+      {
+        "title": "Mikor jobb választás az AMP",
+        "body": "Az AMP sokkal több területet fed le, mint egy csak Minecraftra fókuszáló panel, és kereskedelmi támogatással rendelkezik.",
+        "points": [
+          "Sokféle játékot futtat egyetlen panelről.",
+          "Szüksége van egyszeri bejelentkezésre OIDC-n keresztül, egyedi márkajelzésre vagy telepítési sablonokra, amelyeket a Haladó (Advanced) kategória tartalmaz.",
+          "Hosting üzletet vezet, és kereskedelmi licencet és eladói támogatást szeretne.",
+          "Szeretné maga futtatni a Bedrock Dedicated Servert."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Gyakori kérdések az AMP-vel kapcsolatban",
+      "items": [
+        {
+          "q": "A Minecraft Server Manager ingyenes kereskedelmi használatra?",
+          "a": "Az MIT licenc engedélyezi a kereskedelmi használatot. A panel egy gépen lévő tulajdonosoknak és kis csapatoknak készült, ezért ellenőrizze, hogy megfelel-e a hosztolási igényeinek, mielőtt ügyfelek számára támaszkodna rá."
+        },
+        {
+          "q": "A Minecraft Server Manager támogat más játékokat is, mint a Minecraft?",
+          "a": "Nem. Csak Minecraft Java Edition szervereket futtat, ezért tud mélyrehatóan foglalkozni modpackokkal, modokkal és összeomlási jelentésekkel."
+        },
+        {
+          "q": "Át tudok hozni egy AMP Minecraft példányt?",
+          "a": "Igen. Hozzon létre egy szervert azonos típusú és Minecraft verzióval, majd töltse fel a példány világát zip fájlként a Világok oldalon, és telepítse azt a szerverre. A moddolt szerverek modpackból, pack exportból vagy mod jar fájlok zip-jéből indulhatnak."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideHosting"],
+    "cta": {
+      "title": "Minden funkció, ingyen",
+      "body": "Telepítse a Minecraft Server Managert három lépésben. Nincs mit vásárolni és semmit sem kell feloldani."
+    }
+  },
+  "compareMcsm": {
+    "meta": {
+      "title": "MCSManager alternatíva Minecraft szerverekhez",
+      "description": "MCSManager és Minecraft Server Manager összehasonlítása: egy elosztott panel Minecraft és Steam játékokhoz, egy Minecraft-specifikus, beépített modpackokkal rendelkező panel mellett."
+    },
+    "eyebrow": "MCSManager alternatíva",
+    "title": "Egy MCSManager alternatíva, amely a Minecraftra összpontosít",
+    "intro": "Az MCSManager egy ingyenes, nyílt forráskódú panel Minecraft és Steam játékokhoz, amely több gépet is képes kezelni. A Minecraft Server Manager csak Minecraft futtatására szolgál egy gépen, minden szerver Docker konténerben fut, és a Minecraft eszközök beépítettek.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Összehasonlítás",
+      "columns": ["", "Minecraft Server Manager", "MCSManager"],
+      "rows": [
+        {
+          "label": "Ár és licenc",
+          "values": ["Ingyenes, MIT.", "Ingyenes, Apache-2.0."]
+        },
+        {
+          "label": "Fejlesztési nyelv",
+          "values": ["Node.js 24.", "TypeScript Node.js-en."]
+        },
+        {
+          "label": "Mit kell telepíteni",
+          "values": ["Egy folyamat, vagy egy Docker konténer.", "Két szolgáltatás: egy webes panel és egy démon."]
+        },
+        {
+          "label": "Adatbázis",
+          "values": ["Beépített SQLite fájl az adatmappában.", "Nincs szükség rá."]
+        },
+        {
+          "label": "Játékszerverek futtatása mint",
+          "values": [
+            "Erőforrás-korlátozott Docker konténerek.",
+            "Docker konténerek vagy sima folyamatok, választás szerint."
+          ]
+        },
+        {
+          "label": "Támogatott rendszerek",
+          "values": [
+            "Linux, Windows és macOS. A kép amd64 és arm64 rendszerekre épül.",
+            "Windows, Linux és macOS, Linux esetén egy soros telepítő szkripttel."
+          ]
+        },
+        {
+          "label": "Kezelt gépek",
+          "values": ["Egy. A panel és a Docker ugyanazon a gépen fut.", "Több, elosztott démonokon keresztül."]
+        },
+        {
+          "label": "Játékok",
+          "values": [
+            "Minecraft Java Edition. A Bedrock játékosok Geyser segítségével csatlakozhatnak.",
+            "Minecraft és Steam játékok, mint például a Palworld és a Terraria, egy beépített piactérről."
+          ]
+        }
+      ],
+      "note": "Az információk 2026. októberében ellenőrizve, a projektek saját dokumentációja alapján."
+    },
+    "sections": [
+      {
+        "title": "Hol erősebb a Minecraft Server Manager a Minecraft szempontjából",
+        "body": "Az MCSManager sokféle játékszervert telepít. A Minecraft Server Manager egyetlen játékra összpontosít, így az útmutató, a mod eszközök és az előzmények mind a Minecraftról szólnak.",
+        "points": [
+          "Az itzg Minecraft kép minden beállítása, egyszerű angolsággal elmagyarázva az útmutatóban.",
+          "CurseForge, Modrinth, FTB és GT New Horizons modpackok, egy kattintással visszavonható előzményekkel.",
+          "Egyetlen modkeresés öt regisztrációs adatbázisban, ellenőrzött letöltésekkel.",
+          "Összeomlás-diagnosztika gyanúsítottakkal, és egy kattintással megosztható mclo.gs link.",
+          "Egy kattintással működő BlueMap élő térkép, játékos-analitika és hordozható tervrajzok.",
+          "A teljes panel, beleértve az adatbázist is, egyetlen mappa, amelyet átmásolhat a migráláshoz."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "console"
+      },
+      {
+        "title": "Alapértelmezetten konténerek",
+        "body": "A Minecraft Server Manager minden szervere egy Docker konténer, saját memória- és CPU-korlátokkal, valamint egy lemezkvótával, amelyet a panel érvényesít. A Java szerverenként választható, így egy 1.12 modpack és a legújabb Paper verzió egymás mellett futhat a Java verziók kezelése nélkül. Az MCSManager lehetővé teszi a választást a konténerek és a sima folyamatok között, ami rugalmasabb, ha a Docker nem opció.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "title": "Mikor jobb választás az MCSManager",
+        "body": "Az MCSManager nagyon aktívan fejlesztett, és több mint a Minecraftot fedi le.",
+        "points": [
+          "Több gépen lévő szervereket kezel egyetlen panelről.",
+          "Steam játékokat is futtat, mint például Palworld vagy Terraria.",
+          "Szeretne szervereket futtatni sima folyamatokként, Docker nélkül.",
+          "Drag-and-drop kezelőfelületet és előre elkészített játékelhelyezések piacterét szeretne."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "MCSManager Kérdések",
+      "items": [
+        {
+          "q": "Át tudok költöztetni egy Minecraft szervert az MCSManagerből?",
+          "a": "Igen. Hozzon létre egy szervert azonos típusú és Minecraft verzióval a Minecraft Server Managerben, majd töltse fel a világot zip fájlként a Világok oldalon, és telepítse azt a szerverre. A moddolt szerverek modpackból, csomagexportból vagy mod jar fájlok zip-jéből indulhatnak."
+        },
+        {
+          "q": "Szükségem van Dockerre a Minecraft Server Managerhez?",
+          "a": "Igen. A Docker futtat minden szervert. Linuxon a telepítő szkript telepíti a Dockert, ha hiányzik."
+        },
+        {
+          "q": "Több ember osztozhat egy Minecraft Server Manager panelen?",
+          "a": "Igen. Vannak adminisztrátori, operátori és megtekintői szerepkörök, szerverenkénti engedélyek, és opcionális kétfaktoros bejelentkezés minden fiókhoz."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideMulti", "comparePuffer"],
+    "cta": {
+      "title": "Minecraft, mélyrehatóan",
+      "body": "Telepítse a panelt három lépésben, és hozza létre első szerverét az útmutatóból."
+    }
+  },
+  "comparePuffer": {
+    "meta": {
+      "title": "PufferPanel alternatíva Minecraft szerverekhez",
+      "description": "Minecraft Server Manager összehasonlítása a PufferPanellel: minden szerver a saját Docker konténerében, beépített Minecraft eszközökkel, szemben egy könnyű, többjátékos, többcsomópontos panellel."
+    },
+    "eyebrow": "PufferPanel alternatíva",
+    "title": "Egy PufferPanel alternatíva, kizárólag Minecrafthoz",
+    "intro": "A PufferPanel egy ingyenes, nyílt forráskódú panel számos játékhoz, egy vagy több gépen. A Minecraft Server Manager csak Minecraftot futtat egy gépen, mindig Dockerben, beépített Minecraft eszközökkel.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Összehasonlítás",
+      "columns": ["", "Minecraft Server Manager", "PufferPanel"],
+      "rows": [
+        {
+          "label": "Ár és licenc",
+          "values": ["Ingyenes, MIT.", "Ingyenes, Apache-2.0."]
+        },
+        {
+          "label": "Fejlesztve",
+          "values": ["Node.js 24.", "Go."]
+        },
+        {
+          "label": "Mit kell telepíteni",
+          "values": [
+            "Egy folyamat, vagy egy Docker konténer.",
+            "Egy szolgáltatás az apt vagy yum tárolójából, vagy a Docker képük. Egy másik gépen lévő csomópont ugyanazt a csomagot futtatja."
+          ]
+        },
+        {
+          "label": "Adatbázis",
+          "values": [
+            "Beépített SQLite fájl az adatok mappájában.",
+            "Nincs szükség beállításra az alaptelepítéshez. Egy útmutató foglalkozik külső adatbázis használatával."
+          ]
+        },
+        {
+          "label": "Játékszerverek futtatása",
+          "values": [
+            "Erőforrás-korlátozott Docker konténerek, mindig.",
+            "Folyamatok a gazdagépen (a dokumentációja szerint ez a környezet nem rendelkezik biztonsági funkciókkal) vagy Docker konténerek."
+          ]
+        },
+        {
+          "label": "Támogatott rendszerek",
+          "values": [
+            "Linux, Windows és macOS. A kép amd64 és arm64 rendszerekre épült.",
+            "Linux: csomagok Ubuntu 22.04 és 24.04, valamint Debian 10 és 11 rendszerekre amd64 és arm64 architektúrán, Raspbian arm64-re, és egy yum tároló. 32-bit nem támogatott."
+          ]
+        },
+        {
+          "label": "Kezelt gépek",
+          "values": [
+            "Egy. A panel és a Docker ugyanazon a gazdagépen fut.",
+            "Sok. Más gépeken lévő csomópontok futtatnak szervereket egy panelhez."
+          ]
+        },
+        {
+          "label": "Minecraft",
+          "values": [
+            "Java Edition, az itzg kép minden szervertípusa, valamint CurseForge, Modrinth, FTB és GT New Horizons csomagok. A Bedrock játékosok Geyser segítségével csatlakoznak.",
+            "Sablonok Java és Bedrock szerverekhez, CurseForge és FTB csomagokhoz, valamint BungeeCord, Velocity és Waterfall proxy hálózatokhoz."
+          ]
+        }
+      ],
+      "note": "Az információk 2026 novemberében ellenőrizve a PufferPanel dokumentációja, adattára és sablon adattára alapján."
+    },
+    "sections": [
+      {
+        "title": "Elszigetelés beállítások megjegyzése nélkül",
+        "body": "A PufferPanel lehetővé teszi a környezet kiválasztását szerverenként. Az alapértelmezett a szervert gazdagép-folyamatként futtatja, ugyanazon felhasználóként, mint a panel, és saját dokumentációja szerint nincs biztonsági funkciója; a Docker verzió elszigeteli azt. A Minecraft Server Manager csak az utóbbi típust kínálja. Minden szerver a saját konténerében fut, memória- és CPU-korláttal, a panel által érvényesített lemezkvótával, és semmi sem oszlik meg a többiekkel, kivéve a mod könyvtárat.",
+        "points": [
+          "Egy konténer szerverenként, címkézve és korlátozva.",
+          "A panel által érvényesített lemezkvóták.",
+          "Egy összeomló vagy memóriát túllépő szerver észlelése és rögzítése."
+        ],
+        "pills": ["docker"]
+      },
+      {
+        "title": "Ahol a Minecraft Server Manager mélyebbre ás a Minecraftban",
+        "body": "Egy sablon indít el egy szervert; a munka ezután következik. Modok keresése és frissítése, csomagok, amelyek fejlődnek, naplók olvasása, világok biztonsági mentése. Ezek beépültek a panelbe.",
+        "points": [
+          "A modpackok egy pontos verzióhoz vannak rögzítve. A frissítések és visszaminősítések először biztonsági másolatot készítenek, és egy kattintással visszaállítják.",
+          "Egy keresés öt nyilvántartáson keresztül, szűrve a szerver betöltőjére és a Minecraft verziójára.",
+          "Minden letöltés ellenőrzött checksummal rendelkezik, mielőtt a szerverre kerülne.",
+          "Egy verzióellenőrzés megmutatja, hogy a telepített modok mely jövőbeli Minecraft verziókat támogatják már.",
+          "A összeomlási jelentések észlelése, elemzése és megosztása az mclo.gs-re egy kattintással.",
+          "Egy kattintással elérhető BlueMap élő térkép, a panel saját bejelentkezése mögött."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Mikor a PufferPanel a jobb választás",
+        "body": "A PufferPanel könnyű, ingyenes és évek óta létezik. Ha ezek közül bármelyik igaz rád, válaszd azt.",
+        "points": [
+          "Más játékokat is futtatsz, mint a Minecraft.",
+          "Több gépen futtatsz szervereket, és egy panelt szeretnél mindegyikhez.",
+          "Natív Bedrock szervert, vagy BungeeCord, Velocity vagy Waterfall proxy hálózatot szeretnél.",
+          "Nem szeretnél egyáltalán Docker-t futtatni.",
+          "SFTP hozzáférést szeretnél a szerver fájlokhoz."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "PufferPanel Kérdések",
+      "items": [
+        {
+          "q": "Át tudok költöztetni egy Minecraft szervert a PufferPanelről a Minecraft Server Managerre?",
+          "a": "Igen. Töltsd le a szerver világ mappáját, hozz létre egy azonos típusú és Minecraft verziójú szervert, majd töltsd fel a világot a Világok oldalra, és telepítsd azt a szerverre. Modosított szerver esetén importáld a csomagot vagy egy zip fájlt a modjaiból, amikor létrehozod."
+        },
+        {
+          "q": "Szüksége van a Minecraft Server Managernek Dockerre?",
+          "a": "Igen. Minden Minecraft szerver Docker konténerként fut, ami lehetővé teszi a memória, CPU és lemez szerverenkénti korlátozását. Maga a panel futhat Dockerben vagy közvetlenül Node.js-ből."
+        },
+        {
+          "q": "Futtathat szervereket egy második gépen?",
+          "a": "Nem. A panel kezeli a Docker demont azon a gépen, amelyen fut. Két gép esetén futtass egy panelt mindegyiken, vagy válassz egy csomópontokkal rendelkező panelt, mint a PufferPanel."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareCrafty", "compareMcsm"],
+    "cta": {
+      "title": "Minden szerver a saját konténerében",
+      "body": "Telepítsd a panelt három lépésben, és hozd létre első szerveredet az útmutatóban."
+    }
   }
 }

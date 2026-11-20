@@ -6,57 +6,57 @@ editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/t
 
 [← Vissza a dokumentumokhoz](/docs/)
 
-A kétfaktoros hitelesítés (2FA) egy második lépést ad a bejelentkezéshez: a jelszó megadása után be kell írnod egy rövid kódot a telefonodon lévő hitelesítő alkalmazásból. Még ha valaki meg is tudja a jelszavadat, nem tud bejutni az eszközöd nélkül.
+A kétfaktoros hitelesítés (2FA) egy második lépést ad a bejelentkezéshez: a jelszó megadása után be kell írnia egy rövid kódot a telefonján lévő hitelesítő alkalmazásból. Még ha valaki meg is tudja a jelszavát, nem tud bejutni az Ön eszköze nélkül.
 
-Ez bármilyen szabványos TOTP hitelesítővel működik (Google Authenticator, Authy, 1Password, Microsoft Authenticator és mások), és **minden** fiók számára elérhető, nem csak az adminisztrátoroknak. A saját bejelentkezésed védelme nem szerverkezelési művelet, így a nézők és az üzemeltetők is engedélyezhetik.
+Bármilyen szabványos TOTP hitelesítővel működik (Google Authenticator, Authy, 1Password, Microsoft Authenticator és mások), és **minden** fiók számára elérhető, nem csak az adminisztrátoroknak. A saját bejelentkezésének védelme nem szerverkezelési művelet, így a megtekintők és az üzemeltetők is engedélyezhetik.
 
 ## 2FA engedélyezése
 
-Nyisd meg a fiók menüt (a jobb felső sarokban lévő kezdőbetűd) és válaszd a **Kétfaktoros hitelesítés** lehetőséget.
+Nyissa meg a fiókmenüt (az Ön kezdőbetűje vagy profilképe, jobb felső sarok), és válassza a **2FA** lehetőséget.
 
-![Fiók menü](/docs/images/2fa-user-menu.png)
+![Fiókmenü](/docs/images/2fa-user-menu.png)
 
 Megjelenik egy regisztrációs párbeszédablak:
 
 ![Regisztráció](/docs/images/2fa-enroll.png)
 
-1. **Olvasd be a QR-kódot** a hitelesítő alkalmazásoddal, vagy koppints a **Másolás** gombra, és írd be manuálisan a kulcsot.
-2. Írd be a 6 számjegyű **kódot**, amit az alkalmazásod most mutat.
-3. **Erősítsd meg a jelszavadat.** A 2FA engedélyezése újra ellenőrzi a jelszavadat, így egy véletlenül nyitva maradt munkamenet nem tudja bekapcsolni valaki más eszközével.
-4. Kattints az **Engedélyezés** gombra.
+1. **Olvassa be a QR-kódot** a hitelesítő alkalmazásával, vagy koppintson a **Másolás** gombra, és írja be kézzel a manuális kulcsot.
+2. Írja be a **6 számjegyű kódot**, amelyet az alkalmazás most mutat.
+3. **Erősítse meg a jelszavát.** A 2FA engedélyezése újra ellenőrzi a jelszavát, így egy véletlenül nyitva maradt munkamenet nem tudja bekapcsolni valaki más eszközével.
+4. Kattintson az **Engedélyezés** gombra.
 
-### Mentsd el a biztonsági kódjaidat
+### Mentse el a biztonsági mentési kódjait
 
-Amint a 2FA engedélyezve lett, a panel megjelenít egy egyszer használatos **biztonsági kódok** készletet.
+Amint a 2FA engedélyezve lett, a panel megjelenít egy egyszer használatos **biztonsági mentési kódok** készletet.
 
-![Biztonsági kódok](/docs/images/2fa-backup-codes.png)
+![Biztonsági mentési kódok](/docs/images/2fa-backup-codes.png)
 
-Minden kód **egyszer** használható a bejelentkezéshez, ha elveszítenéd a hozzáférést a hitelesítő alkalmazásodhoz. Mentsd el őket biztonságos helyre (egy jelszókezelő ideális), mert többet nem jelennek meg. Bármikor generálhatsz egy új készletet (ami érvényteleníti a régieket).
+Minden kód **egyszer** használható a bejelentkezéshez, ha elveszítené a hozzáférést a hitelesítő alkalmazásához. Mentse el őket biztonságos helyre (ideális esetben egy jelszókezelőbe), mert többet nem jelennek meg. Bármikor generálhat új készletet (ami érvényteleníti a régieket).
 
 ## Bejelentkezés 2FA-val
 
-Ettől kezdve a bejelentkezésnek van egy második lépése. A felhasználóneved és jelszavad megadása után a panel elkéri a kódodat:
+Ettől kezdve a bejelentkezésnek van egy második lépése. A felhasználónév és a jelszó megadása után a panel elkéri a kódját:
 
 ![2FA bejelentkezés](/docs/images/2fa-login-challenge.png)
 
-Írd be az alkalmazásod aktuális 6 számjegyű kódját (vagy az egyik biztonsági kódodat), és már bent is vagy. Amíg ezt a lépést nem teljesíted, a munkamenet **nem** bejelentkezett: nem érhet el semmilyen oldalt vagy API-t.
+Adja meg az alkalmazás aktuális 6 számjegyű kódját (vagy az egyik biztonsági mentési kódját), és már bent is van. Amíg ezt a lépést nem teljesíti, a munkamenet **nem** bejelentkezett: nem érhet el semmilyen oldalt vagy API-t.
 
 ## 2FA kezelése vagy kikapcsolása
 
-Nyisd meg ugyanazt a **Kétfaktoros hitelesítés** opciót a fiók menüben, amíg az engedélyezve van. A jelszavad megerősítése után a következőket teheted:
+Nyissa meg ugyanazt a **2FA** bejegyzést a fiókmenüben, amíg az engedélyezve van. Jelszavának megerősítése után a következőket teheti:
 
-- **Biztonsági kódok újragenerálása** - kiad egy új készletet és érvényteleníti a régit.
-- **2FA kikapcsolása** - eltávolítja a fiókodból.
+- **Biztonsági mentési kódok újragenerálása:** Új készletet bocsát ki, és érvényteleníti a régieket.
+- **2FA kikapcsolása:** Eltávolítja a fiókjából.
 
-Mindkettő először ellenőrzi az aktuális jelszavadat.
+Mindkettő először ellenőrzi az aktuális jelszavát.
 
-## Elvesztetted a telefonodat _és_ a biztonsági kódjaidat?
+## Elvesztette a telefonját _és_ a biztonsági mentési kódjait?
 
-Egy **adminisztrátor** visszaállíthatja egy másik felhasználó 2FA-ját a **Beállítások → Felhasználók** menüpontban (a 2FA oszlopban található **Visszaállítás** gomb). Ez törli a 2FA-t a fiókhoz, így a felhasználó csak a jelszavával tud bejelentkezni, és újra beállíthatja azt. Az adminisztrátorok nem tudják jelszó nélkül visszaállítani a _saját_ 2FA-jukat. Ők a szokásos jelszóval védett kikapcsolási folyamaton mennek keresztül, így egy feltört adminisztrátori munkamenet nem tudja eltávolítani a saját második tényezőjét.
+Egy **adminisztrátor** visszaállíthatja egy másik felhasználó 2FA-ját a **Beállítások → Felhasználók** menüpontból (a felhasználó műveleti menüjében a **2FA visszaállítása**). Ez törli a 2FA-t a fiókhoz, így a felhasználó csak a jelszavával tud bejelentkezni, és újra beállíthatja azt. Az adminisztrátorok nem állíthatják vissza saját 2FA-jukat jelszó nélkül. A normál jelszóval védett kikapcsolási folyamatot követik, így egy feltört adminisztrátori munkamenet nem tudja eltávolítani a saját második tényezőjét.
 
 ## Jó tudni
 
-- A kódok időalapúak és 30 másodpercenként változnak; a panel elfogad egy kis időeltolódást, és csendben helyreáll, ha a szerver órája később korrigálásra kerül.
-- Egy kód nem játszható le újra – miután bejelentkezéshez használták, ugyanaz a kód nem fog működni az ablakán belül.
-- A helytelen kódok sebességkorlátozottak. A korlátozó **közös** a jelszó lépéssel (fiókonkénti zárolás plusz IP-nkénti `RATE_LIMIT_AUTH_PER_15MIN` korlátozó), így egy helyes jelszó megadása nem tudja visszaállítani a számlálót közvetlenül a 6 számjegyű kód kitalálása előtt.
-- A 2FA változásai (engedélyezés, kikapcsolás, visszaállítás, biztonsági kód használata) mind rögzítésre kerülnek a [Tevékenységnaplóban](/docs/activity/).
+- A kódok időalapúak és 30 másodpercenként váltódnak; a panel elfogad egy kis időeltolódást, és csendesen helyreáll, ha a szerver órája később korrigálásra kerül.
+- Egy kódot nem lehet megismételni: miután bejelentkezéshez használták, ugyanaz a kód nem fog működni az ablakán belül.
+- A téves kódok sebességkorlátozottak. A korlátozó **megosztott** a jelszó lépéssel (fiókonkénti zárolás plusz IP-címenkénti `RATE_LIMIT_AUTH_PER_15MIN` korlátozó), így a helyes jelszó megadása nem állíthatja vissza a számlálót közvetlenül a 6 számjegyű kód kitalálása előtt.
+- A 2FA-val kapcsolatos változások (engedélyezés, kikapcsolás, visszaállítás, biztonsági mentési kód használata) mind rögzítésre kerülnek a [Tevékenységnaplóban](/docs/activity/).

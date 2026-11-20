@@ -1,18 +1,14 @@
 ---
-title: 'API pubblica'
-description: "Una piccola API HTTP di sola lettura per recuperare lo stato del server dall'esterno del pannello: a"
+title: 'API Pubblica'
+description: "Una piccola API HTTP di sola lettura per recuperare lo stato del server dall'esterno del pannello: una dashboard di stato, un monitor di uptime, un bot Discord, una regola di automazione domestica."
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/public-api.md'
 ---
 
-[← Indice della documentazione](/docs/)
+[← Indietro all'indice della documentazione](/docs/)
 
-Una piccola API HTTP di sola lettura per recuperare lo stato del server dall'esterno del pannello: una
-dashboard di stato, un monitor di uptime, un bot Discord, una regola di automazione domestica. È
-servita dal pannello stesso e restituisce gli stessi dati live che mostrano le pagine del pannello
-(dalla cache in memoria), quindi interrogarla non tocca mai Docker.
+Una piccola API HTTP di sola lettura per recuperare lo stato del server dall'esterno del pannello: una dashboard di stato, un monitor di uptime, un bot Discord, una regola di automazione domestica. È servita dal pannello stesso e restituisce gli stessi dati live che mostrano le pagine del pannello (dalla cache in memoria), quindi interrogarla non tocca mai Docker.
 
-È **disattivata finché un amministratore non la utilizza** ed è **protetta da amministratore**. Nulla viene esposto
-finché non esiste un token.
+È **disattivata finché un amministratore non la utilizza** ed è **protetta da amministratore**. Nulla viene esposto finché non esiste un token.
 
 ## Abilitazione
 
@@ -22,7 +18,7 @@ finché non esiste un token.
 
 La creazione della prima chiave attiva automaticamente l'API (l'interruttore **Consenti alle app esterne di leggere lo stato** è un controllo di pausa: disattivalo per interrompere il servizio senza annullare alcuna chiave). Annulla una chiave dalla stessa tabella in qualsiasi momento; i client che la utilizzano perdono immediatamente l'accesso.
 
-I token vengono archiviati come hash SHA-256 (mai in testo in chiaro), sopravvivono a un riavvio del pannello e sopravvivono ai server a cui sono associati (un server eliminato semplicemente non compare nei risultati di quel token).
+I token vengono archiviati come hash SHA-256 (mai in chiaro), sopravvivono a un riavvio del pannello e sopravvivono ai server a cui sono associati (un server eliminato semplicemente non compare nei risultati di quel token).
 
 ## Autenticazione
 
@@ -32,21 +28,19 @@ Invia il token come credenziale Bearer:
 Authorization: Bearer msm_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-Non ci sono cookie e **nessun CORS**: questo è per chiamate server-to-server e da riga di comando, non per app browser da un'altra origine. Se il pannello si trova dietro un proxy inverso, assicurati che il proxy inoltri l'intestazione `Authorization`.
+Non ci sono cookie e **nessun CORS**: questo è per chiamate server-to-server e CLI, non per app browser da un'altra origine. Se il pannello è dietro un proxy inverso, assicurati che il proxy inoltri l'intestazione `Authorization`.
 
-I fallimenti restituiscono `401` con `{ "ok": false, "error": "..." }`. Qualsiasi cosa diversa da `GET`
-(o `HEAD`) restituisce `405`. Percorsi sconosciuti restituiscono `404`. Quando l'API è disabilitata, ogni route
-restituisce `404`.
+I fallimenti restituiscono `401` con `{ "ok": false, "error": "..." }`. Qualsiasi cosa diversa da `GET` (o `HEAD`) restituisce `405`. Percorsi sconosciuti restituiscono `404`. Quando l'API è disabilitata, ogni route restituisce `404`.
 
-## Limite di frequenza
+## Limite di richieste
 
-Ogni token ottiene il proprio budget, `RATE_LIMIT_PUBLIC_API_PER_MIN` (predefinito `120` richieste/minuto; `0` disabilita il limiter). Superare il limite restituisce `429`. Le richieste che non presentano mai un token valido (mancante, malformato, revocato o scaduto) sono limitate separatamente per indirizzo IP del client a cinque volte quel numero, in modo che il probing non possa aggirare il budget ruotando i token.
+Ogni token ottiene il proprio budget, `RATE_LIMIT_PUBLIC_API_PER_MIN` (predefinito `120` richieste/minuto; `0` disabilita il limitatore). Superare il limite restituisce `429`. Ogni richiesta, prima ancora che il suo token venga verificato, conta anche verso un limite per indirizzo IP client pari a cinque volte quel numero, quindi sondare con token mancanti, malformati, revocati o scaduti non può aggirare il budget ruotandoli.
 
 ## Endpoint
 
 ### `GET /api/v1/servers`
 
-Ogni server a cui il token è associato.
+Ogni server a cui è associato il token.
 
 ```json
 {
@@ -71,20 +65,18 @@ Ogni server a cui il token è associato.
 
 ### `GET /api/v1/servers/:id`
 
-Un singolo server, stesso oggetto sotto una chiave `server`. Restituisce `404` per un ID sconosciuto
-**e** per un server a cui il token non è associato (nessun oracolo di esistenza), e `400`
-per un ID malformato.
+Un singolo server, stesso oggetto sotto una chiave `server`. Restituisce `404` per un ID sconosciuto **e** per un server a cui il token non è associato (nessun oracolo di esistenza), e `400` per un ID malformato.
 
 ## Campi di risposta
 
 | Campo           | Significato                                                                                           |
 | --------------- | ----------------------------------------------------------------------------------------------------- |
-| `total`         | Quanti server sono visibili a questo token (dopo il suo filtro di ambito).                            |
+| `total`         | Quanti server sono visibili a questo token (dopo il filtro di ambito).                                |
 | `online`        | Quanti di questi sono nello stato: `running`.                                                         |
 | `id`            | ID stabile del server (`srv_...`).                                                                    |
 | `name`          | Nome visualizzato.                                                                                    |
 | `type`          | Tipo di server itzg (`PAPER`, `FABRIC`, `AUTO_CURSEFORGE`, ...).                                      |
-| `state`         | `running`, `starting`, `stopped` o `crashed` - un riepilogo stabile dello stato interno del pannello. |
+| `state`         | `running`, `starting`, `stopped`, o `crashed`: un riepilogo stabile dello stato interno del pannello. |
 | `cpuPct`        | Percentuale CPU recente, o `null` quando il server non è in esecuzione.                               |
 | `memoryMb`      | Memoria residente in MB, o `null`.                                                                    |
 | `memoryLimitMb` | Limite di memoria del container configurato in MB, o `null`.                                          |

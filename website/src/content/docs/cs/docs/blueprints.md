@@ -1,25 +1,29 @@
 ---
 title: 'Šablony'
-description: 'Šablona zachycuje celou konfiguraci serveru (typ, verze, zdroje, prostředí, připnutí balíčku a volitelně jeho konfiguraci a svět) do jediného souboru.'
+description: 'Šablony ukládají celou konfiguraci serveru Minecraft jako znovupoužitelný recept pro vytváření nových serverů. Tajné klíče nikdy nejsou zahrnuty.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/blueprints.md'
 ---
 
 [← Zpět na index dokumentace](/docs/)
 
-**Blueprint** zachycuje celou konfiguraci serveru (typ, verzi, zdroje, prostředí, připnutí balíčku a volitelně jeho konfiguraci a svět) do jediného přenosného souboru, ze kterého můžete vytvořit nové servery.
+**Šablona** zachycuje celou konfiguraci serveru (typ, verzi, zdroje, prostředí, připnutí balíčku, vlastní mody a volitelně jeho konfiguraci a svět) do jediného přenosného souboru `.mcserver.zip`, ze kterého můžete vytvořit nové servery. Tajné údaje (hesla, tokeny a klíče v prostředí) se do šablony nikdy nezapisují.
 
-![Blueprints](/docs/images/blueprints.png)
+![Šablony](/docs/images/blueprints.png)
 
 ## Exportování
 
-Ze serveru exportujte blueprint a vyberte, co chcete zahrnout: konfiguraci vždy a volitelně vložené soubory a svět. Výsledek se uloží do vaší knihovny blueprintů a lze jej stáhnout a sdílet.
+Na kartě serveru **Nastavení → Konfigurace** použijte **Exportovat jako šablonu** a vyberte, co chcete zahrnout: vždy konfiguraci serveru, jeho konfigurační adresáře (standardně zapnuto) a volitelně samotné soubory vlastních modů (větší soubor, který se nainstaluje bez stahování čehokoli) a aktivní svět. Výsledek se uloží do vaší knihovny šablon a lze jej stáhnout ke sdílení.
 
-## Importování a vytváření z blueprintu
+**Klonovat server**, na stejné kartě, provede export a import v jednom kroku k vytvoření kopie serveru, s jeho světem nebo bez něj.
 
-Importujte soubor blueprintu (nebo si vyberte jeden z knihovny) a vytvořte nový server předkonfigurovaný přesně jako originál. Je to nejrychlejší způsob, jak:
+## Importování a vytváření ze šablony
 
-- Spustit identické servery (síť minihrových serverů, stagingové kopie produkce).
+Importujte soubor šablony (**Importovat šablonu** na stránce **Šablony**) nebo si vyberte jednu z knihovny (**Vytvořit server** na její kartě nebo na kartě **Ze šablony** v průvodci) a vytvořte nový server předkonfigurovaný přesně jako originál. Nový server získá vlastní porty a nové heslo RCON. Vlastní mody, které nebyly vloženy, se stáhnou znovu a zkontrolují se proti hashům, které šablona zaznamenala. Knihovna také začíná se dvěma výchozími šablonami, jednou pro Paper a jednou pro Fabric.
+
+Je to nejrychlejší způsob, jak:
+
+- Spustit identické servery (síť minihrových serverů, stagingové kopie produkčních serverů).
 - Přesunout server mezi panely.
-- Uchovat známou, funkční šablonu, ke které se můžete kdykoli vrátit.
+- Uchovat známou dobrou šablonu, ke které se můžete vždy vrátit.
 
-Protože blueprint zaznamenává přesné [připnutí balíčku](/docs/modpacks/), server s modpackem vytvořený z blueprintu nainstaluje stejnou připnutou verzi bez překvapivých upgradů.
+Protože šablona zaznamenává přesné [připnutí balíčku](/docs/modpacks/), server s modpackem vytvořený ze šablony nainstaluje stejnou připnutou verzi bez překvapivých upgradů.

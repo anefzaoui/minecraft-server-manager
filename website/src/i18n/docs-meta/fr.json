@@ -9,15 +9,15 @@
   },
   "backups": {
     "title": "Sauvegardes",
-    "description": "La page Sauvegardes affiche chaque instantané de votre parc, avec sa taille, sa raison et son ancienneté."
+    "description": "La page Sauvegardes affiche chaque instantané de votre parc, avec sa taille, sa raison et son ancienneté, filtrable par serveur et par raison."
   },
   "blueprints": {
     "title": "Blueprints",
-    "description": "Un blueprint capture toute la configuration d'un serveur (type, version, ressources, environnement, épinglage du pack, et optionnellement sa configuration et son monde) en un seul fichier."
+    "description": "Les Blueprints sauvegardent la configuration complète d'un serveur Minecraft comme une recette réutilisable pour créer de nouveaux serveurs. Les secrets ne sont jamais inclus."
   },
   "chatbot": {
     "title": "Chatbot Minecraft par serveur",
-    "description": "Cette version ajoute un chatbot configuré par l'administrateur à chaque serveur Minecraft géré."
+    "description": "Le panneau propose un chatbot configuré par l'administrateur pour chaque serveur Minecraft géré, mis en place dans l'onglet Paramètres → Chatbot du serveur."
   },
   "console-and-chat": {
     "title": "Console et commandes de chat",
@@ -29,7 +29,7 @@
   },
   "getting-started": {
     "title": "Premiers pas",
-    "description": "La première fois que vous ouvrez le panneau, il vous demande de créer un compte administrateur."
+    "description": "Installez Minecraft Server Manager et terminez la configuration initiale : la vérification du système, votre fuseau horaire et le compte administrateur."
   },
   "index": {
     "title": "Documentation",
@@ -37,27 +37,27 @@
   },
   "integrations": {
     "title": "Intégrations",
-    "description": "Chaque serveur héberge ses intégrations sous le groupe Paramètres : Discord, une Page de Statut publique, des Invitations en un clic et l'onglet optionnel Chatbot."
+    "description": "Chaque serveur possède ses intégrations dans le groupe Paramètres : Discord, une Page de Statut publique, des Invitations en un clic, et l'onglet optionnel Chatbot (réservé aux administrateurs)."
   },
   "modpacks": {
     "title": "Modpacks",
-    "description": "La page Modpacks (et l'onglet À partir d'un modpack dans l'assistant de création) installe un modpack en tant que serveur, toujours épinglé à une version exacte du pack afin qu'un redémarrage puisse"
+    "description": "Installez des modpacks CurseForge, Modrinth, FTB et GT New Horizons en tant que serveurs, toujours épinglés à une version exacte du pack."
   },
   "public-api": {
     "title": "API publique",
-    "description": "Une petite API HTTP en lecture seule pour récupérer l'état du serveur depuis l'extérieur du panneau : a"
+    "description": "Une petite API HTTP en lecture seule pour récupérer l'état du serveur depuis l'extérieur du panneau : un tableau de bord de statut, un moniteur de disponibilité, un bot Discord, une règle d'automatisation domestique."
   },
   "schedules": {
     "title": "Planifications",
-    "description": "La page Planifications automatise les tâches récurrentes à l'aide d'expressions cron."
+    "description": "La page Planifications automatise les tâches récurrentes avec des expressions cron. Pas de cron externe, pas de scripts."
   },
   "servers": {
     "title": "Création et gestion de serveurs",
-    "description": "Cliquez sur Créer un serveur (barre supérieure) ou sur la carte Créer un serveur pour ouvrir l'assistant."
+    "description": "Créez, démarrez, arrêtez, reconstruisez et configurez des serveurs Minecraft dans le panneau : l'assistant de création, les paramètres, la mémoire et le port du jeu."
   },
   "storage": {
     "title": "Stockage",
-    "description": "La page Stockage montre l'utilisation de votre disque : utilisation par serveur et son évolution dans le temps."
+    "description": "Voyez où va l'espace disque, limitez chaque dossier de serveur avec une quota disque, et nettoyez ce dont vous n'avez plus besoin."
   },
   "two-factor-authentication": {
     "title": "Authentification à deux facteurs",
@@ -65,18 +65,46 @@
   },
   "updates": {
     "title": "Mises à jour",
-    "description": "La page Mises à jour suit ce qui est obsolète sur l'ensemble de votre flotte en un seul endroit :"
+    "description": "Suivez et appliquez les mises à jour des versions de Minecraft, des modpacks, des mods et des plugins sur chaque serveur, avec une politique par serveur."
   },
   "users-and-roles": {
     "title": "Utilisateurs et rôles",
-    "description": "Le panneau est multi-utilisateurs."
+    "description": "Comptes, les rôles administrateur, opérateur et spectateur, et permissions par serveur dans Minecraft Server Manager."
   },
   "world-shrink": {
-    "title": "Réduire une carte",
-    "description": "Avec le temps, une carte s'étend : chaque endroit où un joueur a marché, volé ou"
+    "title": "Réduire la taille d'un monde",
+    "description": "Réduisez la taille d'un monde Minecraft en supprimant les chunks rarement visités, afin de récupérer de l'espace disque et d'accélérer les sauvegardes."
   },
   "worlds-and-files": {
     "title": "Mondes et fichiers",
-    "description": "La page Mondes gère les données des mondes de vos serveurs : changez le monde actif, téléchargez un monde ou téléchargez-en un."
+    "description": "La bibliothèque de mondes, les téléchargements et échanges de mondes, l'onglet mods et plugins, et le gestionnaire de fichiers dans le navigateur."
+  },
+  "guide-backups": {
+    "title": "Sauvegardes de serveur Minecraft qui se restaurent réellement",
+    "description": "Comment réaliser des sauvegardes de serveur Minecraft qui se restaurent réellement : copies cohérentes, conservées ailleurs et testées au moins une fois."
+  },
+  "guide-choosing-a-loader": {
+    "title": "Vanilla, Paper, Fabric, Forge, NeoForge, Quilt : lequel choisir ?",
+    "description": "Vanilla, Paper, Fabric, Forge, NeoForge ou Quilt : quel type de serveur Minecraft exécuter, en fonction de ce que vos joueurs installent."
+  },
+  "guide-moving-a-server": {
+    "title": "Déplacer un serveur Minecraft vers un autre hôte",
+    "description": "Déplacer un monde est facile. Déplacer un serveur auquel les joueurs peuvent toujours se connecter, avec leurs inventaires, leurs maisons et leurs permissions intacts, est la partie qui pose problème."
+  },
+  "guide-server-memory": {
+    "title": "Quelle quantité de RAM un serveur Minecraft nécessite-t-il ?",
+    "description": "Quelle quantité de RAM un serveur Minecraft nécessite pour du vanilla, Paper, des mods légers et de gros modpacks, et quelle quantité laisser pour la machine."
+  },
+  "guide-server-wont-start": {
+    "title": "Votre serveur Minecraft ne démarre pas",
+    "description": "Un serveur Minecraft qui ne démarre pas, résolu par ordre de probabilité : le journal, la version Java, la mémoire, l'EULA et le port, et les mods."
+  },
+  "invites-and-status-page": {
+    "title": "Invitations et page de statut",
+    "description": "Invitez des amis sur un serveur avec l'adresse, la version et un modpack client, et partagez une page de statut publique qui affiche uniquement ce que vous choisissez."
+  },
+  "live-map": {
+    "title": "Carte en direct",
+    "description": "Activez une carte 3D en direct BlueMap du monde d'un serveur en un clic, servie uniquement via la connexion du panneau."
   }
 }

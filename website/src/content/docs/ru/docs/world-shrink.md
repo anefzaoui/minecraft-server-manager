@@ -1,6 +1,6 @@
 ---
 title: 'Уменьшение размера мира'
-description: 'Со временем мир разрастается: каждое место, где игрок когда-либо ходил, летал или'
+description: 'Уменьшите размер мира Minecraft, удалив редко посещаемые чанки, чтобы освободить место на диске и ускорить резервное копирование.'
 editUrl: 'https://github.com/anefzaoui/minecraft-server-manager/edit/main/docs/world-shrink.md'
 ---
 

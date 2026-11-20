@@ -8,25 +8,29 @@
     "home": "Etusivu",
     "features": "Ominaisuudet",
     "screenshots": "Kuvakaappaukset",
+    "servers": "Palvelimet",
+    "guides": "Ohjeet",
     "install": "Asennus",
     "docs": "Dokumentaatio",
     "faq": "UKK",
+    "compare": "Vertailu",
     "changelog": "Muutosloki",
     "github": "GitHub",
     "discord": "Discord",
     "menu": "Valikko",
     "language": "Kieli",
-    "theme": "Vaihda vaalean tai tumman teeman välillä",
+    "theme": "Vaihda vaaleaan tai tummaan teemaan",
     "skip": "Siirry sisältöön"
   },
   "hero": {
-    "eyebrow": "Ilmainen ja avoimen lähdekoodin. Toimii omalla koneellasi.",
-    "title": "Hallitse Minecraft-palvelimiasi yhdestä käyttäjäystävällisestä paneelista.",
-    "subtitle": "Minecraft Server Manager muuttaa Dockerin viihtyisäksi kodiksi palvelimillesi: modipaketit pysyvät kiinnitettyinä, yhden napsautuksen varmuuskopiot, aikataulut, reaaliaikainen kartta, pelaajatilastot ja konsoli, joka puhuu selkeää englantia. Ei laskuja, ei lukitusta, koko paneelisi yhdessä kansiossa.",
-    "primary": "Aloita 3 vaiheessa",
+    "eyebrow": "Ilmainen ja avoin lähdekoodi. Toimii omalla koneellasi.",
+    "title": "Hallitse Minecraft-palvelimiasi yhdestä helppokäyttöisestä paneelista.",
+    "subtitle": "Minecraft Server Manager muuttaa Dockerin viihtyisäksi kodiksi palvelimillesi: modipaketit pysyvät kiinnitettyinä, yhden napsautuksen varmuuskopiot, aikataulut, reaaliaikainen kartta, pelaajatilastot ja selkeää englantia puhuva konsoli. Ei laskuja, ei lukitusta, koko paneelisi yhdessä kansiossa.",
+    "primary": "Aloita muutamassa minuutissa",
     "secondary": "Tutustu ominaisuuksiin",
     "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
-    "scroll": "Katso opas"
+    "scroll": "Katso opas",
+    "shotCaption": "Todellinen paneeli: sen kojelauta kuudella esimerkkipalvelimella, tummassa teemassa."
   },
   "pillars": {
     "title": "Tehty palvelinten pyörittäjille, ei tikettien ratkojille",
@@ -51,7 +55,7 @@
     ]
   },
   "features": {
-    "title": "Kaikki palvelimen omistajan tarvitsema",
+    "title": "Kaikki mitä palvelimen omistaja tarvitsee",
     "intro": "Kattava ominaisuusopas palvelimen luomisesta sen reaaliaikaisen kartan jakamiseen.",
     "cta": "Lue dokumentaatio",
     "groups": [
@@ -66,12 +70,12 @@
           },
           {
             "title": "Ohjattu luontitoiminto",
-            "body": "Yksinkertainen tai edistynyt tila, jossa jokainen kuvakeasetus selitetään selkeällä suomen kielellä ennen sen valitsemista.",
+            "body": "Yksinkertainen tai edistynyt tila, jossa jokainen kuva-asetus selitetään selkeällä suomen kielellä ennen sen valitsemista.",
             "icon": "wand"
           },
           {
             "title": "Reaaliaikainen konsoli",
-            "body": "WebSocket-konsoli RCON-komentorivillä, lokisuodattimilla ja yhden napsautuksen pelaajatoiminnoilla.",
+            "body": "WebSocket-konsoli RCON-komentopalkilla, lokisuodattimilla ja yhden napsautuksen pelaajatoiminnoilla.",
             "icon": "terminal"
           },
           {
@@ -82,7 +86,7 @@
         ]
       },
       {
-        "title": "Modit ja modipaketit",
+        "title": "Modit ja modpackit",
         "items": [
           {
             "title": "Viisi rekisteriä yhdessä selaimessa",
@@ -97,7 +101,7 @@
           },
           {
             "title": "Tuo mitä tahansa",
-            "body": "Jokainen jar tunnistetaan ja yhteensopivuus tarkistetaan sisään tuotaessa.",
+            "body": "Jokainen jar tunnistetaan ja yhteensopivuus tarkistetaan maahan tuotaessa.",
             "icon": "upload",
             "pills": ["mrpack", "cf-export", "zip"]
           },
@@ -113,9 +117,14 @@
             "icon": "library"
           },
           {
-            "title": "Valitse-modit-ensin -ratkaisija",
+            "title": "Valitse modit ensin -ratkaisija",
             "body": "Valitse haluamasi modit ja hanki uusin täysin yhteensopiva lataaja ja Minecraft-versio.",
             "icon": "sparkles"
+          },
+          {
+            "title": "Mikä tahansa pakettiversio, mikä tahansa lataajaversio",
+            "body": "Siirrä modipakkaus mihin tahansa julkaistuun versioon, uudempaan tai vanhempaan, tai vaihda modilataajan versiota. Varmuuskopiointi tapahtuu ensin, ja epäonnistunut käynnistys palauttaa.",
+            "icon": "refresh"
           }
         ]
       },
@@ -123,18 +132,18 @@
         "title": "Suojaus ja automaatio",
         "items": [
           {
-            "title": "Tallenna-turvalliset varmuuskopiot",
-            "body": "Tilannekuvat säilytysluokilla, palautus paikalleen ja valinnainen maailman kutistaminen levyn vapauttamiseksi.",
+            "title": "Tiedostoturvalliset varmuuskopiot",
+            "body": "Tilannekuvat säilytysluokilla, palautus paikoilleen ja valinnainen maailman kutistaminen levyn vapauttamiseksi.",
             "icon": "archive"
           },
           {
             "title": "Cron-aikataulut",
-            "body": "Uudelleenkäynnistykset, varmuuskopiot ja RCON-komennot aikataulun mukaisesti, seuraava ajo näkyvillä.",
+            "body": "Uudelleenkäynnistykset, varmuuskopiot ja RCON-komennot aikataulun mukaan, seuraava ajo näkyvillä.",
             "icon": "clock"
           },
           {
-            "title": "Sinikopiot",
-            "body": "Vie palvelin siirrettävänä reseptinä, tuo se minne tahansa ja saat saman palvelimen takaisin.",
+            "title": "Piirustukset",
+            "body": "Vie palvelin siirrettävänä reseptinä, tuo se minne tahansa ja hanki sama palvelin takaisin.",
             "icon": "blueprint"
           },
           {
@@ -160,8 +169,8 @@
             "pills": ["bluemap"]
           },
           {
-            "title": "Analytiikka ja tallennustila",
-            "body": "Peliaika, kuolemat ja kaivospisteet, inventaarion diagnostiikka, palvelinkohtainen levynkäyttö ja pakolliset kiintiöt.",
+            "title": "Analytiikka ja tallennus",
+            "body": "Pelitunnit, kuolemat ja kaivostulostaulut, inventaarion diagnostiikka, palvelinkohtainen levynkäyttö ja pakotetut kiintiöt.",
             "icon": "chart"
           },
           {
@@ -172,12 +181,18 @@
           },
           {
             "title": "Julkinen tilasivu ja API",
-            "body": "Opt-in tilasivut, kutsublokit, generoitu asiakkaan .mrpack ja vain luku -tilaan todennettu API.",
+            "body": "Opt-in tilasivut, kutsublokit, generoitu asiakas .mrpack ja vain luku -tokenilla todennettu API.",
             "icon": "globe"
           },
           {
+            "title": "Kutsu ystäviä",
+            "body": "Kopioi kutsu osoitteella ja versiolla. Palvelimelle, joka on rakennettu valitsemistasi modeista, anna ystäville asiakas .mrpack, joka asentaa ne ja lisää palvelimen heidän luetteloonsa.",
+            "icon": "users",
+            "pills": ["mrpack"]
+          },
+          {
             "title": "Käyttäjät, roolit ja 2FA",
-            "body": "Ylläpitäjä-, operaattori- ja katselija-roolit TOTP-kaksivaiheisella todennuksella.",
+            "body": "Järjestelmänvalvoja-, operaattori- ja katselija-roolit TOTP-kaksivaiheisella todennuksella.",
             "icon": "lock"
           }
         ]
@@ -186,53 +201,66 @@
   },
   "screenshots": {
     "title": "Paneeli, jota on ilo käyttää",
-    "intro": "Tietokone ja puhelin. Paneeli on suunniteltu ensisijaisesti kapeaksi, joten jokainen sivu toimii puhelimella.",
+    "intro": "Tietokone ja puhelin. Paneeli on suunniteltu ensisijaisesti kapealle näytölle, joten jokainen sivu toimii puhelimella.",
     "desktop": "Tietokone",
     "mobile": "Puhelimella",
     "items": {
-      "dashboard": "Kojelauta: kaikki palvelimet, pelaajamäärä ja viimeaikainen toiminta yhdellä silmäyksellä.",
+      "dashboard": "Kojelauta: kaikki palvelimet, pelaajamäärät ja viimeaikainen toiminta yhdellä silmäyksellä.",
       "wizard": "Luontivelho selittää jokaisen asetuksen ennen sen valitsemista.",
       "overview": "Palvelimen yleiskatsaus resurssimittareilla ja pikatoiminnoilla.",
       "console": "Live-konsoli RCON-komentorivillä ja lokisuodattimilla.",
-      "mods": "Modit viidestä rekisteristä, suodatettuna palvelimen lataajalle ja versiolle.",
-      "worlds": "Vaihda maailmoja ja hallitse tiedostoja selaimella.",
+      "mods": "Modit viidestä rekisteristä, suodatettuna palvelimen latausohjelman ja version mukaan.",
+      "modpacks": "Modpackit: etsi CurseForge ja Modrinth, ja jokainen paketti asennetaan kiinnitettynä tarkkaan versioon.",
+      "worlds": "Vaihda maailmoja ja hallitse tiedostoja selaimesta.",
       "backups": "Varmuuskopiot säilytysluokilla ja paikan päällä tapahtuvalla palautuksella.",
       "schedules": "Cron-aikataulut uudelleenkäynnistyksille, varmuuskopioille ja komennoille.",
       "blueprints": "Blueprintit: siirrettävät palvelinreseptit.",
-      "storage": "Tallennusanalyysi ja pakolliset kiintiöt."
+      "storage": "Tallennustilan analytiikka ja pakolliset kiintiöt."
     }
   },
   "install": {
     "title": "Asennus",
-    "intro": "Valitse isäntäjärjestelmääsi sopiva vaihtoehto. Jokainen polku antaa saman ohjauspaneelin.",
+    "intro": "Valitse isäntäjärjestelmääsi vastaava vaihtoehto. Jokainen polku antaa saman paneelin.",
     "requirements": "Vaatimukset",
     "reqItems": [
       "Docker Engine (Linux) tai Docker Desktop (Windows, macOS).",
-      "Node.js 24 tai uudempi lähdekoodista asennettaessa. Docker-image sisältää oman Node.js-asennuksensa.",
+      "Node.js 24 tai uudempi lähdekoodista asennettaessa. Docker-kuva sisältää oman.",
       "Muutama gigatavu levytilaa palvelinkuvia ja maailmoja varten."
     ],
     "docker": {
       "title": "Vaihtoehto 1: Docker",
-      "body": "Monialustainen valmis image julkaistaan GHCR:ään jokaisen julkaisun yhteydessä. Lataa compose-tiedosto, aseta yksi muuttuja ja käynnistä.",
+      "body": "Monialusta-arkkitehtuurille valmis kuva julkaistaan GHCR:ään jokaisen julkaisun yhteydessä. Lataa compose-tiedosto, aseta yksi muuttuja ja käynnistä.",
       "after": "Avaa sitten http://your-host:25564. Portainerissa tai Dockgessa liitä compose-tiedosto pinona ja aseta DATA_DIR_HOST pinon ympäristömuuttujiin.",
-      "warning": "Ohjauspaneeli ohjaa isäntäjärjestelmän Docker-demonia liitetyn socketin kautta, mikä vastaa isäntäjärjestelmän root-oikeuksia. Kohtele ylläpitäjän kirjautumistietoja vastaavasti äläkä koskaan paljasta ohjauspaneelia suoraan internetiin."
+      "warning": "Paneeli ohjaa isäntäjärjestelmän Docker-demonia liitetyn socketin kautta, joka on isäntäjärjestelmässä root-oikeuksia vastaava. Kohtele järjestelmänvalvojan kirjautumista vastaavasti äläkä koskaan paljasta paneelia suoraan internetiin."
     },
     "source": {
       "title": "Vaihtoehto 2: Lähdekoodista",
       "body": "Mikä tahansa käyttöjärjestelmä, mukaan lukien Windows ja macOS Docker Desktopilla.",
-      "after": "Avaa http://localhost:25564. Ensimmäinen käynnistys käy läpi järjestelmätarkistuksen, aikavyöhykkeesi ja ylläpitäjätilin luomisen."
+      "after": "Avaa http://localhost:25564. Ensimmäinen käynnistys käy läpi järjestelmän tarkistuksen, aikavyöhykkeesi ja järjestelmänvalvojan tilin luomisen."
     },
     "next": "Seuraavat vaiheet",
-    "nextBody": "Aloitusopas kattaa ensimmäisen käynnistyksen asetukset, ensimmäisen palvelimen luomisen ja tiedostojen sijainnit.",
+    "nextBody": "Aloitusopas kattaa ensimmäisen käynnistyksen asetukset, ensimmäisen palvelimen luomisen ja sen, missä kaikki sijaitsee.",
     "nextCta": "Lue aloitusopas",
     "compose": "Lataa docker-compose.yml",
     "windows": "Huomioitavaa Windowsissa",
     "windowsItems": [
       "Docker Desktopin on oltava käynnissä ennen palvelinten käynnistämistä tai luomista.",
-      "Jaa projektisi levy Docker Desktopiin (Asetukset, Resurssit, Tiedostojen jakaminen), jotta sidotut liitokset toimivat.",
-      "Docker-image on tarkoitettu Linux-isännille; Windowsissa ja macOS:ssä aja ohjauspaneeli lähdekoodista."
+      "Jaa projektisi levy Docker Desktopille (Asetukset, Resurssit, Tiedostojen jakaminen), jotta sidotut liitokset toimivat.",
+      "Docker-kuva on tarkoitettu Linux-isännille; Windowsissa ja macOS:ssä paneeli ajetaan lähdekoodista."
     ],
-    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []],
+    "options": {
+      "title": "Asennusohjelman asetukset",
+      "intro": "Linux-asennusohjelma ottaa asetuksensa bash -s -- -komennon jälkeen, joten ne toimivat myös putken läpi. Suorita se uudelleen samoilla asetuksilla päivittääksesi; datakansiosi, .env ja compose-muokkaukset säilytetään.",
+      "items": {
+        "port": "Tarjoile paneeli toisessa portissa.",
+        "proxy": "Kuuntele vain osoitteessa 127.0.0.1, käänteistä välityspalvelinta varten TLS:llä edessä.",
+        "tag": "Kiinnitä julkaisu uusimman seuraamisen sijaan.",
+        "dir": "Asenna johonkin muuhun kuin /opt/msm.",
+        "uninstall": "Poista paneeli ja säilytä sen tiedot. Putken läpi ei ole näppäimistöä kysymykseen vastaamiseksi, joten lisää --yes; lisää myös --purge poistaaksesi datakansion.",
+        "help": "Jokainen asetus oletusarvoineen."
+      }
+    }
   },
   "faq": {
     "title": "Usein kysytyt kysymykset",
@@ -243,12 +271,12 @@
       },
       {
         "q": "Toimiiko se Raspberry Pi:llä tai muulla ARM-koneella?",
-        "a": "Kyllä. Docker-kuva on julkaistu molemmille arkkitehtuureille, ja lähdekoodista asennettava versio toimii kaikkialla, missä Node.js 24 ja Docker toimivat.",
+        "a": "Kyllä. Docker-image on julkaistu molemmille arkkitehtuureille, ja lähdekoodista asennus toimii kaikkialla, missä Node.js 24 ja Docker toimivat.",
         "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
       },
       {
         "q": "Mitä palvelintyyppejä tuetaan?",
-        "a": "Kaikki, mitä itzg-kuva tukee, sekä modipaketit neljästä suuresta lähteestä.",
+        "a": "Kaikkea, mitä itzg-image tukee, sekä modipaketit neljästä suuresta lähteestä.",
         "pills": [
           "vanilla",
           "paper",
@@ -268,12 +296,16 @@
         "a": "Kopioi data-kansio. Se sisältää tietokannan, jokaisen palvelimen maailman, varmuuskopiot ja modikirjaston. Käynnistä paneeli uudessa koneessa osoittaen kyseiseen kansioon."
       },
       {
-        "q": "Voiko palvelimia hallita useampi henkilö?",
-        "a": "Kyllä. Paneelissa on ylläpitäjä-, operaattori- ja katseluroolit, ja jokainen tili voi ottaa käyttöön kaksivaiheisen tunnistautumisen."
+        "q": "Voiko palveluita hallita useampi henkilö?",
+        "a": "Kyllä. Paneelissa on ylläpitäjän, operaattorin ja katselijan roolit, ja jokainen tili voi ottaa käyttöön kaksivaiheisen tunnistautumisen."
       },
       {
-        "q": "Tarvitseeko sen olla julkisesti saatavilla internetissä?",
-        "a": "Ei. Pelaajat yhdistävät pelipaikkoihin, eivät paneeliin. Pidä paneeli omassa lähiverkossasi tai VPN:n tai todennetun käänteisen välityspalvelimen takana."
+        "q": "Kuinka ystävät kotini ulkopuolella liittyvät?",
+        "a": "Ohjaa palvelimen pelisatama, 25565 ylöspäin, reitittimessäsi koneelle, joka sitä pyörittää, tai käytä tunnelia, jos internet-palveluntarjoajasi ei salli porttien edelleenohjausta. Palvelimen Invites-välilehti näyttää jaettavan osoitteen ja kirjoittaa kutsutekstin puolestasi. Pidä paneelin oma portti suljettuna."
+      },
+      {
+        "q": "Tarvitseeko sen olla altistettuna internetille?",
+        "a": "Ei. Pelaajat yhdistävät pelisatamiin, eivät paneeliin. Pidä paneeli omassa lähiverkossasi tai VPN:n tai todennuksella varustetun käänteisen välityspalvelimen takana."
       },
       {
         "q": "Entä Bedrock-pelaajat?",
@@ -281,15 +313,20 @@
         "pills": ["geyser", "floodgate"]
       },
       {
+        "q": "Onko se tehty tekoälyllä?",
+        "a": "Osittain ja avoimesti. Suurin osa koodista on kirjoitettu Claude Code -työkalulla, ja ylläpitäjä suunnittelee, tarkistaa ja testaa jokaisen ominaisuuden. Arkiston tekoälyseloste kuvaa kuinka."
+      },
+      {
         "q": "Mistä saan apua?",
-        "a": "Discord-palvelimella on tukifoorumi ja oikeita ihmisiä. Virheet ja ominaisuuspyynnöt menevät GitHubin ongelmiin."
+        "a": "Discord-palvelimella on tukifoorumi ja oikeita ihmisiä. Virheet ja ominaisuuspyynnöt menevät GitHub-ongelmiin."
       }
     ]
   },
   "changelog": {
     "title": "Muutosloki",
     "intro": "Jokainen julkaisu, uusin ensin. Julkaisutiedotteet julkaistaan englanniksi.",
-    "releases": "Kaikki julkaisut GitHubissa"
+    "releases": "Kaikki julkaisut GitHubissa",
+    "feed": "Julkaisusyyte (Atom)"
   },
   "community": {
     "title": "Tule moikkaamaan",
@@ -298,7 +335,7 @@
     "github": "Tähtää GitHubissa"
   },
   "footer": {
-    "tagline": "Ilmainen ja avoimen lähdekoodin MIT-lisenssillä.",
+    "tagline": "Ilmainen ja avoin lähdekoodi MIT-lisenssillä.",
     "product": "Tuote",
     "community": "Yhteisö",
     "resources": "Resurssit",
@@ -306,32 +343,38 @@
     "releases": "Julkaisut",
     "contributing": "Osallistuminen",
     "license": "Lisenssi",
-    "notAffiliated": "Ei virallinen Minecraft-tuote. Ei Mojangin tai Microsoftin hyväksymä tai liittymä."
+    "notAffiliated": "Ei virallinen Minecraft-tuote. Ei Mojangin tai Microsoftin hyväksymä tai liittolainen.",
+    "serverTypes": "Palvelintyypit",
+    "guides": "Oppaita",
+    "compare": "Vertaa",
+    "roadmap": "Tie kartta",
+    "ai": "Miten tekoälyä käytetään",
+    "conduct": "Toimintakoodi"
   },
   "meta": {
     "home": {
-      "title": "Ilmainen itse isännöity Minecraft-palvelimen ohjauspaneeli",
-      "description": "Pyöritä vanilla- ja modattuja Minecraft-palvelimia selaimestasi. Docker-pohjainen, modpackit kiinnitetty tarkkoihin versioihin, varmuuskopiot, aikataulut, live-kartta, pelaaja-analytiikka. Ilmainen, avoin lähdekoodi, pystyssä kolmessa vaiheessa."
+      "title": "Ilmainen itse isännöity Minecraft-palvelinohjauspaneeli",
+      "description": "Pyöritä vanilla- ja modattuja Minecraft-palvelimia selaimellasi ilmaisella, itse isännöidyllä Docker-paneelilla: kiinnitetyt modpackit, varmuuskopiot, aikataulut ja reaaliaikainen kartta."
     },
     "features": {
-      "title": "Ominaisuudet",
-      "description": "Kaikki Minecraft Server Managerin ominaisuudet: kontitetut palvelimet, viisi modirekisteriä, tarkistussummalla varmennetut lataukset, tallennusturvalliset varmuuskopiot, aikataulut, blueprintit, kaatumisdiagnostiikka, live-kartta, roolit ja kaksivaiheinen tunnistautuminen."
+      "title": "Minecraft-palvelinohjauspaneelin ominaisuudet",
+      "description": "Kaikki Minecraft Server Managerin ominaisuudet: Docker-palvelimet, viisi modirekisteriä, vahvistetut lataukset, varmuuskopiot, aikataulut, kaatumisanalyysi, reaaliaikainen kartta ja 2FA."
     },
     "screenshots": {
-      "title": "Kuvakaappaukset",
-      "description": "Kuvakaappaukset Minecraft Server Manager -paneelista työpöydällä ja puhelimella: kojelauta, ohjattu toiminto, konsoli, modit, maailmat, varmuuskopiot, aikataulut ja paljon muuta."
+      "title": "Minecraft-palvelinohjauspaneelin kuvakaappaukset",
+      "description": "Kuvakaappaukset Minecraft Server Manager -paneelista työpöydällä ja puhelimella: kojelauta, ohjattu asennus, konsoli, modit, maailmat, varmuuskopiot, aikataulut ja paljon muuta."
     },
     "install": {
-      "title": "Asennus",
+      "title": "Asenna Minecraft-palvelinohjauspaneeli Dockerilla",
       "description": "Asenna Minecraft Server Manager Dockerilla kolmella komennolla tai lähteestä Windowsissa, macOS:ssä ja Linuxissa."
     },
     "faq": {
-      "title": "UKK",
-      "description": "Vastauksia koskien kustannuksia, tuettuja palvelintyyppejä, ARM-tukea, siirtoa, rooleja ja altistumista internetille."
+      "title": "Minecraft-palvelinohjauspaneelin UKK",
+      "description": "Vastauksia koskien kustannuksia, tuettuja palvelintyyppejä, Raspberry Pi:tä ja ARM:ää, siirtymistä uuteen koneeseen, rooleja, Bedrock-pelaajia ja paneelin julkaisemista internetiin."
     },
     "changelog": {
-      "title": "Muutosloki",
-      "description": "Julkaisutiedotteet jokaiselle Minecraft Server Managerin versiolle."
+      "title": "Muutosloki ja julkaisutiedot",
+      "description": "Julkaisutiedot jokaisesta Minecraft Server Managerin, ilmaisen itse isännöidyn Minecraft-palvelinohjauspaneelin, versiosta."
     },
     "notFound": {
       "title": "Sivua ei löydy",
@@ -345,8 +388,62 @@
   },
   "langNotice": "Tämä sivu näytetään englanniksi, kunnes sen käännös on valmis.",
   "tutorial": {
-    "title": "Käyttöönottovalmis kolmessa vaiheessa",
-    "intro": "Valitse, miten haluat suorittaa paneelin. Täytä kaksi kenttää, ja jokainen alla oleva komento kirjoittaa itsensä uudelleen koneellesi.",
+    "title": "Käyttövalmis minuuteissa",
+    "intro": "Valitse koneesi ja liitä komennot. Lisäasetukset tarjoaa kaikki muut tavat paneelin suorittamiseen, komennot on muokattu omalle kansiollesi ja osoitteellesi.",
+    "modes": {
+      "simple": "Yksinkertainen",
+      "advanced": "Lisäasetukset"
+    },
+    "simple": {
+      "linux": {
+        "label": "Linux",
+        "steps": [
+          {
+            "title": "Suorita asennusohjelma",
+            "body": "Toimii millä tahansa 64-bittisellä Linux-koneella, VPS:stä Raspberry Pi 4:ään tai 5:een. Se asentaa Dockerin, jos se puuttuu, asettaa paneelin hakemistoon /opt/msm ja käynnistää sen. Suorita se uudelleen myöhemmin päivittääksesi."
+          },
+          {
+            "title": "Avaa paneeli",
+            "body": "Asennusohjelma tulostaa osoitteen ja kertakäyttöisen PIN-koodin. Avaa osoite selaimessa, syötä PIN-koodi ja luo ylläpitäjätilisi."
+          }
+        ]
+      },
+      "windows": {
+        "label": "Windows",
+        "steps": [
+          {
+            "title": "Asenna Docker Desktop, Node.js, Git ja pnpm",
+            "body": "Yksi rivi kutakin PowerShellissä. Käynnistä Docker Desktop asennuksen jälkeen ja pidä se käynnissä."
+          },
+          {
+            "title": "Hae paneeli ja käynnistä se",
+            "body": "Avaa uusi pääteikkuna, jotta se löytää juuri asentamasi työkalut."
+          },
+          {
+            "title": "Avaa paneeli",
+            "body": "Ensimmäinen käynnistys käy läpi järjestelmän tarkistuksen, aikavyöhykkeesi ja ylläpitäjätilin luomisen."
+          }
+        ]
+      },
+      "macos": {
+        "label": "macOS",
+        "steps": [
+          {
+            "title": "Asenna Docker Desktop, Node.js, Git ja pnpm",
+            "body": "Homebrew'n avulla. Käynnistä Docker Desktop asennuksen jälkeen ja pidä se käynnissä."
+          },
+          {
+            "title": "Hae paneeli ja käynnistä se",
+            "body": "Asennusvaihe myös rakentaa paneelin. Käännettävää ei ole."
+          },
+          {
+            "title": "Avaa paneeli",
+            "body": "Ensimmäinen käynnistys käy läpi järjestelmän tarkistuksen, aikavyöhykkeesi ja ylläpitäjätilin luomisen."
+          }
+        ]
+      }
+    },
+    "advancedIntro": "Täytä kaksi kenttää, ja jokainen alla oleva komento muokkautuu koneellesi.",
     "dataDir": "Datakansio isäntäkoneella",
     "dataDirHint": "Absoluuttinen polku. Maailmat, varmuuskopiot, modit ja tietokanta sijaitsevat kaikki täällä.",
     "host": "Isäntänimi tai IP",
@@ -361,7 +458,7 @@
         "steps": [
           {
             "title": "Luo datakansio",
-            "body": "Yksi kansio sisältää kaiken, minkä paneeli omistaa."
+            "body": "Yksi kansio sisältää kaiken, mitä paneeli omistaa."
           },
           {
             "title": "Lataa compose-tiedosto ja osoita se kansioon",
@@ -377,7 +474,7 @@
         "label": "Portainer / Dockge",
         "steps": [
           {
-            "title": "Luo datakansio isäntäkoneella",
+            "title": "Luo datakansio isäntäkoneelle",
             "body": "Sama kansiosääntö: absoluuttinen polku, koneella, joka suorittaa Dockeria."
           },
           {
@@ -399,11 +496,11 @@
           },
           {
             "title": "Kloonaa ja asenna",
-            "body": "Asennusvaihe rakentaa myös paneelin CSS:n. Ei natiivisia moduuleja käännettäväksi."
+            "body": "Asennusvaihe myös rakentaa paneelin CSS:n. Ei natiivimoduuleja käännettäväksi."
           },
           {
             "title": "Käynnistä paneeli",
-            "body": "Oletuksena se kuuntelee vain localhostia. Aseta PANEL_HOST=0.0.0.0, jotta siihen pääsee käsiksi muista verkkosi koneista."
+            "body": "Oletuksena se kuuntelee vain localhostia. Aseta PANEL_HOST=0.0.0.0, jotta siihen pääsee käsiksi muilta koneilta verkossasi."
           }
         ]
       },
@@ -412,15 +509,15 @@
         "steps": [
           {
             "title": "Käynnistä lähdeasennuksesta",
-            "body": "Suorita tämä kloonatusta kansiosta. PM2 käynnistää sovelluksia Node-versiolla, joka käynnisti sen daemonin, joten kiinnitä tulkki."
+            "body": "Suorita tämä kloonatusta kansiosta. PM2 käynnistää sovelluksia käyttäen Node-versiota, jolla sen daemon käynnistettiin, joten kiinnitä tulkki."
           },
           {
             "title": "Tallenna prosessilista ja ota käynnistys käyttöön",
-            "body": "pm2 startup tulostaa yhden komennon suoritettavaksi sudo:lla; suorita se kerran."
+            "body": "pm2 startup tulostaa yhden komennon, joka suoritetaan sudo-oikeuksin; suorita se kerran."
           },
           {
             "title": "Suositko systemd:tä?",
-            "body": "Yksikkö, joka suorittaa node src/server.js kloonatusta kansiosta WorkingDirectory-asetuksen ollessa määritettynä, toimii samalla tavalla. Paneeli ei tarvitse ylimääräisiä lippuja."
+            "body": "Yksikkö, joka suorittaa node src/server.js -komentoa kloonatusta kansiosta WorkingDirectory-asetuksella, toimii samalla tavalla. Paneeli ei tarvitse lisälippuja."
           }
         ]
       }
@@ -436,5 +533,1647 @@
     "checksums": "Tarkistussummat",
     "integrations": "Integraatiot",
     "keyless": "avaimeton"
+  },
+  "landing": {
+    "breadcrumb": "Leivänmurut",
+    "install": "Asenna paneeli",
+    "docs": "Lue dokumentaatio",
+    "related": "Lue lisää",
+    "open": "Avaa",
+    "docsGuides": "Lisää oppaita dokumentaatiossa",
+    "docsGuidesIntro": "Lyhyitä, käytännönläheisiä vastauksia palvelinomistajien useimmin kysymiin kysymyksiin, pidettynä dokumentaation rinnalla."
+  },
+  "serversHub": {
+    "meta": {
+      "title": "Minecraft-palvelintyypit: Paper, Fabric, Forge",
+      "description": "Suorita Paper-, Purpur-, Fabric-, Quilt-, Forge-, NeoForge-, vanilla- tai täysi modpack-palvelin yhdellä itse isännöidyllä paneelilla. Valitse palvelintyyppi ja katso, mitä saat."
+    },
+    "eyebrow": "Jokainen palvelintyyppi",
+    "title": "Yksi paneeli jokaista Minecraft-palvelintyyppiä varten",
+    "intro": "Lisäosat, modit, muuttumaton peli tai kokonainen modpack. Valitse, mitä haluat suorittaa, ja paneeli hoitaa Java-version, lataukset ja kiinnityksen puolestasi.",
+    "pills": [
+      "vanilla",
+      "paper",
+      "purpur",
+      "fabric",
+      "quilt",
+      "forge",
+      "neoforge",
+      "packs-curseforge",
+      "packs-modrinth",
+      "ftb",
+      "gtnh"
+    ],
+    "cards": {
+      "serverPaper": "Paper- ja Purpur-lisäosapalvelimet, joissa on lisäosia neljästä rekisteristä ja pelaajat liittyvät muokkaamattomalla asiakasohjelmalla.",
+      "serverFabric": "Fabric- ja Quilt-palvelimet kevyille, nopeasti päivittyville modeille, ja versiotarkistus ennen jokaista Minecraft-päivitystä.",
+      "serverForge": "Forge ja NeoForge raskaammille modeille, 1.7.10-klassikoista nykyisiin paketteihin, oikea Java valittuna sinulle.",
+      "serverVanilla": "Muuttumaton peli, snapshot-versioista vanhoihin beta-versioihin, maailmanhallinnalla, varmuuskopioilla ja pelaajatilastoilla.",
+      "serverModpacks": "CurseForge-, Modrinth-, FTB- ja GT New Horizons -paketit kiinnitettynä tarkkaan versioon, sekä omat zip- tai .mrpack-tiedostosi."
+    },
+    "sections": [
+      {
+        "title": "Etkö ole varma kumman valita?",
+        "body": "Valitse sen perusteella, mitä pelaajiesi tulisi asentaa, ei sen perusteella, mikä kuulostaa nopeimmalta. Jos kenenkään ei pitäisi asentaa mitään, suorita vanilla tai Paper. Jos asennat julkaistun paketin, paketti päättää latausohjelman ja Minecraft-version puolestasi. Jos rakennat modattua palvelinta itse, Fabric ja NeoForge kattavat useimmat modernit modit, ja Forge kattaa vanhemmat aikakaudet.",
+        "points": [
+          "Selviytyminen ystävien kanssa, ei mitään erikoista: vanilla.",
+          "Julkinen palvelin arvoilla, alueilla ja moderoinnilla: Paper.",
+          "Tietty paketti CurseForgesta tai Modrinthista: mitä tahansa paketti sanoo.",
+          "Moderni paketti, jonka kokoat itse: Fabric tai NeoForge.",
+          "Vanha paketti 1.7–1.12 aikakaudelta: Forge."
+        ]
+      }
+    ],
+    "related": ["guidesHub", "serverModpacks"],
+    "cta": {
+      "title": "Aloita ensimmäinen palvelimesi",
+      "body": "Asenna paneeli, avaa luontivelho ja valitse palvelintyyppi. Jokainen tyyppi on ilmainen ja toimii omalla koneellasi."
+    }
+  },
+  "serverPaper": {
+    "meta": {
+      "title": "Paper-palvelinohjelma: lisäosat, itse isännöity",
+      "description": "Ilmainen, itse isännöity Paper- ja Purpur-palvelinohjelma. Hae lisäosia Hangarista, SpigotMC:stä ja Modrinthista, varmista jokainen lataus ja pidä ne ajan tasalla."
+    },
+    "eyebrow": "Paper ja Purpur",
+    "title": "Itse isännöity Paper-palvelinohjelma aidolla lisäosien selaimella",
+    "intro": "Suorita Paperia tai Purpuria omassa Docker-kontissaan, etsi lisäosia neljästä rekisteristä poistumatta ohjelmasta ja anna pelaajien liittyä pelillä, joka heillä jo on.",
+    "pills": ["paper", "purpur", "hangar", "spigotmc", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Miksi Paper julkiselle palvelimelle",
+        "body": "Lisäosat toimivat vain palvelimella, joten pelaajat liittyvät tavallisella, muokkaamattomalla asiakasohjelmalla eivätkä heidän tarvitse koskaan asentaa mitään. Kaikki sääntöihin, oikeuksiin, talouksiin, maa-alueiden valtauksiin, minipeleihin tai moderointiin liittyvä on lisäosa, ja siksi lähes jokainen julkinen palvelin käyttää Paperia. Sen taustalla on vuosien suorituskykytyö ja asetus melkein jokaiselle käyttäytymiselle, joka on koskaan ärsyttänyt ylläpitäjää. Purpur on Paperin haara, jossa on vielä enemmän kytkimiä, myös pelimekaniikkaan liittyviä. Molemmat löytyvät luontivelhon Vanilla-välilehdeltä.",
+        "points": [
+          "Pelaajat yhdistävät tavallisella pelillä. Ei modeja, ei käynnistysohjelman asetuksia.",
+          "Useimmat Bukkit-aikakauden lisäosat toimivat edelleen.",
+          "Valitse Purpur vain, jos haluat sen lisäkytkimet; muuten Paper."
+        ]
+      },
+      {
+        "title": "Neljä lisäosarekisteriä yhdessä haussa",
+        "body": "Lisäosapalvelimen Mods-välilehti hakee Hangarista (PaperMC:n oma lisäosarekisteri), SpigotMC:stä, Modrinthista ja CurseForgesta, suodatettuna palvelimen Minecraft-versioon. Vain CurseForge vaatii API-avaimen. Voit myös liittää projektisivun, GitHub-arkiston tai julkaisun tai suoran jar-linkin, ja ohjelma löytää oikean käännöksen. Jokainen rekisterilataus tarkistetaan rekisterin julkaisemaa vahvinta tarkistussummaa vastaan ennen kuin se saavuttaa palvelimen, joten vioittunut tai peukaloitu tiedosto ei koskaan laskeudu.",
+        "pills": ["hangar", "spigotmc", "modrinth", "curseforge", "github-releases", "sha512", "sha256"],
+        "points": [
+          "Palvelimella jo olevat tulokset näyttävät 'Asennettu'-merkin.",
+          "Jos SpigotMC-resurssi on isännöity muualla, ohjelma ilmoittaa siitä heti ja tarjoaa sivun avaamista ja jar-tiedoston lataamista sen sijaan.",
+          "Ladattujen jar-tiedostojen tunnistetaan, joten ne säilyttävät todellisen nimensä ja pysyvät päivitettävinä."
+        ],
+        "shot": "mods"
+      },
+      {
+        "title": "Lisäosien päivitykset ilman arvailua",
+        "body": "Jokainen lisäämäsi lisäosa tarkistetaan sen lähdettä vastaan päivittäin ja pyydettäessä. Päivitä yksi lisäosa, ohita versio, jota et halua, tai paina 'Päivitä kaikki' soveltaaksesi kaikkea yhdellä uudelleenkäynnistyksellä. Jos päivitys osoittautuu huonoksi, palauta edellinen käännös jaetusta kirjastosta. Ota käyttöön 'Ilmoita minulle' palvelimen päivityskäytännössä, ja odottavat päivitykset näkyvät merkkinä ja Päivitykset-sivulla.",
+        "points": [
+          "Päivittäiset tarkistukset Hangarista, SpigotMC:stä, Modrinthista, CurseForgesta ja GitHub Releasesista.",
+          "Palautus palauttaa edellisen käännöksen kirjastosta.",
+          "Jos kiinnität Paper-käännöksen, Päivitykset-sivu kertoo sinulle, kun uudempi julkaistaan."
+        ]
+      },
+      {
+        "title": "Suorita se kuin yhteisöpalvelin",
+        "body": "Paper-palvelimet saavat samat työkalut kuin kaikki muutkin palvelimet ohjelmassa: live-konsoli RCON-komentorivillä, sallittujen listojen, operaattorit, bannit ja IP-bannit, teleportit sekä mukautetut chat-komennot viiveillä. Anna henkilökunnallesi tilit, joilla on palvelinkohtaiset oikeudet, jotta moderaattori voi käyttää konsolia koskematta varmuuskopioihin tai tiedostoihin. Yhdellä napsautuksella lisätään BlueMap live-kartta, joka tarjoillaan vain ohjelman oman kirjautumisen kautta, ja Discord-hälytykset kertovat, kun jokin vaatii sinua.",
+        "pills": ["bluemap", "discord"],
+        "shot": "console"
+      }
+    ],
+    "steps": {
+      "title": "Aloita Paper-palvelin kolmessa vaiheessa",
+      "items": [
+        {
+          "title": "Valitse Paper velhossa",
+          "body": "Avaa 'Luo palvelin', pysy Vanilla-välilehdellä, valitse Paper tai Purpur ja valitse Minecraft-versio. Ilmainen pelisatama ja järkevä muisti täytetään puolestasi."
+        },
+        {
+          "title": "Lisää lisäosasi",
+          "body": "Palvelimen Mods-välilehdellä hae Hangarista, SpigotMC:stä, Modrinthista tai CurseForgesta tai liitä linkki. Asennukset varmennetaan latauksen aikana."
+        },
+        {
+          "title": "Jaa osoite",
+          "body": "Yleiskatsaus-välilehti näyttää osoitteen, jonka voit antaa pelaajille. He liittyvät pelillä, joka heillä jo on."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Paper-palvelinkysymykset",
+      "items": [
+        {
+          "q": "Voinko lisätä modeja Paper-palvelimeen?",
+          "a": "Ei. Paper lataa lisäosia, jotka toimivat vain palvelimella. Modit muuttavat itse peliä ja vaativat modilataajaa, kuten Fabric tai NeoForge, sekä palvelimella että jokaisella asiakasohjelmalla. Jos haluat molemmat, suorita modattu palvelin ja lisäosapalvelin rinnakkain sen sijaan, että yksi hybridi."
+        },
+        {
+          "q": "Tarvitsenko SpigotMC-tilin tai API-avaimen lisäosien asentamiseen?",
+          "a": "Ei. SpigotMC, Hangar ja Modrinth toimivat kaikki ilman avainta. Vain CurseForge pyytää API-avainta, jonka lisäät kerran kohdassa Asetukset, API-avaimet."
+        },
+        {
+          "q": "Punakivifarmi videosta ei toimi palvelimellani. Miksi?",
+          "a": "Paper muuttaa oletuksena joitain vanilla-käyttäytymisiä suorituskyvyn nimissä. Se on yleensä syy, ja se on yleensä asetus Paperin konfiguraatiossa, jota voit muokata palvelimen tiedostonhallinnassa."
+        },
+        {
+          "q": "Toimivatko vanhat Bukkit- ja Spigot-lisäosani edelleen?",
+          "a": "Useimmat niistä, kyllä. Paper on Spigotin haara ja säilyttää lisäosien API:n, joten Bukkitille ja Spigotille kirjoitetut lisäosat toimivat useimmiten muuttumattomina. Tarkista jokaisen lisäosan sivulta, mitä Minecraft-versioita se tukee."
+        }
+      ]
+    },
+    "related": ["serverFabric", "serverVanilla", "guideMulti"],
+    "cta": {
+      "title": "Suorita Paper-palvelimesi kotona",
+      "body": "Asenna ohjelma mihin tahansa koneeseen, jossa on Docker, ja luo sitten Paper-palvelin velhon avulla. Ilmainen, avointa lähdekoodia ja sinun."
+    }
+  },
+  "serverFabric": {
+    "meta": {
+      "title": "Itse isännöity Fabric-palvelin modiselaimella",
+      "description": "Isännöi Fabric- tai Quilt-Minecraft-palvelinta itse. Hae Modrinthistä ja CurseForgestä, kiinnitä latausohjelman koontiversio ja tarkista jokainen modi ennen päivitystä."
+    },
+    "eyebrow": "Fabric ja Quilt",
+    "title": "Itse isännöity Fabric-palvelin, joka tietää, mitä modisi tukevat",
+    "intro": "Luo Fabric- tai Quilt-palvelin haluamistasi modeista, pidä latausohjelman koontiversio paikallaan ja siirry uuteen Minecraft-versioon vasta, kun jokainen modi pystyy seuraamaan.",
+    "pills": ["fabric", "quilt", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Miksi Fabric",
+        "body": "Fabric on pieni, seuraa uusia Minecraft-versioita päivien sisällä ja sisältää useimmat modernit suorituskykymodit. Jos tavoitteenasi on nopea palvelin muutamalla laadunparannusmodilla, tämä on oikea latausohjelma. Lähes jokainen Fabric-modi vaatii myös Fabric API:n, joka on erillinen lataus, jonka lisäät kuten minkä tahansa muunkin modin. Quilt on Fabricin haarauma, joka suorittaa useimmat Fabric-modit; valitse se, jos sinulla on erityinen syy, muuten valitse Fabric.",
+        "points": [
+          "Nopea uusien Minecraft-julkaisujen seuraaminen.",
+          "Useimpien modernien suorituskykymodien koti.",
+          "Quilt-palvelimet näkevät Fabric-koontiversiot automaattisesti, koska Quilt suorittaa Fabric-modeja."
+        ]
+      },
+      {
+        "title": "Aloita haluamistasi modeista",
+        "body": "Ohjatun toiminnon Modit-välilehti valitsee latausohjelman, Minecraft-version ja latausohjelman koontiversion: viimeisimmän tai kiinnitetyn. Voit tehdä sen myös toisinpäin. Valitse ensin modit, ja ratkaisija ehdottaa uusinta latausohjelmaa ja Minecraft-versiota, jota jokainen niistä tukee, ja asentaa sitten joukon palvelimen luomisen yhteydessä.",
+        "points": [
+          "Kiinnitä Fabric- tai Quilt-latausohjelman koontiversio viimeisimmän seuraamisen sijaan.",
+          "Päivitykset-sivu tarjoaa uudempaa koontiversiota kiinnitetylle latausohjelmalle.",
+          "Modiselain suodattaa latausohjelman mukaan, joten Forge-jar-tiedosto ei voi vahingossa päätyä Fabric-palvelimeen."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Versiotarkistus ennen jokaista päivitystä",
+        "body": "Fabric-palvelimen Modit-välilehdellä on Versiot-välilehti. Se tarkistaa jokaisen asennetun modin Modrinthistä ja CurseForgestä ja raportoi korkeimman Minecraft-version, jolle jokaisesta on koontiversio, sekä erittelyn siitä, mitä kukin uudempi versio jättäisi pois. Uudempi Minecraft-versio tarjotaan vasta, kun tarkistus sen tukee, eikä koskaan, kun jar-tiedostoa ei voida tunnistaa.",
+        "pills": ["modrinth", "curseforge"]
+      },
+      {
+        "title": "Modit, joihin voit luottaa ja joita voit peruuttaa",
+        "body": "Jokainen rekisterilataus tarkistetaan vahvinta tarkistussummaa vastaan, jonka rekisteri julkaisee, ennen kuin se saavuttaa palvelimen. Lisäämäsi modit sijaitsevat jaetussa kirjastossa, deduplikoituna sha256:lla, joten kymmenen samaa modia käyttävää palvelinta tallentaa sen kerran. Päivitä modi, ohita versio tai palauta edellinen koontiversio, kun päivitys menee pieleen. Tuo Modrinth .mrpack tai zip-tiedosto modeista ja jokainen modi tunnistetaan ja tarkistetaan palvelinta vasten ennen kuin mitään asennetaan.",
+        "pills": ["mrpack", "zip", "sha512", "sha256"],
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Aloita Fabric-palvelin kolmessa vaiheessa",
+      "items": [
+        {
+          "title": "Valitse Fabric Modit-välilehdeltä",
+          "body": "Valitse Fabric tai Quilt, Minecraft-versio ja viimeisin latausohjelman koontiversio tai kiinnitetty."
+        },
+        {
+          "title": "Hae ja lisää modeja",
+          "body": "Hae Modrinthistä tai CurseForgestä, lisää Fabric API ja lisää loput. Jokainen lataus tarkistetaan."
+        },
+        {
+          "title": "Kutsu pelaajiasi",
+          "body": "Kutsut-välilehti luo kopioitavan kutsun ja asiakkaan .mrpack-tiedoston lisäämistäsi modeista, ja palvelimesi on jo pelin sisäisessä palvelinlistassa."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Fabric-palvelimen kysymyksiä",
+      "items": [
+        {
+          "q": "Tarvitsevatko pelaajat asentaa samat modit?",
+          "a": "Kyllä, kaikille modeille, jotka lisäävät sisältöä. Modit muuttavat itse peliä, joten asiakkaan on ladattava samat. Kutsut-välilehti luo asiakkaan .mrpack-tiedoston lisäämistäsi modeista, ja palvelimesi on jo pelin sisäisessä palvelinlistassa, jonka pelaajat tuovat käynnistysohjelmaan, kuten Prismiin tai Modrinth Appiin."
+        },
+        {
+          "q": "Tarvitsenko todella Fabric API:n?",
+          "a": "Melkein aina. Lähes jokainen Fabric-modi riippuu siitä, ja se on erillinen lataus. Lisää se modiselaimesta kuten mikä tahansa muu modi."
+        },
+        {
+          "q": "Mistä tiedän, toimiiko modini seuraavassa Minecraft-versiossa?",
+          "a": "Avaa palvelimen Modit-välilehti ja sitten Versiot. Se näyttää korkeimman Minecraft-version, jolle jokaisella asennetulla modilla on koontiversio, ja mitä uudempi versio jättäisi pois."
+        },
+        {
+          "q": "Modin päivitys rikkoi palvelimen. Voinko palata takaisin?",
+          "a": "Kyllä. Palauta modi sen riviltä Modit-välilehdellä, ja edellinen koontiversio tulee takaisin jaetusta kirjastosta."
+        }
+      ]
+    },
+    "related": ["serverForge", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Isännöi Fabric-palvelintasi itse",
+      "body": "Asenna ohjauspaneeli, avaa Modit-välilehti ja valitse modisi. Ei tilausta eikä rajoituksia palvelinten määrälle."
+    }
+  },
+  "serverForge": {
+    "meta": {
+      "title": "Forge- ja NeoForge-modattu palvelinpaneeli",
+      "description": "Pyöritä Forge- tai NeoForge-modattua Minecraft-palvelinta itse. Oikea Java valitaan puolestasi, latausohjelmien versiot voi kiinnittää ja kaatumiset nimeävät epäillyt."
+    },
+    "eyebrow": "Forge ja NeoForge",
+    "title": "Forge-modattu palvelinpaneeli, joka valitsee oikean Javan puolestasi",
+    "intro": "Klassisista 1.7.10-versioista nykyisiin NeoForge-paketteihin: luo palvelin, määritä sen muisti ja löydä kaatumisen takana oleva modi lukematta pinon jäljitystä rivi riviltä.",
+    "pills": ["forge", "neoforge", "curseforge", "modrinth"],
+    "sections": [
+      {
+        "title": "Forge vai NeoForge?",
+        "body": "NeoForge on paikka, jossa vanha Forge-ekosysteemi toimii nykyisissä versioissa. Se erkani Forgesta 1.20.1-versiossa, ja useimmat suuret paketit, jotka on rakennettu versioille 1.20.2 ja uudemmille, kohdistuvat siihen, joten aloita uusi raskaansarjan palvelin NeoForgella. Forge omistaa edelleen menneisyyden: kaikki 1.7.10-, 1.12.2- ja 1.16.5-aikakausilta ovat Forgea, ja se on suuri osa rakastetuimmista paketeista. Modit yhdelle latausohjelmalle eivät toimi toisella, ja 1.20.1 NeoForge-paketti ei toimi 1.20.1 Forgella.",
+        "points": [
+          "Uusi raskaansarjan palvelin: NeoForge.",
+          "1.7.10, 1.12.2 tai 1.16.5 aikakausi: Forge.",
+          "Julkaistu paketti: mitä tahansa paketti listaa, täsmälleen."
+        ]
+      },
+      {
+        "title": "Oikea Java, joka kerta",
+        "body": "Minecraftin Java-vaatimus liikkuu pelin mukana, ja väärä versio antaa epäselvän UnsupportedClassVersionError -virheen selkeän viestin sijaan. Vanhat paketit tarvitsevat todella Java 8:aa, ja nykyiset versiot tarvitsevat 21 tai uudempaa. Luontivelho lukee valitsemasi Minecraft-version ja valitsee ajonaikaisen ympäristön itse, joten ristiriitaa ei tapahdu vahingossa. Paketin päivittäminen ratkaisee Javan uudelleen, jos uusi versio tarvitsee erilaista.",
+        "points": ["1.16.5 ja aiemmat: Java 8.", "1.18 - 1.20.4: Java 17.", "1.20.5 - 1.21: Java 21."]
+      },
+      {
+        "title": "Muisti mitoitettu modeille",
+        "body": "Jokaisella palvelimella on kaksi lukua: Java-kasa ja säiliön muistiraja. Java tarvitsee muistia pinon lisäksi, noin 1,5–2 Gt suuressa modipaketissa, ja säiliö ilman liikkumavaraa tapetaan heti, kun Java sitä pyytää. Velho asettaa rajan 50 prosenttia pinon yläpuolelle, ja paneeli kieltäytyy säiliön rajasta, joka ei ole pinon yläpuolella. Keittiönsinkkipaketti 150–300 modille haluaa 6–8 Gt pinon.",
+        "points": [
+          "Muistin loppumisen vuoksi pysähtynyt palvelin kirjataan historiaansa täsmälleen sellaisena.",
+          "Aseta pienempi alkupino nähdäksesi muistin seuraavan todellista käyttöä."
+        ]
+      },
+      {
+        "title": "Kaatumiset, jotka nimeävät epäillyt",
+        "body": "Kaatumisraportit kerätään automaattisesti ja jäsennetään yhden rivin yhteenvetoon, jossa on poikkeus ja todennäköisimmät modit sen takana. Avaa sisäänrakennettu katseluohjelma, kopioi pinon jäljitys tai vahvistuksen jälkeen ja jaa se osoitteeseen mclo.gs ja hanki sen automaattiset oivallukset: tunnetut ongelmat ehdotetuilla korjauksilla, näytettynä suoraan paneelissa. Automaattinen uudelleenkäynnistys kaatumisen yhteydessä yrittää uudelleen kasvavilla odotuksilla ja ohittaa kaatumiset, jotka vaativat ensin korjauksen, kuten väärä Java tai muistin loppuminen.",
+        "pills": ["mclogs"],
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Aloita Forge-palvelin kolmessa vaiheessa",
+      "items": [
+        {
+          "title": "Valitse latausohjelma ja versio",
+          "body": "Velhon Mods-välilehdellä valitse Forge tai NeoForge, Minecraft-versio ja uusin latausohjelman versio tai kiinnitetty versio."
+        },
+        {
+          "title": "Anna sille riittävästi muistia",
+          "body": "Aseta Java-kasa modilistasi koon mukaan. Säiliön raja seuraa, 50 prosenttia sen yläpuolella."
+        },
+        {
+          "title": "Lisää modeja tai tuo ZIP",
+          "body": "Hae CurseForgesta ja Modrinthista tai tuo CurseForge-vienti tai jar-tiedostojen ZIP. Jokainen jar tunnistetaan ja tarkistetaan ensin palvelinta vasten."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Forge-palvelimen kysymyksiä",
+      "items": [
+        {
+          "q": "Voinko edelleen ajaa 1.12.2- tai 1.7.10-pakettia?",
+          "a": "Kyllä. Valitse versio ja Forge velhossa, ja paneeli ajaa sen Java 8:lla, jota nämä versiot tarvitsevat. GT New Horizons, 1.7.10-asiantuntijapaketti, asennetaan Modipaketit-sivulta omalla Java-valinnallaan."
+        },
+        {
+          "q": "Kuinka paljon muistia Forge-palvelin tarvitsee?",
+          "a": "Kevyt paketti 40–80 modille toimii hyvin 4 Gt pinolla 6 Gt säiliössä. Paketti 150–300 modille vaatii 6–8 Gt pinon ja noin 10 Gt säiliölle."
+        },
+        {
+          "q": "Voinko kiinnittää tietyn Forge-version?",
+          "a": "Kyllä. Velhon latausohjelman versionvalitsin ottaa uusimman tai tietyn version, ja Päivitykset-sivu tarjoaa uudemman versioita kiinnitetylle ilman, että niitä sovelletaan automaattisesti."
+        },
+        {
+          "q": "Palvelimeni kaatui käynnistyksessä. Mistä minun pitäisi etsiä?",
+          "a": "Avaa Valvonta ja sitten Historia. Kaatumisraporttikortti listaa poikkeuksen ja epäillyt modit, ja Analysoi suorittaa mclo.gs-oivallukset tunnetuille ongelmille ja korjauksille."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "serverFabric", "guideHome"],
+    "cta": {
+      "title": "Pyöritä modattua palvelintasi itse",
+      "body": "Asenna paneeli riittävän muistin omaavalle koneelle ja luo sitten Forge- tai NeoForge-palvelin velhon avulla."
+    }
+  },
+  "serverVanilla": {
+    "meta": {
+      "title": "Vanilla Minecraft -palvelinohjelmisto, itse isännöity",
+      "description": "Isännöi vanilla Minecraft -palvelinta itse: mikä tahansa versio vanhoista betoista uusimpaan tilannekuvaan, maailmanhallinnalla, päivittäisillä varmuuskopioilla ja pelaajatilastoilla."
+    },
+    "eyebrow": "Muuttumaton peli",
+    "title": "Vanilla Minecraft -palvelin kaikella tarvittavalla",
+    "intro": "Pidä peli täsmälleen sellaisena kuin Mojang sen toimittaa, ja hoida varmuuskopiot, maailmatyökalut, moderointi ja pelaajatilastot paneelin kautta latausten sijaan.",
+    "pills": ["vanilla", "docker"],
+    "sections": [
+      {
+        "title": "Mikä tahansa haluamasi versio",
+        "body": "Valitse uusin julkaisu, tilannekuva tai tietty versio, mukaan lukien vanhat beta- ja alfaversiot. Paneeli valitsee kyseisen version tarvitseman Java-ajoympäristön, lataa kuvan ja käynnistää palvelimen siitä. Kukaan ei asenna mitään liittyäkseen: pelaajat yhdistävät pelillä, joka heillä jo on.",
+        "points": [
+          "Uusin julkaisu, tilannekuvat tai tietty versio.",
+          "Vanhat beta- ja alfaversiot nostalgia-palvelinta varten.",
+          "Oikea Java valittuna jokaiselle versiolle."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Maailmanhallinta ilman komentoja",
+        "body": "Maailmanhallinta on käytettävissä palvelimen jokaisessa välilehdessä: pelin sisäinen kello, sää ja yleisimmät pelisäännöt kytkiminä, ja kaikki muut säännöt yhden klikkauksen päässä. Maailmat-välilehti nollaa aktiivisen maailman uudella, säilytetyllä tai mukautetulla siemenluvulla, tarjoten ensin turvavarmuuskopion. Kopioi maailma, säilytä valmiit maailmat maailmakirjastossa tai lataa jo omistamasi maailma .zip- tai .tar-arkistona.",
+        "points": [
+          "Nollaa uudella siemenluvulla, samalla siemenluvulla tai itse syöttämälläsi.",
+          "Maailmakirjasto, jota jokainen palvelin jakaa.",
+          "Muokkaa server.properties-tiedostoa selaimessa; levyn arvo on voimassa."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Varmuuskopiot alusta alkaen",
+        "body": "Jokaiselle uudelle palvelimelle luodaan automaattisesti päivittäinen varmuuskopiointiaikataulu. Varmuuskopiot ovat turvallisia: paneeli keskeyttää tallennuksen, tyhjentää maailman, pakkaa sen ja tarkistaa arkiston avautumisen ennen sen tallentamista. Palautus palauttaa palvelimen täsmälleen sellaiseksi kuin se oli, ja ottaa ensin turvavarmuuskopion nykyisistä tiedoista.",
+        "shot": "backups"
+      },
+      {
+        "title": "Moderointi ja tilastot ilman lisäosia",
+        "body": "Vanilla-versiossa ei ole lupajärjestelmää, joten paneeli tarjoaa sinulle sen sijaan moderointityökalut: valkoinen lista, operaattorit kaikilla tasoilla, bannit ja IP-bannit sekä teleportit, reaaliaikaisesti palvelimen ollessa käynnissä ja suoraan tiedostoihin sen ollessa pysäytettynä. Pelin omat tilastot luetaan aikataulutetusti pelaajaprofiileihin ja tulostauluun: peliaika, kuolemat, tapot, louhitut timantit ja lohkot sekä matkustettu etäisyys. Aktiivisuus-aikajana pitää chatin, liittymiset, kuolemat ja saavutukset haettavissa."
+      }
+    ],
+    "faq": {
+      "title": "Vanilla-palvelimen kysymyksiä",
+      "items": [
+        {
+          "q": "Voinko ajaa tilannekuvapalvelinta?",
+          "a": "Kyllä. Valitse tilannekuva Minecraft-versiona ohjatussa toiminnossa. Ota varmuuskopio ennen jokaista uutta tilannekuvaa, koska tilannekuvamaailmoja ei voi avata vanhemmassa versiossa."
+        },
+        {
+          "q": "Voiko vanilla-palvelimella olla reaaliaikainen kartta?",
+          "a": "Ei vanilla-versiossa. BlueMap vaatii lisäosan tai modilataajan toimiakseen. Paper-palvelin saa sellaisen yhdellä klikkauksella, ja pelaajat liittyvät silti muokkaamattomalla asiakasohjelmalla."
+        },
+        {
+          "q": "Voinko nollata maailman, mutta säilyttää siemenluvun?",
+          "a": "Kyllä. Nollaa aktiivinen maailma Maailmat-välilehdeltä ja valitse nykyisen siemenluvun säilyttäminen. Paneeli tarjoaa ensin turvavarmuuskopion vanhasta maailmasta."
+        },
+        {
+          "q": "Kuinka monta pelaajaa vanilla-palvelin voi käsitellä?",
+          "a": "Vanilla on hitaampi monilla pelaajilla kuin Paper. Kaveriporukalle se riittää. Vilkkaalle julkiselle palvelimelle Paper pyörittää samaa peliä vuosien suorituskykytyöllä."
+        }
+      ]
+    },
+    "related": ["serverPaper", "guidePi", "guideHome"],
+    "cta": {
+      "title": "Aloita Vanilla-palvelin",
+      "body": "Asenna paneeli, valitse Vanilla ohjatussa toiminnossa ja jaa osoite. Ilmainen ja avointa lähdekoodia."
+    }
+  },
+  "serverModpacks": {
+    "meta": {
+      "title": "Minecraft-modpack-palvelin: yhden napsautuksen asennukset",
+      "description": "Pyöritä Minecraft-modpack-palvelinta CurseForgesta, Modrinthista, FTB:stä tai GT New Horizonsista. Paketit pysyvät kiinnitettyinä, ja jokainen päivitys sisältää varmuuskopion ja palautusmahdollisuuden."
+    },
+    "eyebrow": "Modpack-palvelimet",
+    "title": "Minecraft-modpack-palvelin, joka ei koskaan päivitä selkäsi takana",
+    "intro": "Asenna paketti nimen perusteella, kiinnitä se tarkkaan versioon ja päivitä vain silloin kun haluat, varmuuskopion jälkeen ja yhden napsautuksen palautuksella, jos uusi versio ei käynnisty.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"],
+    "sections": [
+      {
+        "title": "Kaikki suuret pakettilähteet",
+        "body": "Modpackit-sivu ja ohjatun asennustoiminnon \"Paketista\" -välilehti asentavat paketit CurseForgesta ja Modrinthista hakemalla niiden nimiä, FTB-paketit niiden paketti- ja versiotunnuksilla sekä GT New Horizons sen omasta julkaisuindeksistä. Eikö ole julkaistu paketti ollenkaan? Lataa Modrinth .mrpack, CurseForge-modpack-vienti tai mikä tahansa mod-jar-tiedostojen zip-paketti. Manifesti tai enemmistöääni tunnistetuista jar-tiedostoista täyttää latausohjelman ja Minecraft-version.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export", "zip"],
+        "points": [
+          "CurseForge vaatii API-avaimen, joka lisätään kerran kohdassa Asetukset, API-avaimet.",
+          "Modit, joiden tekijät kieltävät automaattiset lataukset, listataan linkin ja latauspaikan kera asennuksen epäonnistumisen sijaan.",
+          "GT New Horizons saa Java-versionsa ja järkevät muisti- ja levytilavaatimuksensa asetettua puolestasi."
+        ]
+      },
+      {
+        "title": "Kiinnitetty tarkkaan versioon",
+        "body": "Kun valitset paketin, paneeli ratkaisee tarkan version, tallentaa sen ja asentaa sen. Uudelleenkäynnistys ei voi hiljaa päivittää pakettia. Sinä päätät, miten kukin palvelin saa tiedon uusista versioista: \"Vain manuaalinen\" jättää sen kokonaan rauhaan, \"Ilmoita minulle\" näyttää merkin ja listaa sen Päivitykset-sivulla, ja \"Automaattinen päivitys\" soveltaa pakettipäivitykset päivittäisen tarkistuksen jälkeen saman suojatun polun kautta. Päivitykset, jotka siirtäisivät maailman eri Minecraft-versioon, ohitetaan aina, koska maailman muuntaminen on sinun päätöksesi.",
+        "points": [
+          "Vain manuaalinen on oletus.",
+          "Vakaiden julkaisujen seurantaan asetettuja palvelimia ei koskaan tarjota beta-versioita.",
+          "Automaattinen päivitys ei koskaan ylitä Minecraft-versiota."
+        ]
+      },
+      {
+        "title": "Päivitykset palautusmahdollisuudella",
+        "body": "Paketin päivittäminen on yksi toimenpide. Paneeli ottaa varmuuskopion, pysäyttää palvelimen siististi, vaihtaa kiinnitetyn version, rakentaa palvelimen uudelleen oikealla Javalla uutta versiota varten ja tarkkailee ensimmäistä käynnistystä, antaen runsaasti aikaa suurille paketeille, jotka lataavat gigatavuja ensimmäisellä käynnistyksellä. Jos uusi versio ei käynnisty, palauta yhdellä napsautuksella.",
+        "shot": "backups"
+      },
+      {
+        "title": "Omat modisi päällä",
+        "body": "Pakettipalvelimeen lisäämäsi modit elävät jaetussa kirjastossa ja linkitetään palvelimeen, joten ne säilyvät pakettipäivitysten yli. Poista käytöstä pakettimodi, jota et halua, lisää suorituskykymodi, josta paketista puuttuu, ja säilytä molemmat seuraavan päivityksen ajan. Pelaajat asentavat saman paketin samassa versiossa CurseForgesta tai Modrinthista, ja Kutsut-välilehti antaa sinulle kopioitavan kutsun osoitteella ja versiolla.",
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Aloita modpack-palvelin kolmessa vaiheessa",
+      "items": [
+        {
+          "title": "Etsi paketti",
+          "body": "Hae CurseForgesta tai Modrinthista Modpackit-sivulla tai lataa .mrpack, CurseForge-vienti tai jar-tiedostojen zip-paketti."
+        },
+        {
+          "title": "Valitse versio ja muisti",
+          "body": "Valitse tarkka pakettiversio. Anna Java-pinolle tilaa modien määrälle; säiliön raja seuraa."
+        },
+        {
+          "title": "Luo ja katso sen käynnistyvän",
+          "body": "Paneeli asentaa paketin, kiinnittää sen ja käynnistää palvelimen. Suuren paketin ensimmäinen käynnistys kestää jonkin aikaa; konsoli näyttää jokaisen rivin."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Modpack-palvelimen kysymyksiä",
+      "items": [
+        {
+          "q": "Päivittääkö palvelimen uudelleenkäynnistys modpackini?",
+          "a": "Ei. Paketti on kiinnitetty tarkkaan versioon, jonka asensit. Se muuttuu vain, kun päivität sen, tai päivittäisen tarkistuksen jälkeen, jos olet asettanut palvelimen automaattiseen päivitykseen."
+        },
+        {
+          "q": "Miksi CurseForge tarvitsee API-avaimen, kun Modrinth ei?",
+          "a": "CurseForge vastaa vain pyyntöihin, jotka sisältävät avaimen. Voit hankkia sellaisen CurseForgen konsolista ja lisätä sen kerran kohdassa Asetukset, API-avaimet. Modrinth toimii ilman sitä."
+        },
+        {
+          "q": "Jotkin modini paketissa eivät latautuneet. Mitä nyt?",
+          "a": "Niiden tekijät kieltävät automaattiset lataukset. Paneeli listaa jokaisen linkillä sen sivulle ja latauspaikalla, joten lataat jar-tiedoston selaimellasi ja pudotat sen paikalleen."
+        },
+        {
+          "q": "Voinko asentaa FTB-paketin?",
+          "a": "Kyllä, FTB API:n kautta paketin numeerisella tunnuksella ja erillisellä versiotunnuksella. Paneeli ei vielä tarkista FTB-paketteja päivitysten varalta."
+        }
+      ]
+    },
+    "related": ["guideFriends", "serverForge", "serverFabric"],
+    "cta": {
+      "title": "Pyöritä omaa modpack-palvelintasi kotona",
+      "body": "Asenna paneeli, avaa Modpackit-sivu ja valitse paketti. Se pysyy valitsemassasi versiossa, kunnes toisin ilmoitat."
+    }
+  },
+  "guidesHub": {
+    "meta": {
+      "title": "Ohjeet: isännöi Minecraft-palvelinta itse",
+      "description": "Ohjeet Minecraft-palvelinten itse isännöintiin: modpack-palvelin ystäville, Raspberry Pi, kotitietokone, maksullisen hostingin jättäminen ja monta palvelinta yhdellä koneella."
+    },
+    "eyebrow": "Ohjeet",
+    "title": "Ohjeet Minecraft-palvelinten itse isännöintiin",
+    "intro": "Käytännönläheiset opastukset todellisista käyttöönotoista, hyllyllä olevasta Raspberry Pi:stä palvelintä täynnä olevaan koneeseen.",
+    "cards": {
+      "guideFriends": "Isännöi CurseForge- tai Modrinth-modpackia ystävillesi oikealla muistilla ja kutsulla, jota he voivat seurata.",
+      "guidePi": "Muuta Raspberry Pi 4 tai 5 Minecraft-palvelimeksi verkkopaneelilla ja mitoita se rehellisesti.",
+      "guideHome": "Isännöi Minecraft-palvelinta kotona Windowsissa, macOS:ssä tai Linuxissa ja anna ystävien liittyä turvallisesti.",
+      "guideHosting": "Siirrä maailmasi, lisäosasi ja modisi pois maksullisesta palvelimesta menettämättä yhtäkään tavaraa.",
+      "guideMulti": "Suorita useita Minecraft-palvelimia yhdellä koneella ilman, että portit, muisti tai levy menevät toistensa tielle."
+    },
+    "related": ["serversHub"],
+    "cta": {
+      "title": "Tarvitsetko jotain, mitä täällä ei käsitellä?",
+      "body": "Dokumentaatio syventyy jokaiseen ominaisuuteen, ja Discordissa on oikeita ihmisiä, jotka pyörittävät palvelimia."
+    }
+  },
+  "guideFriends": {
+    "meta": {
+      "title": "Isännöi modipakkauspalvelin ystäville",
+      "description": "Isännöi CurseForge- tai Modrinth-modipakkauspalvelinta ystävillesi omalla koneellasi: valitse pakkaus, anna sille riittävästi muistia, kutsu ystäviä ja pidä varmuuskopiot."
+    },
+    "eyebrow": "Modipakkauspalvelinopas",
+    "title": "Kuinka isännöidä modipakkauspalvelin ystävillesi",
+    "intro": "Oma koneesi voi isännöidä pakkausta, jota pelaat ystäviesi kanssa. Asenna paneeli, luo palvelin pakkauksesta, anna sille tarvitsemansa muisti ja lähetä ystäville kutsulinkki, jota he voivat seurata.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "docker"],
+    "sections": [
+      {
+        "title": "Valitse pakkaus ohjatusta",
+        "body": "Modipakkaukset-sivu ja luontiohjatun Modipakkaus-välilehti etsivät CurseForgea ja Modrinthia nimen perusteella; ohjattu toiminto hyväksyy myös FTB-pakkaukset tunnuksella tai jo omistamasi pakkausviennin. Valitse versio, jota ystäväsi pelaavat. Paneeli asentaa täsmälleen kyseisen version ja pitää sen siellä: uudelleenkäynnistys ei koskaan päivitä pakkausta selkäsi takana. CurseForge vaatii ilmaisen API-avaimen, joka lisätään kerran kohdassa Asetukset, API-avaimet; Modrinth ei vaadi mitään.",
+        "points": [
+          "Etsi CurseForgea ja Modrinthia tai lataa .mrpack, CurseForge-vienti tai mod-jar-tiedostojen zip-pakkaus.",
+          "Pakkausversio on kiinnitetty, joten kaikki pelaavat samalla versiolla.",
+          "Java valitaan pakkauksen Minecraft-versiota varten."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "mrpack", "cf-export"],
+        "shot": "modpacks"
+      },
+      {
+        "title": "Anna sille riittävästi muistia",
+        "body": "Modipakkaukset vaativat huomattavasti enemmän muistia kuin tavallinen palvelin, ja palvelimella on kaksi lukua: Java-keko ja sitä ympäröivä säiliön raja, jonka on oltava suurempi, koska Java käyttää keon ulkopuolista muistia. Kevyt pakkaus, jossa on 40–80 modia, vaatii 4 Gt kekoa 6 Gt säiliössä; suuri keittiönsinkkipakkaus vaatii 6–8 Gt kekoa 10 Gt säiliössä. Paneeli erottaa muistin loppumisen vuoksi pysähtyneen palvelimen kaatumisesta, joten tiedät, mitä asetusta muuttaa.",
+        "points": [
+          "Aseta muisti ohjatussa ja muuta sitä myöhemmin palvelimen asetuksissa.",
+          "Jätä muistia käyttöjärjestelmälle ja paneelille.",
+          "Valvonta-välilehti näyttää, mitä palvelin todella käyttää."
+        ]
+      },
+      {
+        "title": "Lähetä ystäville kutsulinkki, jota he voivat seurata",
+        "body": "Ystävät asentavat saman pakkauksen samalla versiolla omassa käynnistysohjelmassaan: CurseForge-sovellus, Modrinth-sovellus tai Prism Launcher. Palvelimen Kutsut-välilehti kohdassa Asetukset kopioi jaettavan osoitteen ja kutsutekstin Minecraft-versiolla. Ystävät samassa verkossasi käyttävät paikallista osoitetta. Ystäville muualla, välitä pelisatama reitittimessäsi tai käytä tunnelia, kun palveluntarjoajasi ei salli sitä.",
+        "points": [
+          "Kutsut-välilehti tarjoaa paikallisen osoitteen, julkisen osoitteesi ja mukautetun osoitteen.",
+          "Jos valkoinen lista on päällä, lisää jokainen ystävä ensin Pelaajat-välilehdellä.",
+          "Ystäville, jotka ovat samassa verkossasi, voit käyttää paikallista osoitetta. Muualta tuleville ystäville sinun on välitettävä pelisatama reitittimessäsi tai käytettävä tunnelipalvelua, jos palveluntarjoajasi estää porttien välityksen."
+        ],
+        "pills": ["mrpack"]
+      },
+      {
+        "title": "Pidä maailma turvassa",
+        "body": "Jokaiselle uudelle palvelimelle luodaan päivittäinen varmuuskopiointiaikataulu. Ennen pakkauspäivitystä paneeli ottaa toisen varmuuskopion, rakentaa palvelimen uudelleen uudelle versiolle ja valvoo ensimmäistä käynnistystä; jos se ei käynnisty, yksi napsautus palauttaa sen. Pakkauksen päälle lisäämäsi modit säilyvät päivitysten aikana.",
+        "points": [
+          "Päivittäiset varmuuskopiot ensimmäisestä päivästä lähtien.",
+          "Pakkauspäivitykset ja -palautukset varmuuskopiolla ja palautuksella.",
+          "Kaaturaportit tunnistettu, selitetty ja jaettavissa."
+        ],
+        "shot": "backups"
+      }
+    ],
+    "steps": {
+      "title": "Isännöi modipakkauspalvelintasi",
+      "items": [
+        {
+          "title": "Asenna paneeli",
+          "body": "Linuxissa yksirivinen asennusohjelma asentaa Dockerin ja paneelin. Windowsissa ja macOS:ssä suorita paneeli Node.js:llä Docker Desktopin vieressä."
+        },
+        {
+          "title": "Lisää CurseForge API-avain",
+          "body": "Vain CurseForge-pakkauksille: lisää ilmainen avain kohdasta Asetukset, API-avaimet."
+        },
+        {
+          "title": "Luo palvelin pakkauksesta",
+          "body": "Avaa ohjatun toiminnon Modipakkaus-välilehti, etsi pakkaus, valitse sen versio ja muisti, ja luo palvelin."
+        },
+        {
+          "title": "Kutsu ystäviäsi",
+          "body": "Käynnistä palvelin, avaa Asetukset, Kutsut ja lähetä kutsuteksti. Ystävät asentavat saman pakkausversion käynnistysohjelmaansa ja liittyvät."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Modipakkauspalvelimen kysymyksiä",
+      "items": [
+        {
+          "q": "Kuinka paljon RAM-muistia modipakkauspalvelin tarvitsee?",
+          "a": "Noin 6 Gt kevyelle pakkaukselle, jossa on 40–80 modia, ja 10 Gt suurelle pakkaukselle, jossa on 150–300 modia, kummassakin pienempi Java-keko sisällä. Asiantuntijapakkaukset, kuten GregTech New Horizons, vaativat 16 Gt. Jätä tilaa myös käyttöjärjestelmälle."
+        },
+        {
+          "q": "Tarvitsevatko ystäväni saman modipakkausversion?",
+          "a": "Kyllä. Palvelin käyttää yhtä kiinnitettyä pakkausversiota, ja asiakas, jolla on eri versiot modeista, yleensä hylätään tai kaatuu. Kerro ystäville palvelimen Yleiskatsaus-välilehdellä näkyvä versio."
+        },
+        {
+          "q": "Voivatko ystävät liittyä ilman porttien välitystä?",
+          "a": "Kyllä, jos he ovat verkossasi. Muualta tuleville, joko välitä pelisatama reitittimessäsi tai käytä tunnelipalvelua, joka toimii myös silloin, kun palveluntarjoajasi estää porttien välityksen."
+        },
+        {
+          "q": "Mitä tapahtuu, kun pakkaus saa päivityksen?",
+          "a": "Ilmoita minulle -käytännöllä Päivitykset-sivu näyttää sen. Sen käyttöönotto vaatii varmuuskopion, rakentaa palvelimen uudelleen ja valvoo ensimmäistä käynnistystä, ja palautus on yhden napsautuksen päässä. Ystäväsi päivittävät pakkauksen myös omassa käynnistysohjelmassaan."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "guideHome", "guidePi"],
+    "cta": {
+      "title": "Pelaa pakkaustasi omalla palvelimellasi",
+      "body": "Ilmainen, avointa lähdekoodia, eikä vaadi tiliä keneltäkään. Asenna paneeli ja luo palvelin pakkauksesta ohjatussa toiminnossa."
+    }
+  },
+  "guidePi": {
+    "meta": {
+      "title": "Minecraft-palvelin Raspberry Pi:lle verkkopaneelilla",
+      "description": "Asenna Raspberry Pi Minecraft-palvelin ilmaisella verkkopaneelilla. Mitä laitteistoa tarvitset, miten asennat sen yhdellä komennolla ja miten määrität muistin."
+    },
+    "eyebrow": "Raspberry Pi -opas",
+    "title": "Pyöritä Minecraft-palvelinta Raspberry Pi:llä oikealla verkkopaneelilla",
+    "intro": "Raspberry Pi 4 tai 5 on hiljainen ja vähän virtaa kuluttava koti pienelle Minecraft-palvelimelle. Tässä kerrotaan, mitä ostaa, miten asennat paneelin yhdellä komennolla ja kuinka pitkälle voit mennä.",
+    "pills": ["arm64", "linux", "docker", "paper", "fabric"],
+    "sections": [
+      {
+        "title": "Mitä tarvitset",
+        "body": "Paneeli ja sen palvelinimage on julkaistu arm64:lle, joten 64-bittinen Raspberry Pi pyörittää niitä kuten mitä tahansa muutakin Linux-konetta. Muisti on tärkein rajoittava tekijä: tavallinen tai Paper-palvelin enintään kymmenelle pelaajalle tarvitsee 2 Gt Java-keon 4 Gt koneessa, ja kevyt modipaketti tarvitsee 4 Gt keon 6 Gt koneessa. Tämä asettaa 4 Gt Pi:n pienempään päähän ja 8 Gt Pi:n mukavaan keskikastiin.",
+        "points": [
+          "Raspberry Pi 4 tai 5, jossa on 4 Gt muistia tai enemmän. 8 Gt, jos haluat modeja.",
+          "64-bittinen käyttöjärjestelmä, kuten 64-bittinen Raspberry Pi OS.",
+          "SSD-levy USB:n kautta SD-kortin sijaan. Maailmat lukevat ja kirjoittavat jatkuvasti, ja hitaalla tallennustilalla oleva maailma pätkii lohkojen latautuessa.",
+          "Langallinen verkkoyhteys, jos mahdollista."
+        ]
+      },
+      {
+        "title": "Valitse Pi:lle sopiva palvelintyyppi",
+        "body": "Minecraft välittää enemmän yhden ytimen nopeudesta kuin niiden määrästä, ja Pi:n ytimet ovat vaatimattomia. Paper pyörittää samaa peliä kuin tavallinen versio vuosien suorituskykytyöllä, ja pelaajat liittyvät silti muokkaamattomalla asiakasohjelmalla. Jos haluat modeja, Fabric pienellä määrällä suorituskyky- ja elämänlaatuparannuksia on parempi valinta kuin suuri Forge-paketti. 200 modin keittiönsinkkipakkaus ei ole Pi:n homma.",
+        "pills": ["paper", "purpur", "fabric"],
+        "points": [
+          "Pieni ryhmä, muokkaamaton peli: Paper.",
+          "Muutama modi: Fabric.",
+          "Laske katseluetäisyyttä; 12:sta 8 lohkoon laskeminen säästää paljon muistia ja on tuskin havaittavissa pelissä."
+        ]
+      },
+      {
+        "title": "Pidä sitä silmällä",
+        "body": "Palvelimen Monitorointi-välilehti näyttää tikit sekunnissa ja millisekunnit per tikki, joten näet, milloin Pi alkaa hidastua. Muistimittari näyttää, mitä kontti todella käyttää. Java varaa oletuksena koko keonsa etukäteen; jos haluat muistin seuraavan todellista käyttöä, aseta pienempi alkukeko palvelimen Resurssit-kortissa. Päivittäiset varmuuskopiot ovat päällä ensimmäisestä päivästä lähtien.",
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Asenna paneeli Raspberry Pi:lle",
+      "items": [
+        {
+          "title": "Asenna 64-bittinen käyttöjärjestelmä",
+          "body": "Asenna 64-bittinen Raspberry Pi OS (tai muu 64-bittinen Linux), käynnistä SSD-levyltä, jos mahdollista, ja päivitä järjestelmä."
+        },
+        {
+          "title": "Suorita yhden rivin asennusohjelma",
+          "body": "Asennusohjelma Asennus-sivulla asentaa Dockerin, jos se puuttuu, asettaa paneelin hakemistoon /opt/msm, käynnistää sen ja odottaa, kunnes se vastaa. Se tunnistaa arm64:n itsestään."
+        },
+        {
+          "title": "Viimeistele asennus selaimessa",
+          "body": "Avaa Pi:n osoite portissa 25564 toiselta tietokoneelta. Koska paneeli on saavutettavissa verkostasi, asennus pyytää 6-numeroista PIN-koodia, jonka asennusohjelma tulostaa sinulle."
+        },
+        {
+          "title": "Luo pieni palvelin",
+          "body": "Valitse Paper tai Fabric ohjatussa toiminnossa. Oletusmuisti mukautuu Pi:n RAM-muistiin; jätä tilaa järjestelmälle ja muille palveluille."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Raspberry Pi -kysymykset",
+      "items": [
+        {
+          "q": "Toimiiko Raspberry Pi 3?",
+          "a": "Se ei ole hyvä valinta. Pi 3:ssa on 1 Gt muistia, kun taas jopa pieni tavallinen tai Paper-palvelin tarvitsee 2 Gt keon 4 Gt koneessa. Käytä Pi 4:ää tai 5:ttä, jossa on 4 Gt tai enemmän."
+        },
+        {
+          "q": "Tarvitsenko 64-bittisen käyttöjärjestelmän?",
+          "a": "Kyllä. Paneeli-image ja asennusohjelma on rakennettu arm64:lle ja amd64:lle, ja asennusohjelma pysähtyy kaikilla muilla arkkitehtuureilla."
+        },
+        {
+          "q": "Voinko ajaa isoa modipakkausta Pi:llä?",
+          "a": "Suuret paketit vaativat 6–8 Gt Java-keoa ja noin 10 Gt muistia yhteensä, enemmän kuin mikään Pi ei pysty tarjoamaan. Pysy Paperissa tai kevyessä Fabric-asennuksessa."
+        },
+        {
+          "q": "Miten kodin ulkopuoliset pelaajat liittyvät?",
+          "a": "Ohjaa pelin portti, oletuksena 25565 TCP:n ja UDP:n yli, reitittimestäsi Pi:lle. Älä koskaan ohjaa paneelin porttia tai RCON-portteja; käytä paneelia VPN:n tai käänteisen välityspalvelimen kautta TLS:llä sen sijaan."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverPaper", "serverFabric"],
+    "cta": {
+      "title": "Muuta Pi palvelimeksi",
+      "body": "Yksi komento asentaa kaiken. Paneeli on ilmainen, avointa lähdekoodia ja pyörii kokonaan Pi:llä."
+    }
+  },
+  "guideHome": {
+    "meta": {
+      "title": "Isännöi Minecraft-palvelinta kotona askel askeleelta",
+      "description": "Isännöi Minecraft-palvelinta kotona Windowsissa, macOS:ssä tai Linuxissa ilmaisella verkkopaneelilla. Asenna se, pidä paneeli yksityisenä ja anna ystävien liittyä turvallisesti."
+    },
+    "eyebrow": "Kotipalvelinopas",
+    "title": "Isännöi Minecraft-palvelinta kotona Windowsissa, macOS:ssä tai Linuxissa",
+    "intro": "Mikä tahansa tietokone, joka voi ajaa Dockeria, voi isännöidä palvelimiasi. Asenna paneeli, pidä se yksityisenä, avaa vain pelin portti, ja ystäväsi voivat liittyä mistä tahansa.",
+    "pills": ["windows", "macos", "linux", "docker", "nodejs"],
+    "sections": [
+      {
+        "title": "Kaksi tapaa asentaa",
+        "body": "Linux-koneella yhden rivin asennusohjelma tekee kaiken: se asentaa Dockerin, jos se puuttuu, ajaa paneelin säiliönä ja käynnistää sen uudelleen uudelleenkäynnistyksen jälkeen. Windowsissa ja macOS:ssä aja paneelia suoraan Node.js 24:llä Docker Desktopin rinnalla. Paneeli tulostaa selkeän viestin ja pysähtyy, jos Node.js on liian vanha, ja jos Docker ei ole vielä käynnissä, saat silti täyden paneelin; palvelimet käynnistyvät heti, kun Docker on käynnissä.",
+        "pills": ["linux", "docker", "windows", "macos", "nodejs"],
+        "points": [
+          "Linux: asennusohjelma tai compose-tiedosto Portainerissa tai Dockge:ssa.",
+          "Windows: Docker Desktop WSL2-taustajärjestelmällä, sitten paneeli lähteestä.",
+          "macOS: Docker Desktop, sitten paneeli lähteestä.",
+          "PM2:n tai systemd:n alla paneeli selviää uudelleenkäynnistyksistä."
+        ]
+      },
+      {
+        "title": "Pidä paneeli yksityisenä",
+        "body": "Pelaajat eivät koskaan puhu paneelille. He yhdistävät pelin porttiin. Tuore asennus lähteestä vastaa vain koneella, jolla se toimii, osoitteessa localhost portti 25564. Päästäksesi siihen toiselta tietokoneelta kotona, aseta se kuuntelemaan verkossasi; asennus pyytää sitten kertaluonteista PIN-koodia, joten muukalainen, joka saavuttaa portin ensin, ei voi lunastaa ylläpitäjätiliä. Älä koskaan välitä paneelin porttia internetiin. Hallitaksesi palvelimia kodin ulkopuolella, käytä VPN:ää, SSH-tunnelia tai käänteistä välityspalvelinta TLS:n kanssa.",
+        "points": [
+          "Vain localhost valmiina.",
+          "PIN-koodi asennukseen, kun paneeli on saavutettavissa verkosta.",
+          "Kaksivaiheinen todennus jokaiselle tilille."
+        ]
+      },
+      {
+        "title": "Anna ystävien liittyä",
+        "body": "Jokainen palvelin saa pelin portin, alkaen 25565 ja kasvaen. Reitittimessäsi välitä kyseinen portti, sekä TCP:n että UDP:n yli, palvelimia ajavaan tietokoneeseen. Jätä etäkonsolin portit, 1000 pelin portin yläpuolella, suljetuiksi: paneeli saavuttaa ne säiliön sisältä eikä koskaan tarvitse niitä auki. Anna pelaajille isäntänimi, jota hallitset, kotiosoitteesi sijaan, joten osoitteen muutos on DNS-muutos eikä viesti jokaiselle pelaajalle.",
+        "points": [
+          "Välitä vain pelin portit, TCP ja UDP.",
+          "Pidä RCON ja paneelin portti suljettuina.",
+          "Yleiskatsaus-välilehti näyttää jaettavan osoitteen."
+        ],
+        "shot": "overview"
+      },
+      {
+        "title": "Saa se toimimaan kuin palvelin",
+        "body": "Kotitietokone, joka menee lepotilaan, vie palvelimesi mukanaan, joten sammuta lepotila koneesta, joka isännöi sitä. Valitse Käynnistä paneelin käynnistyksen yhteydessä palvelimen asetuksissa, ja se käynnistyy uudelleen paneelin mukana. Automaattinen uudelleenkäynnistys kaatumisen jälkeen tuo kaatuneen palvelimen takaisin kasvavilla odotusajoilla yritysten välillä. Päivittäiset varmuuskopiot aikataulutetaan jokaiselle uudelle palvelimelle, ja aikataulut voivat käynnistää palvelimet uudelleen hiljaisina aikoina.",
+        "shot": "schedules"
+      }
+    ],
+    "steps": {
+      "title": "Isännöi ensimmäistä palvelintasi kotona",
+      "items": [
+        {
+          "title": "Asenna Docker",
+          "body": "Docker Engine Linuxissa tai Docker Desktop Windowsissa ja macOS:ssä. Windowsissa jaa paneelin sisältävä levy Docker Desktopin kanssa."
+        },
+        {
+          "title": "Asenna ja avaa paneeli",
+          "body": "Seuraa järjestelmäsi Asennus-sivua, sitten avaa paneeli selaimessa. Asennus tarkistaa Dockerin, luo ylläpitäjätilisi ja kysyy aikavyöhykettäsi."
+        },
+        {
+          "title": "Luo palvelin",
+          "body": "Ohjattu toiminto ehdottaa ilmaista porttia ja muistia, joka sopii koneellesi. Valitse palvelintyyppi ja paina luo."
+        },
+        {
+          "title": "Välitä pelin portti",
+          "body": "Välitä palvelimen pelin portti reitittimessäsi, TCP ja UDP, ja lähetä ystäville osoite Yleiskatsaus-välilehdeltä."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Kotihostaukseen liittyviä kysymyksiä",
+      "items": [
+        {
+          "q": "Voinko isännöidä samalla tietokoneella, jolla pelaan?",
+          "a": "Kyllä, kunhan siinä on muistia molemmille. Anna palvelimelle sen keko plus lisätilaa Javaa varten ja jätä riittävästi peliasiakkaalle. Tavallinen palvelin muutamalle ystävälle tarvitsee noin 4 Gt itselleen."
+        },
+        {
+          "q": "Miksi Wi-Fi-verkossani olevat ystävät voivat liittyä, mutta ulkopuoliset eivät?",
+          "a": "Pelin porttia ei ole välitetty reitittimessäsi, tai palomuuri estää sen. Välitä palvelimen pelin portti TCP:n ja UDP:n yli isännöivään koneeseen ja salli se koneen palomuurissa."
+        },
+        {
+          "q": "Voinko ajaa paneelin Docker-kuvaa Windowsissa tai macOS:ssä?",
+          "a": "Säiliöasennus kohdistuu Linux-isäntiä varten. Windowsissa ja macOS:ssä aja paneelia lähteestä Node.js 24:llä Docker Desktopin rinnalla, mikä toimii samalla tavalla, kun se on käynnissä."
+        }
+      ]
+    },
+    "related": ["guidePi", "guideMulti", "serverVanilla"],
+    "cta": {
+      "title": "Aloita isännöinti kotona",
+      "body": "Ilmainen, avoin lähdekoodi, eikä tiliä kenellekään. Palvelimesi elävät yhdessä kansiossa omalla koneellasi."
+    }
+  },
+  "guideHosting": {
+    "meta": {
+      "title": "Jätä maksullinen Minecraft-hosting: siirrä maailmasi",
+      "description": "Siirrä Minecraft-palvelin pois maksulliselta palveluntarjoajalta: ota oikeat tiedostot, tuo maailma ja lisäosat omaan hallintapaneeliisi, säilytä kaikki inventaariot ja pidä osoite."
+    },
+    "eyebrow": "Siirto-opas",
+    "title": "Siirrä Minecraft-palvelimesi pois maksulliselta palveluntarjoajalta",
+    "intro": "Tuo maailmasi, lisäosasi ja modisi kotiin kaikkien inventaarioiden säilyessä. Tarkista ensin tilanne, kopioi koko palvelinkansio, rakenna se uudelleen omassa hallintapaneelissasi ja vasta sitten ohjaa pelaajat siihen.",
+    "pills": ["docker", "paper", "fabric", "forge", "packs-curseforge", "packs-modrinth"],
+    "sections": [
+      {
+        "title": "Tarkista tilanne ennen lataamista",
+        "body": "Kirjoita nämä ylös, kun vanha palvelin on vielä käynnissä. Jokainen niistä on pilannut siirron pahasti, kun sitä on oletettu tarkistamisen sijaan. Online-tila on tärkein: jos vanha palvelin toimi ilman sitä ja uusi toimii sen kanssa, tai päinvastoin, jokainen pelaaja saa eri identiteetin ja täysin uuden, tyhjän inventaarion.",
+        "points": [
+          "Tarkka Minecraft-versio ja lataaja. 1.20.1 NeoForge ei ole 1.20.1 Forge.",
+          "Modien tai lisäosien lista versioineen.",
+          "level-name server.properties-tiedostosta. Maailmakansio ei usein ole nimeltään world.",
+          "Online-tila, päällä tai pois päältä.",
+          "Mikä tahansa palvelinkansion ulkopuolella oleva, kuten lisäosan tietokanta."
+        ]
+      },
+      {
+        "title": "Ota koko kansio, älä vain maailmaa",
+        "body": "Käytä palveluntarjoajan tiedostonhallintaa tai latausvaihtoehtoa ja ota koko palvelinkansio. Hanki itse modien ja lisäosien jar-tiedostot, älä vain nimilistaa: versiot ovat tärkeitä, ja uusin on eri tiedosto ensi kuussa. Lataa myös varmuuskopiosi. Varmuuskopio, joka on olemassa vain hallintapaneelissa, josta olet lähdössä, ei ole sinun omistamasi varmuuskopio. Pysäytä palvelin kunnolla ennen lopullista latausta, jotta peli tallentaa maailman levylle."
+      },
+      {
+        "title": "Rakenna se uudelleen omassa hallintapaneelissasi",
+        "body": "Luo saman tyyppinen ja täsmälleen saman version palvelin. Tuo sitten osat sisään. Maailmat-sivu ottaa maailmasi .zip- tai .tar-arkistona, löytää maailman automaattisesti sen sisältä ja asentaa sen palvelimelle, varmuuskopioiden ensin nykyisen. Lisäosa- tai mod-palvelimella tuo zip-tiedosto lisäosien jar-tiedostoista: jokainen tunnistetaan, arvioidaan suhteessa palvelimeen ja asennetaan, jos se sopii. Konfiguraatiot ja muu menevät tiedostonhallinnan kautta, joka muokkaa ja lataa suoraan selaimessa. Jos vanha palvelin käytti julkaistua pakettia, asenna sama paketti samalla versiolla sen sijaan.",
+        "pills": ["zip", "mrpack", "cf-export"],
+        "points": [
+          "Maailman lataus löytää maailman arkistostasi.",
+          "Zip-tiedoston tuonti tunnistaa jokaisen jar-tiedoston ja tarkistaa sen suhteessa palvelimeen.",
+          "Tiedostonhallinta hoitaa konfiguraatiot, whitelist- ja ops-tiedostot."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Pidä osoite, pidä pelaajat",
+        "body": "Jos pelaajat yhdistävät pelkkään IP-osoitteeseen, jokainen siirto saa heidät muokkaamaan palvelinlistaa, ja jotkut eivät koskaan tee sitä. Käytä hallitsemaasi verkkotunnusta ja osoita se uuteen koneeseesi. Siirtäminen muuttuu silloin DNS-muutokseksi. Laske tietueen elinaika (TTL) päivää ennen siirtoa, jotta muutos leviää nopeasti. SRV-tietue antaa pelaajien kirjoittaa pelkän verkkotunnuksen, vaikka palvelin toimisi eri portissa, sama asia, jonka palveluntarjoajat tekevät antaakseen peliosoitteen."
+      }
+    ],
+    "steps": {
+      "title": "Vaihto, järjestyksessä",
+      "items": [
+        {
+          "title": "Testaa yksityisessä portissa",
+          "body": "Käynnistä uusi palvelin portissa, jota pelaajat eivät tiedä, liity siihen itse ja tarkista tuttu rakennelma, inventaariosi ja että kaikki lisäosat tai modit latautuivat."
+        },
+        {
+          "title": "Viimeinen kopio",
+          "body": "Ilmoita uudelleenkäynnistyksestä, pysäytä vanha palvelin kunnolla, lataa maailma vielä kerran ja asenna se kopio, jotta uusimmat muutokset tulevat sen mukana."
+        },
+        {
+          "title": "Vaihda portti ja osoite",
+          "body": "Siirrä palvelin julkiseen porttiinsa Pelikansio-kortilla, ja osoita sitten verkkotunnuksesi uuteen koneeseen."
+        },
+        {
+          "title": "Pidä vanha käynnissä jonkin aikaa",
+          "body": "Peruuta vanha sopimus vasta muutaman päivän kuluttua. Pidä se pysäytettynä, jotta kukaan ei rakenna hylättyyn kopioon."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Siirtokysymykset",
+      "items": [
+        {
+          "q": "Säilyttävätkö pelaajat inventaarionsa?",
+          "a": "Kyllä, kunhan online-tila on sama molemmissa palvelimissa ja siirsit koko maailmakansion. Pelaajatieto elää maailman sisällä, avaimena kunkin pelaajan identiteetti, ja tämä identiteetti muuttuu, jos online-tila muuttuu."
+        },
+        {
+          "q": "Palveluntarjoajani antaa minun ladata vain maailman. Riittääkö se?",
+          "a": "Vaniljaversiolle, useimmiten. Lisäosa- tai mod-palvelimelle tarvitset myös jar-tiedostot tarkkoina versioina, koska maailma ei lataudu oikein ilman modeja, jotka sen loivat. Pyydä palveluntarjoajaltasi koko palvelinkansio."
+        },
+        {
+          "q": "Mitä hallintapaneeli korvaa palveluntarjoajani ohjauspaneelista?",
+          "a": "Konsolin, tiedostonhallinnan, varmuuskopiot, aikataulut, pelaajien hallinnan, lisäosien ja modien asennukset sekä modpack-asennukset, sekä asiat, joista palveluntarjoajat usein veloittavat lisämaksusta, kuten useammat palvelimet tai useammat varmuuskopiopaikat. Rajoitus on oma laitteistosi."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverModpacks", "guideMulti"],
+    "cta": {
+      "title": "Tuo palvelimesi kotiin",
+      "body": "Asenna hallintapaneeli, luo palvelin, joka vastaa vanhaasi, ja lataa maailmasi. Ilmainen, avointa lähdekoodia ja sinun pidettäväksesi."
+    }
+  },
+  "guideMulti": {
+    "meta": {
+      "title": "Suorita useita Minecraft-palvelimia yhdellä koneella",
+      "description": "Suorita useita Minecraft-palvelimia yhdellä koneella: automaattiset portit, palvelinkohtainen muisti, suoritin- ja levytilarajat, jaetut modit ja yksi hallintapaneeli koko laivastolle."
+    },
+    "eyebrow": "Monipalvelinopas",
+    "title": "Suorita useita Minecraft-palvelimia yhdellä koneella, siististi",
+    "intro": "Selviytymismaailma, luova rakennuspalvelin ja viikonloppumodipaketti, kaikki samalla koneella. Jokaisella on oma säiliönsä, oma porttinsa ja omat rajansa, ja näet ne kaikki yhdessä hallintapaneelissa.",
+    "pills": ["docker", "paper", "fabric", "forge", "vanilla"],
+    "sections": [
+      {
+        "title": "Portit järjestetty puolestasi",
+        "body": "Peliporrtit jaetaan ensimmäisenä vapaana olevana, laskien ylöspäin 25565:stä, ja etäkomento (RCON) 1000 ylöspäin kustakin. Kymmenen palvelinta käyttää peliporrtteja 25565–25574 ja pitää RCON:n omassa lohkossaan, joten voit avata yhden yhtenäisen pelialueen palomuurissasi paljastamatta koskaan RCON:ia. Portti lasketaan varatuksi, jos toinen palvelin käyttää sitä, jokin koneen Docker-säiliö julkaisee sen tai järjestelmä ilmoittaa sen varatuksi. Siirrä palvelinta myöhemmin Peliporrtikortilla, ja paneeli tarkistaa uuden portin ennen tallentamista.",
+        "points": [
+          "Yksi peli- ja RCON-pari per palvelin, määritetään automaattisesti.",
+          "Seuraava vapaa portti valitsee pienimmän vapaana olevan.",
+          "Avaa vain pelialue. RCON pysyy suljettuna."
+        ]
+      },
+      {
+        "title": "Rajoitukset, jotta yksi palvelin ei voi nälkiinnyttää muita",
+        "body": "Jokainen palvelin on oma Docker-säiliönsä, jolla on suoritinrajoitus, Java-kasa (heap) ja sen yläpuolella oleva kova muistirajoitus. Docker ei voi rajoittaa kansion levynkäyttöä, joten paneeli tekee sen: jokaisella palvelimella on levytila, ja toimenpide, joka ylittäisi sen, kuten modin asentaminen tai maailman lataaminen, estetään, kunnes tilaa vapautuu. Ota käyttöön Pysäytä palvelin kiintiön ylittyessä, ja palvelin, joka kasvaa yli 10 prosenttia kiintiönsä yli, pysäytetään ja merkitään sen historiaan.",
+        "points": [
+          "Palvelinkohtainen suoritin-, kasa- ja muistirajoitus.",
+          "Paneelin pakottamat levytilat.",
+          "Uusien palvelinten oletusasetukset mukautuvat koneen muistiin."
+        ],
+        "shot": "storage"
+      },
+      {
+        "title": "Jaa se, mikä voidaan jakaa",
+        "body": "Lisäämäsi modit tallennetaan kerran jaettuun kirjastoon, deduplikoidaan sha256:lla ja linkitetään jokaiseen palvelimeen, joka käyttää niitä, joten kymmenen samaa modia käyttävää palvelinta eivät tallenna sitä kymmenen kertaa. Maailmat menevät maailmakirjastoon, josta mikä tahansa palvelin voi asentaa. Suunnitelma (blueprint) tallentaa palvelimen koko reseptin yhtenä .mcserver.zip-tiedostona, ja Klooni (Clone) käyttää sitä luodakseen identtisen palvelimen uusilla porteilla.",
+        "shot": "blueprints"
+      },
+      {
+        "title": "Yksi näkymä koko laivastoon",
+        "body": "Hallintapaneeli näyttää kaikki palvelimet yhdellä silmäyksellä: tila, muisti, pelaajat verkossa, päivitykset odottamassa ja viimeaikainen toiminta. Tunnisteet (Tags) järjestävät palvelinluettelon. Globaalit aikataulut suorittavat uudelleenkäynnistyksiä, varmuuskopioita tai komentoja palvelinten välillä, ja Päivitykset-sivu kerää kaiken, mikä on vanhentunutta koko laivastossa. Palvelinkohtaiset käyttöoikeudet antavat ystävälle mahdollisuuden suorittaa omaa palvelintaan paneelissa näkemättä sinun palvelintasi.",
+        "shot": "dashboard"
+      }
+    ],
+    "steps": {
+      "title": "Suunnittele monipalvelinkone",
+      "items": [
+        {
+          "title": "Laske muisti yhteen",
+          "body": "Summaa kunkin palvelimen Java-kasa ja sen liikkumavara, ja jätä sitten tilaa järjestelmälle. Pysäytetyt palvelimet eivät käytä muistia, joten viikonloppupaketti ei maksa mitään arkipäivisin."
+        },
+        {
+          "title": "Aseta järkevät oletusarvot",
+          "body": "Järjestelmänvalvoja asettaa kasan, levytilan ja suoritinrajoituksen, jolla jokainen uusi palvelin aloittaa kohdasta Asetukset, Oletukset uusille palvelimille."
+        },
+        {
+          "title": "Avaa yksi porttialue",
+          "body": "Avaa peliporrtialue, joka on mitoitettu suunnittelemillesi palvelimille, TCP- ja UDP-protokollilla. Jätä RCON-lohko suljetuksi."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Monipalvelinkysymyksiä",
+      "items": [
+        {
+          "q": "Kuinka monta palvelinta yksi kone voi suorittaa?",
+          "a": "Muisti päättää sen ensin. Laske yhteen jokaisen käynnissä olevan palvelimen kasa ja sen liikkumavara: pieni vanilla- tai Paper-palvelin tarvitsee noin 4 Gt yhteensä, kevyt modipaketti noin 6 Gt. Pysäytetyt palvelimet eivät maksa mitään."
+        },
+        {
+          "q": "Voiko jokaisella palvelimella olla omat järjestelmänvalvojansa?",
+          "a": "Kyllä. Palvelinkohtaiset käyttöoikeudet myöntävät katselu-, käyttö-, konsoli-, pelaaja-, sisältö-, varmuuskopiointi-, tiedosto-, asetukset- ja poisto-oikeudet erikseen kullekin palvelimelle, ja palvelin voidaan piilottaa käyttäjältä kokonaan."
+        },
+        {
+          "q": "Voivatko pelaajat vaihtaa palvelimieni välillä pelissä?",
+          "a": "Ei itse paneelin kautta. Jokaisella palvelimella on oma osoitteensa ja porttinsa. Palvelimien linkittäminen niin, että pelaajat siirtyvät niiden välillä pelissä, vaatii välityspalvelimen (proxy server), jonka suorittaisit niiden rinnalla."
+        }
+      ]
+    },
+    "related": ["guideHome", "serversHub", "guideHosting"],
+    "cta": {
+      "title": "Suorita koko laivastosi yhdestä paikasta",
+      "body": "Asenna paneeli kerran ja lisää palvelimia tarpeen mukaan. Ei palvelinkohtaisia maksuja eikä instanssirajoituksia."
+    }
+  },
+  "compareHub": {
+    "meta": {
+      "title": "Minecraft-palvelinohjelmien vertailu: Pterodactyl, AMP, Crafty",
+      "description": "Reilu vertailu ilmaisista ja maksullisista Minecraft-palvelinohjelmista: Pterodactyl, Crafty Controller, AMP, MCSManager ja PufferPanel, sekä Minecraft Server Manager."
+    },
+    "eyebrow": "Vertaa ohjelmia",
+    "title": "Minecraft-palvelinohjelmien vertailu",
+    "intro": "Useat hyvät ohjelmat voivat pyörittää Minecraft-palvelinta. Tässä, miten Minecraft Server Manager eroaa niistä, ja milloin jokin toinen ohjelma on parempi valinta.",
+    "cards": {
+      "comparePtero": "Ilmainen monen pelin ohjelma, joka on rakennettu hosting-yrityksille, ja jossa on erillinen daemon jokaisella koneella. Vertaa asennuksen vaivaa ja Minecraft-ominaisuuksia.",
+      "compareCrafty": "Ilmainen Minecraft-ohjelma, joka on kirjoitettu Pythonilla ja pyörittää palvelimia tavallisina prosesseina. Vertaa, miten palvelimet eristetään ja miten modipaketit asennetaan.",
+      "compareAmp": "Kaupallinen ohjelma sadoille peleille, myydään lisenssitasoina. Vertaa hintaa, instanssirajoituksia ja Minecraftin syvyyttä.",
+      "compareMcsm": "Ilmainen, hajautettu ohjelma Minecraftille ja Steam-peleille. Vertaa arkkitehtuuria, Dockerin käyttöä ja modipakettien käsittelyä.",
+      "comparePuffer": "Ilmainen, kevyt ohjelma monille peleille ja monille koneille, palvelimet prosesseina tai konteissa. Vertaa eristystä, solmuja ja Minecraftin syvyyttä."
+    },
+    "sections": [
+      {
+        "title": "Miten nämä vertailut on kirjoitettu",
+        "body": "Jokainen tieto toisesta ohjelmasta on peräisin kyseisen projektin omalta verkkosivustolta, dokumentaatiosta tai koodivarastosta, ja jokainen sivu kertoo, milloin se on tarkistettu. Jos emme voineet vahvistaa jotain, jätimme sen pois arvaamisen sijaan. Jos tieto on muuttunut, kerro meille Discordissa tai GitHubissa, niin korjaamme sivun.",
+        "points": [
+          "Jokainen sivu listaa, mitä toinen ohjelma tekee paremmin.",
+          "Hinnat ja versiot on lainattu tarkistuspäivämäärineen.",
+          "Minecraft Server Manager ei ole sidoksissa mihinkään näistä projekteista. Niiden nimet kuuluvat omistajilleen."
+        ]
+      },
+      {
+        "title": "Mihin Minecraft Server Manager on rakennettu",
+        "body": "Yksi omistaja tai pieni tiimi, joka pyörittää Minecraft Java -palvelimia omalla koneellaan. Jokainen palvelin on resurssirajoitettu Docker-kontti, koko ohjelma sijaitsee yhdessä kansiossa, ja Minecraftin osat, jotka ovat muualla hankalia, ovat sisäänrakennettuja: kiinnitetyt modipaketit ja palautus, viisi modirekisteriä yhdessä haussa, kaatumisanalyysi, yhden klikkauksen live-kartta ja siirrettävät pohjapiirrokset.",
+        "pills": ["paper", "purpur", "fabric", "forge", "neoforge", "quilt", "vanilla"]
+      }
+    ],
+    "faq": {
+      "title": "Kysymyksiä ohjelman valinnasta",
+      "items": [
+        {
+          "q": "Minkä ohjelman valitsen yhtä Minecraft-palvelinta varten kotona?",
+          "a": "Jos pyörität vain Minecraft Javaa ja haluat modipaketteja, varmuuskopioita ja live-kartan ilman, että sinun tarvitsee koota niitä itse, Minecraft Server Manager on tehty sitä varten. Jos isännöit myös muita pelejä tai hallinnoit useita koneita, monen pelin ohjelma, kuten Pterodactyl, MCSManager tai AMP, sopii paremmin."
+        },
+        {
+          "q": "Onko Minecraft Server Manager todella ilmainen?",
+          "a": "Kyllä. Se on MIT-lisensoitu, siinä ei ole maksullista tasoa eikä se käytä maksullisia palveluita. CurseForge-lataukset vaativat CurseForge API -avaimen, jonka lisäät Asetuksissa."
+        },
+        {
+          "q": "Voinko siirtää olemassa olevan maailmani Minecraft Server Manageriin?",
+          "a": "Kyllä. Lataa maailma Maailmat-sivulla ja asenna se uuteen palvelimeen, tai tuo modipaketin vienti tai zip-tiedosto mod-jar-tiedostoista luodessasi palvelinta."
+        }
+      ]
+    },
+    "related": ["serversHub", "guideHosting"],
+    "cta": {
+      "title": "Kokeile omalla koneellasi",
+      "body": "Asenna ohjelma kolmessa vaiheessa ja luo ensimmäinen palvelimesi ohjatun toiminnon avulla. Koko ohjelmasi pysyy yhdessä kansiossa, jonka voit kopioida minne tahansa."
+    },
+    "table": {
+      "title": "Kaikki ohjelmat silmäyksellä",
+      "columns": [
+        "",
+        "Minecraft Server Manager",
+        "Pterodactyl",
+        "Crafty Controller",
+        "AMP",
+        "MCSManager",
+        "PufferPanel"
+      ],
+      "rows": [
+        {
+          "label": "Hinta",
+          "values": ["Ilmainen.", "Ilmainen.", "Ilmainen.", "Maksulliset lisenssitasot.", "Ilmainen.", "Ilmainen."]
+        },
+        {
+          "label": "Lisenssi",
+          "values": ["MIT.", "MIT.", "GPL-3.0.", "Kaupallinen, suljettu lähdekoodi.", "Apache-2.0.", "Apache-2.0."]
+        },
+        {
+          "label": "Pelit",
+          "values": [
+            "Minecraft Java Edition.",
+            "Monet, munien kautta.",
+            "Minecraft Java ja Bedrock.",
+            "Yli 200.",
+            "Minecraft ja Steam-pelit.",
+            "Monet, mallien kautta."
+          ]
+        },
+        {
+          "label": "Peliservut pyörivät",
+          "values": [
+            "Docker-kontteina.",
+            "Docker-kontteina.",
+            "Prosesseina isännällä.",
+            "Prosesseina tai Docker-kontteina, kun ne on kytketty päälle.",
+            "Kontteina tai prosesseina.",
+            "Prosesseina tai kontteina."
+          ]
+        },
+        {
+          "label": "Useita koneita",
+          "values": [
+            "Ei. Yksi ohjelma per kone.",
+            "Kyllä, Wings-solmuilla.",
+            "Ei etäsolmuja dokumentaatiossaan.",
+            "Professional-lisenssi ja sitä korkeammat.",
+            "Kyllä, daemonien kanssa.",
+            "Kyllä, solmujen kanssa."
+          ]
+        },
+        {
+          "label": "Isäntäjärjestelmät",
+          "values": [
+            "Linux, Windows, macOS.",
+            "Linux.",
+            "Linux, Windows, macOS.",
+            "Linux, Windows.",
+            "Linux, Windows, macOS.",
+            "Linux."
+          ]
+        }
+      ],
+      "note": "Tiedot tarkistettu kunkin projektin omasta dokumentaatiosta, lokakuussa ja marraskuussa 2026. Jokainen vertailusivu sisältää yksityiskohdat."
+    }
+  },
+  "comparePtero": {
+    "meta": {
+      "title": "Pterodactyl-vaihtoehto Minecraft-palvelimille",
+      "description": "Minecraft Server Manager verrattuna Pterodactyl-järjestelmään: yksi prosessi ja yksi kansio paneelin, daemonin, tietokannan ja Redis-palvelun sijaan, sisäänrakennetuilla Minecraft-ominaisuuksilla."
+    },
+    "eyebrow": "Pterodactyl-vaihtoehto",
+    "title": "Pterodactyl-vaihtoehto, joka on rakennettu vain Minecraftille",
+    "intro": "Pterodactyl on ilmainen, avoimen lähdekoodin paneeli, joka pyörittää monia pelejä monilla koneilla. Minecraft Server Manager pyörittää yhtä peliä yhdellä koneella, joten se vaatii huomattavasti vähemmän asennusta ja sisältää valmiiksi Minecraft-työkalut.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Rinnakkain",
+      "columns": ["", "Minecraft Server Manager", "Pterodactyl"],
+      "rows": [
+        {
+          "label": "Hinta ja lisenssi",
+          "values": ["Ilmainen, MIT.", "Ilmainen, MIT."]
+        },
+        {
+          "label": "Mitä asennat",
+          "values": [
+            "Yksi Node.js-prosessi tai yksi Docker-kontti.",
+            "PHP (Laravel) -paneeli React-käyttöliittymällä, sekä Go-kielellä kirjoitettu Wings-daemon jokaisessa solmussa."
+          ]
+        },
+        {
+          "label": "Tietokanta ja välimuisti",
+          "values": [
+            "Sisäänrakennettu SQLite-tiedosto data-kansion sisällä. Ei muuta ajettavaa.",
+            "MySQL 5.7.22+ tai MariaDB 10.2+, Redis, web-palvelin ja Composer."
+          ]
+        },
+        {
+          "label": "Pelipalvelimet ajetaan",
+          "values": ["Resurssirajoitettuina Docker-kontteina.", "Eristettyinä Docker-kontteina (Docker vaaditaan)."]
+        },
+        {
+          "label": "Isäntäjärjestelmät",
+          "values": [
+            "Linux, Windows ja macOS. Kuva on rakennettu amd64- ja arm64-arkkitehtuureille.",
+            "Vain Linux: Ubuntu, Debian ja RHEL-perheen julkaisut. Wings ei toimi Windowsissa."
+          ]
+        },
+        {
+          "label": "Hallitut koneet",
+          "values": [
+            "Yksi. Paneeli ja Docker ajetaan samalla isännällä.",
+            "Useita. Yksi paneeli hallitsee Wings-solmuja useilla koneilla."
+          ]
+        },
+        {
+          "label": "Pelit",
+          "values": [
+            "Minecraft Java Edition. Bedrock-pelaajat voivat liittyä Geyserin kautta.",
+            "Monet pelit \"munien\" kautta, mukaan lukien Minecraft, Rust, Terraria ja ARK."
+          ]
+        }
+      ],
+      "note": "Tiedot tarkistettu lokakuussa 2026 kummankin projektin oman dokumentaation perusteella."
+    },
+    "sections": [
+      {
+        "title": "Asennus ilman koottavaa kokonaisuutta",
+        "body": "Pterodactylin oma dokumentaatio kutsuu sitä erittäin monimutkaiseksi järjestelmäksi, jossa on useita riippuvuuksia: PHP, tietokantapalvelin, Redis, web-palvelin, jonotyöntekijä ja Wings jokaisessa solmussa. Tämä suunnittelu mahdollistaa sen palvelevan hosting-yrityksiä. Minecraft Server Manager on yksi prosessi, joka puhuu Docker-socketillesi ja pitää kaiken, mukaan lukien tietokannan, yhdessä kansiossa. Linuxissa yksi asennusskripti hoitaa sen ja asentaa Dockerin, jos se puuttuu.",
+        "points": [
+          "Ei erillistä daemonia, tietokantapalvelinta tai välimuistia, joita pitäisi pitää käynnissä.",
+          "Kopioi data-kansio siirtääksesi koko paneelin uuteen koneeseen.",
+          "Toimii natiivisti Windowsissa ja macOS:ssä Docker Desktopin rinnalla."
+        ],
+        "pills": ["docker", "portainer", "dockge", "pm2"]
+      },
+      {
+        "title": "Missä Minecraft Server Manager on vahvempi Minecraftille",
+        "body": "Koska se pyörittää vain Minecraftia, paneeli tietää, mitä modpack, mod-jar ja kaaturaportti ovat. Työkalut, joihin Minecraft-omistaja turvautuu, ovat osa paneelia, eivät jotain löydettävää ja kytkettävää.",
+        "points": [
+          "Modpackit kiinnitetään tarkkaan versioon, ja päivitykset ottavat varmuuskopion ensin ja palauttavat yhdellä napsautuksella.",
+          "Yksi haku viidestä rekisteristä, suodatettuna palvelimen lataajalle ja Minecraft-versiolle.",
+          "Jokainen lataus tarkistetaan tarkistussummalla ennen kuin se saavuttaa palvelimen.",
+          "Kaatumiset havaitaan, jäsennetään ja jaetaan mclo.gs-palveluun yhdellä napsautuksella.",
+          "Yhden napsautuksen BlueMap-reaaliaikakartta, paneelin oman kirjautumisen takana.",
+          "Itzg-kuvan jokainen asetus selitetään selkokielellä ohjatussa toiminnossa."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Milloin Pterodactyl on parempi valinta",
+        "body": "Pterodactyl on kypsä, aktiivisesti ylläpidetty ja hosting-yritysten tukema. Jos jokin näistä kuvaa sinua, se on vahvempi valinta.",
+        "points": [
+          "Pyörität palvelimia useilla koneilla ja haluat yhden paneelin kaikille niille.",
+          "Tarjoat muita pelejä kuin Minecraftia.",
+          "Myyt tai jaat hosting-palveluita monille erillisille asiakkaille ja tarvitset sitä skaalautuvuutta.",
+          "Käytät jo Pterodactylia ja sen munat kattavat tarpeesi."
+        ]
+      },
+      {
+        "title": "Huomautus Pelicanista",
+        "body": "Pelican Panel on Pterodactylin forkki, lisensoitu AGPL-3.0 ja edelleen julkaisukandidaattivaiheessa tämän sivun tarkistushetkellä. Se säilyttää paneelin ja Wings-suunnittelun, lisää SQLite- ja PostgreSQL-tietokantavaihtoehdot ja siinä on laajennuskeskus, jossa kolmannen osapuolen laajennus selaa CurseForge- ja Modrinth-modpackeja."
+      }
+    ],
+    "faq": {
+      "title": "Pterodactyl-kysymykset",
+      "items": [
+        {
+          "q": "Voinko siirtää palvelimen Pterodactylista Minecraft Server Manageriin?",
+          "a": "Kyllä. Lataa palvelimen maailma Pterodactylista, luo saman tyyppinen ja Minecraft-versioinen palvelin Minecraft Server Manageriin, lataa sitten maailma Maailmat-sivulla ja asenna se kyseiseen palvelimeen. Modatuille palvelimille, tuo pack tai mod-jar-zip-tiedostosi luodessasi sitä."
+        },
+        {
+          "q": "Tarvitseeko Minecraft Server Manager tietokantapalvelinta kuten MySQL?",
+          "a": "Ei. Se käyttää Node.js 24:ään sisäänrakennettua SQLite-moottoria ja tallentaa tietokantatiedoston data-kansioon kaiken muun kanssa."
+        },
+        {
+          "q": "Voiko Minecraft Server Manager hallita useita koneita kuten Wings-solmuja?",
+          "a": "Ei. Se hallitsee Docker-daemonia koneella, jolla se toimii. Useille koneille, aja yksi paneeli jokaisella, tai valitse monisolmuinen paneeli."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareMcsm", "guideMulti"],
+    "cta": {
+      "title": "Pyöritä Minecraftia ilman ylimääräistä kokonaisuutta",
+      "body": "Asenna Minecraft Server Manager kolmessa vaiheessa ja luo ensimmäinen palvelimesi ohjatussa toiminnossa."
+    }
+  },
+  "compareCrafty": {
+    "meta": {
+      "title": "Crafty Controller vs Minecraft Server Manager",
+      "description": "Crafty Controller ja Minecraft Server Manager ovat molemmat ilmaisia Minecraft-paneeleita. Vertaa, miten palvelimet eristetään, miten modpackit asennetaan ja mihin kumpikin sopii."
+    },
+    "eyebrow": "Crafty Controller -vaihtoehto",
+    "title": "Crafty Controller vs Minecraft Server Manager",
+    "intro": "Molemmat ovat ilmaisia, itse isännöityjä paneeleita, jotka on tehty Minecraftille. Crafty ajaa kutakin palvelinta prosessina isännällä, kirjoitettu Pythonilla. Minecraft Server Manager ajaa kutakin palvelinta omassa Docker-kontissaan ja rakentaa modpackit, modihaut ja kaatumistyökalut paneeliin.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Rinnakkain",
+      "columns": ["", "Minecraft Server Manager", "Crafty Controller"],
+      "rows": [
+        {
+          "label": "Hinta ja lisenssi",
+          "values": ["Ilmainen, MIT.", "Ilmainen, GPL-3.0."]
+        },
+        {
+          "label": "Kirjoitettu",
+          "values": ["Node.js 24.", "Python 3.10–3.12."]
+        },
+        {
+          "label": "Pelipalvelimet ajetaan",
+          "values": ["Resurssirajoitetut Docker-kontit.", "Prosessit isännällä. Paneeli itse voi myös ajaa Dockerissa."]
+        },
+        {
+          "label": "Docker",
+          "values": ["Vaaditaan isännällä.", "Valinnainen."]
+        },
+        {
+          "label": "Isäntäjärjestelmät",
+          "values": [
+            "Linux, Windows ja macOS. Kuva on rakennettu amd64- ja arm64-arkkitehtuureille.",
+            "Linux, Windows, macOS ja Raspberry Pi OS, sekä Docker-, UnRAID- ja CasaOS-oppaat. Sen kuva kattaa amd64- ja arm64-arkkitehtuurit."
+          ]
+        },
+        {
+          "label": "Versiot",
+          "values": [
+            "Java Edition. Bedrock-pelaajat voivat liittyä Geyserin kautta.",
+            "Java Edition versiosta 1.8 uusimpaan ja Bedrock."
+          ]
+        },
+        {
+          "label": "Modpackit",
+          "values": [
+            "CurseForge-, Modrinth-, FTB- ja GT New Horizons -paketit ohjatusti, kiinnitettynä tarkkaan versioon.",
+            "Sen UKK kuvaa paketin tuontia zip-tiedostona tai Modrinth-paketteja mrpack-installin kautta."
+          ]
+        },
+        {
+          "label": "Varmuuskopiot, aikataulut, roolit, 2FA",
+          "values": [
+            "Kyllä: säilytys per palvelin, cron-aikataulut, kolme roolia palvelinkohtaisilla oikeuksilla, TOTP.",
+            "Kyllä: varmuuskopiointien hallinta, tehtävien ajoitus, käyttäjäroolit ja TOTP sekä passkeyt."
+          ]
+        }
+      ],
+      "note": "Tiedot tarkistettu lokakuussa 2026 kummankin projektin omia dokumentaatioita vastaan."
+    },
+    "sections": [
+      {
+        "title": "Kontit isäntäprosessien sijaan",
+        "body": "Minecraft Server Managerissa jokainen palvelin on oma Docker-konttinsa tunnetulla itzg Minecraft -kuvalla, omilla muisti- ja suoritinrajoituksillaan ja levynkiintiöllä, jota paneeli valvoo. Yksi palvelin ei voi kuluttaa koneen muistia tai täyttää sen levyä, ja palvelimen uudelleenrakentaminen ei koskaan vaikuta muihin. Haitapuolena on, että Docker on asennettava isännälle.",
+        "points": [
+          "Muisti-, suoritin- ja levytilarajoitukset per palvelin.",
+          "Siisti RCON-pysäytys ennen kontin pysäyttämistä ja kaatumisen tunnistus viiveellä.",
+          "Java valitaan palvelinkohtaisesti kuvan perusteella, joten sekoitetut Minecraft-versiot toimivat."
+        ],
+        "pills": ["docker", "amd64", "arm64"],
+        "shot": "overview"
+      },
+      {
+        "title": "Missä Minecraft Server Manager on vahvempi",
+        "body": "Ohjattu asennus asentaa modpackit ja modit puolestasi ja pitää ne kiinnitettyinä, joten uudelleenkäynnistys ei koskaan päivitä pakettia hiljaa.",
+        "points": [
+          "Asenna CurseForge-, Modrinth-, FTB- ja GT New Horizons -paketit ohjatusti.",
+          "Tuo Modrinth .mrpack, CurseForge-vienti tai omat mod-jar-tiedostosi, jokainen jar-tiedosto tunnistettuna.",
+          "Hae viidestä rekisteristä samanaikaisesti, suodatettuna palvelimen lataajalle ja versiolle.",
+          "Päivitykset varmuuskopioivat ensin ja palauttavat yhdellä napsautuksella.",
+          "Yhden napsautuksen BlueMap-reaaliaikakartta ja mclo.gs-kaatumisen jakaminen.",
+          "Siirrettävät rakennuspiirustukset: vie palvelimen resepti ja hanki sama palvelin missä tahansa."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"]
+      },
+      {
+        "title": "Milloin Crafty Controller on parempi valinta",
+        "body": "Crafty on kypsä, aktiivisesti ylläpidetty ja toimii useammassa paikassa ilman Dockeria.",
+        "points": [
+          "Haluat ajaa palvelimia asentamatta Dockeria, esimerkiksi suoraan Windowsissa, macOS:ssä tai Raspberry Pi:ssä.",
+          "Ajat itse Bedrock Dedicated Serveriä, et vain Javaa Geyserin kanssa.",
+          "Haluat passkey-kirjautumisen."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Crafty Controller -kysymyksiä",
+      "items": [
+        {
+          "q": "Voinko siirtää Crafty-palvelimeni Minecraft Server Manageriin?",
+          "a": "Kyllä. Luo palvelin samalla tyypillä ja Minecraft-versiolla, lataa sitten maailma zip-tiedostona Maailmat-sivulla ja asenna se kyseiseen palvelimeen. Modatulle palvelimelle, tuo pakettisi tai mod-jar-tiedostojen zip-tiedosto luodessasi sitä."
+        },
+        {
+          "q": "Toimiiko Minecraft Server Manager Raspberry Pi:llä?",
+          "a": "Kyllä, 64-bittisessä käyttöjärjestelmässä Dockerin kanssa. Paneelin kuva on julkaistu arm64- ja amd64-arkkitehtuureille."
+        },
+        {
+          "q": "Miksi Minecraft Server Manager tarvitsee Dockeria?",
+          "a": "Jokainen palvelin ajetaan omassa kontissaan, mikä mahdollistaa resurssirajoitukset, siistin uudelleenrakentamisen ja oikean Java-version jokaiselle Minecraft-versiolle."
+        }
+      ]
+    },
+    "related": ["compareHub", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Kokeile omalla palvelimellasi",
+      "body": "Asenna paneeli kolmessa vaiheessa ja luo sitten palvelin modpackista ohjatulla asennuksella."
+    }
+  },
+  "compareAmp": {
+    "meta": {
+      "title": "Ilmainen AMP-vaihtoehto Minecraft-palvelimille",
+      "description": "Minecraft Server Manager verrattuna CubeCodersin AMP:hen: ilmainen, MIT-lisensoitu Minecraft-paneeli ilman instanssirajoituksia, kaupallisen monen pelin paneelin rinnalla."
+    },
+    "eyebrow": "AMP-vaihtoehto",
+    "title": "Ilmainen AMP-vaihtoehto Minecraftille",
+    "intro": "CubeCodersin AMP on kaupallinen paneeli erittäin pitkälle pelilistalle, myydään lisenssitasoina. Minecraft Server Manager on ilmainen ja avointa lähdekoodia, pyörittää vain Minecraftia, eikä siinä ole rajoitusta luotavien palvelimien määrälle.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Rinnakkain",
+      "columns": ["", "Minecraft Server Manager", "AMP"],
+      "rows": [
+        {
+          "label": "Hinta",
+          "values": [
+            "Ilmainen. Ei tasoja.",
+            "Standard £7.50 / $10, Professional £15 / $30, Advanced £30 / $40, Enterprise muuttuvalla tilauksella."
+          ]
+        },
+        {
+          "label": "Lisenssi ja lähdekoodi",
+          "values": [
+            "MIT, lähdekoodi GitHubissa.",
+            "Kaupallinen ja suljettu lähdekoodi. Sen julkinen GitHub-arkisto sisältää tikettejä ja dokumentaatiota."
+          ]
+        },
+        {
+          "label": "Luotavat palvelimet",
+          "values": [
+            "Ei rajoitusta laitteistosi ulkopuolella.",
+            "5 instanssia Standard-tasolla, 15 Professional-tasolla, 50 Advanced-tasolla."
+          ]
+        },
+        {
+          "label": "Paneelin käyttäjät",
+          "values": [
+            "Rajoittamaton, ylläpitäjä-, operaattori- ja katselija-rooleilla.",
+            "3 Standard-tasolla, rajoittamaton Professional-tasosta alkaen."
+          ]
+        },
+        {
+          "label": "Kaupallinen käyttö",
+          "values": ["Sallittu MIT-lisenssillä.", "Vain Enterprise-lisenssillä."]
+        },
+        {
+          "label": "Useita koneita",
+          "values": ["Yksi kone per paneeli.", "Professional-taso ja sitä ylempi."]
+        },
+        {
+          "label": "Isäntäjärjestelmät",
+          "values": [
+            "Linux, Windows ja macOS. Kuva on rakennettu amd64- ja arm64-arkkitehtuureille.",
+            "Windows ja Linux."
+          ]
+        },
+        {
+          "label": "Pelit",
+          "values": [
+            "Minecraft Java Edition. Bedrock-pelaajat voivat liittyä Geyserin kautta.",
+            "Yli 200 peliä ja sovellusta yhteensopivuuslistallaan, mukaan lukien Minecraft Java ja Bedrock."
+          ]
+        }
+      ],
+      "note": "Tiedot tarkistettu lokakuussa 2026 kunkin projektin omasta dokumentaatiosta. AMP:n hinnat ovat peräisin CubeCodersin versiovertailulomakkeesta ja voivat muuttua."
+    },
+    "sections": [
+      {
+        "title": "Ei lisenssiä, ei instanssimäärää",
+        "body": "AMP:n tasot määrittävät, kuinka monta instanssia ja paneelin käyttäjää saat, ja vain Enterprise-taso sallii kaupallisen käytön. Minecraft Server Managerissa ei ole tasoja: jokainen ominaisuus, jokainen palvelin ja jokainen käyttäjätili on ilmainen MIT-lisenssin alla, eikä se käytä maksullisia palveluita. CurseForge-lataukset vaativat CurseForge API-avaimen, jonka lisäät asetuksiin.",
+        "points": [
+          "Luo niin monta palvelinta kuin koneesi pystyy pyörittämään.",
+          "Kutsu koko tiimisi palvelinkohtaisilla käyttöoikeuksilla ja kaksivaiheisella kirjautumisella.",
+          "Lähdekoodi on julkinen, joten voit lukea, forkata ja osallistua sen kehittämiseen."
+        ]
+      },
+      {
+        "title": "Missä Minecraft Server Manager on vahvempi Minecraftille",
+        "body": "Yhdelle pelille tarkoitettu paneeli voi syventyä siihen. Jokainen itzg Minecraft -kuvan tukema asetus löytyy ohjatusta toiminnosta selkokielisellä ohjeella, ja Minecraft-työnkulut ovat sisäänrakennettuja.",
+        "points": [
+          "CurseForge, Modrinth, FTB ja GT New Horizons modpackit, kiinnitettynä yhdellä klikkauksella palautettavalla toiminnolla.",
+          "Yksi modihaku viidestä rekisteristä, tarkistussummalla varmennetuilla latauksilla.",
+          "Versioyhteensopivuustarkistukset ennen Minecraft-päivityksen tarjoamista.",
+          "Kaatumisanalyysi mclo.gs-jakotoiminnolla ja yhdellä klikkauksella toimiva BlueMap-reaaliaikakartta.",
+          "Pelaaja-analytiikka, inventaarion ja tallennustilan analyysi levytilakiintiöillä."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "bluemap", "mclogs"],
+        "shot": "wizard"
+      },
+      {
+        "title": "Milloin AMP on parempi valinta",
+        "body": "AMP kattaa paljon laajemman alueen kuin vain Minecraftiin keskittyvä paneeli, ja sen mukana tulee kaupallinen tuki.",
+        "points": [
+          "Isännöit monia eri pelejä yhdestä paneelista.",
+          "Tarvitset kertakirjautumisen OIDC:n kautta, mukautetun brändäyksen tai käyttöönotto mallipohjat, jotka sisältyvät sen Advanced-tasoon.",
+          "Pyörität hosting-liiketoimintaa ja haluat kaupallisen lisenssin myyjän tuella.",
+          "Haluat itse pyörittää Bedrock Dedicated Serveriä."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "AMP-kysymykset",
+      "items": [
+        {
+          "q": "Onko Minecraft Server Manager ilmainen kaupalliseen käyttöön?",
+          "a": "MIT-lisenssi sallii kaupallisen käytön. Paneeli on rakennettu omistajille ja pienille tiimeille yhdellä koneella, joten tarkista, sopiiko se isännöintitapaasi ennen kuin luotat siihen asiakkaiden kanssa."
+        },
+        {
+          "q": "Tukeeko Minecraft Server Manager muita pelejä kuin Minecraftia?",
+          "a": "Ei. Se pyörittää vain Minecraft Java Edition -palvelimia, minkä vuoksi se voi syventyä modpackeihin, modeihin ja kaatumisraportteihin."
+        },
+        {
+          "q": "Voinko siirtää AMP Minecraft -instanssin?",
+          "a": "Kyllä. Luo palvelin samalla tyypillä ja Minecraft-versiolla, lataa sitten instanssin maailma zip-tiedostona Maailmat-sivulla ja asenna se kyseiseen palvelimeen. Modatut palvelimet voivat aloittaa modpackista, pack-viennistä tai mod-jar-tiedostojen zipistä."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideHosting"],
+    "cta": {
+      "title": "Kaikki ominaisuudet, ilmaiseksi",
+      "body": "Asenna Minecraft Server Manager kolmessa vaiheessa. Ei ole mitään ostettavaa eikä mitään avattavaa."
+    }
+  },
+  "compareMcsm": {
+    "meta": {
+      "title": "MCSManager-vaihtoehto Minecraft-palvelimille",
+      "description": "MCSManager ja Minecraft Server Manager vertailussa: hajautettu paneeli Minecraft- ja Steam-peleille, sekä Minecraftiin keskittyvä paneeli sisäänrakennetuilla modpackeilla."
+    },
+    "eyebrow": "MCSManager-vaihtoehto",
+    "title": "MCSManager-vaihtoehto, joka keskittyy Minecraftiin",
+    "intro": "MCSManager on ilmainen, avoimen lähdekoodin paneeli Minecraft- ja Steam-peleille, joka voi hallita useita koneita. Minecraft Server Manager pyörittää vain Minecraftia yhdellä koneella, jokainen palvelin Docker-kontissa ja Minecraft-työkalut sisäänrakennettuina.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Rinnakkain",
+      "columns": ["", "Minecraft Server Manager", "MCSManager"],
+      "rows": [
+        {
+          "label": "Hinta ja lisenssi",
+          "values": ["Ilmainen, MIT.", "Ilmainen, Apache-2.0."]
+        },
+        {
+          "label": "Kirjoitettu",
+          "values": ["Node.js 24.", "TypeScript Node.js:llä."]
+        },
+        {
+          "label": "Mitä asennat",
+          "values": ["Yksi prosessi tai yksi Docker-kontti.", "Kaksi palvelua: verkkopaneeli ja daemon."]
+        },
+        {
+          "label": "Tietokanta",
+          "values": ["Sisäänrakennettu SQLite-tiedosto data-kansion sisällä.", "Ei tarvita."]
+        },
+        {
+          "label": "Pelipalvelimet ajetaan",
+          "values": ["Resurssirajoitetut Docker-kontit.", "Docker-kontit tai tavalliset prosessit, valintasi mukaan."]
+        },
+        {
+          "label": "Isäntäjärjestelmät",
+          "values": [
+            "Linux, Windows ja macOS. Kuva on rakennettu amd64- ja arm64-arkkitehtuureille.",
+            "Windows, Linux ja macOS, yhden rivin asennusskriptillä Linuxille."
+          ]
+        },
+        {
+          "label": "Hallitut koneet",
+          "values": ["Yksi. Paneeli ja Docker ajetaan samalla isännällä.", "Useita, hajautettujen daemonien kautta."]
+        },
+        {
+          "label": "Pelit",
+          "values": [
+            "Minecraft Java Edition. Bedrock-pelaajat voivat liittyä Geyserin kautta.",
+            "Minecraft ja Steam-pelit kuten Palworld ja Terraria, sisäänrakennetusta kauppapaikasta."
+          ]
+        }
+      ],
+      "note": "Tiedot tarkistettu lokakuussa 2026 kunkin projektin oman dokumentaation perusteella."
+    },
+    "sections": [
+      {
+        "title": "Missä Minecraft Server Manager on vahvempi Minecraftille",
+        "body": "MCSManager ottaa käyttöön monenlaisia pelipalvelimia. Minecraft Server Manager keskittyy yhteen peliin, joten ohjattu asennus, mod-työkalut ja historia puhuvat kaikki Minecraftia.",
+        "points": [
+          "Kaikki itzg Minecraft-kuvan asetukset selitettynä selkeällä suomen kielellä ohjatussa asennuksessa.",
+          "CurseForge, Modrinth, FTB ja GT New Horizons modpackit, kiinnitettynä yhden klikkauksen palautuksella.",
+          "Yksi mod-haku viidestä rekisteristä, tarkistussummilla varmennetuilla latauksilla.",
+          "Kaatumisraportointi epäiltyjen nimillä ja yhden klikkauksen mclo.gs-jakamisella.",
+          "Yhden klikkauksen BlueMap live-kartta, pelaaja-analytiikka ja siirrettävät blueprintit.",
+          "Koko paneeli, tietokanta mukaan lukien, on yksi kansio jonka voit kopioida siirtääksesi."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "console"
+      },
+      {
+        "title": "Kontit oletuksena",
+        "body": "Jokainen Minecraft Server Managerin palvelin on Docker-kontti omilla muisti- ja CPU-rajoituksillaan sekä levynkiintiöllä, jota paneeli valvoo. Java valitaan palvelinkohtaisesti, joten 1.12 modpack ja uusin Paper-versio toimivat rinnakkain ilman Java-asennusten jongleerausta. MCSManager antaa sinun valita konttien ja tavallisten prosessien välillä, mikä on joustavampaa, kun Docker ei ole vaihtoehto.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "title": "Milloin MCSManager on parempi valinta",
+        "body": "MCSManager kehittyy erittäin aktiivisesti ja kattaa enemmän kuin vain Minecraftin.",
+        "points": [
+          "Hallitset palvelimia useissa koneissa yhdestä paneelista.",
+          "Isännöit myös Steam-pelejä kuten Palworld tai Terraria.",
+          "Haluat ajaa palvelimia tavallisina prosesseina, ilman Dockeria.",
+          "Haluat vedä ja pudota -käyttöliittymän ja valmiiksi pakattujen peliasennusten kauppapaikan."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "MCSManager-kysymyksiä",
+      "items": [
+        {
+          "q": "Voinko siirtää Minecraft-palvelimen MCSManagerista?",
+          "a": "Kyllä. Luo palvelin samalla tyypillä ja Minecraft-versiolla Minecraft Server Manageriin, lataa sitten maailma zip-tiedostona Maailmat-sivulla ja asenna se kyseiseen palvelimeen. Modatut palvelimet voidaan aloittaa modpackista, paketin viennistä tai mod-jar-tiedostojen zip-paketista."
+        },
+        {
+          "q": "Tarvitsenko Dockerin Minecraft Server Managerille?",
+          "a": "Kyllä. Docker pyörittää jokaista palvelinta. Linuxissa asennusskripti asentaa Dockerin puolestasi, jos se puuttuu."
+        },
+        {
+          "q": "Voivatko useat ihmiset jakaa yhden Minecraft Server Manager -paneelin?",
+          "a": "Kyllä. On olemassa ylläpitäjän, operaattorin ja katselijan rooleja, palvelinkohtaisia oikeuksia ja valinnainen kaksivaiheinen kirjautuminen jokaiselle tilille."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideMulti", "comparePuffer"],
+    "cta": {
+      "title": "Minecraft, syvällisesti",
+      "body": "Asenna paneeli kolmessa vaiheessa ja luo ensimmäinen palvelimesi ohjatun asennuksen avulla."
+    }
+  },
+  "comparePuffer": {
+    "meta": {
+      "title": "PufferPanel-vaihtoehto Minecraft-palvelimille",
+      "description": "Minecraft Server Manager verrattuna PufferPaneliin: jokainen palvelin omassa Docker-kontissaan ja sisäänrakennetut Minecraft-työkalut, kevyttä monen pelin ja monen solmun paneelia vastaan."
+    },
+    "eyebrow": "PufferPanel-vaihtoehto",
+    "title": "PufferPanel-vaihtoehto, joka on tehty vain Minecraftille",
+    "intro": "PufferPanel on ilmainen, avoimen lähdekoodin paneeli monille peleille yhdellä tai useammalla koneella. Minecraft Server Manager pyörittää vain Minecraftia yhdellä koneella, aina Dockerissa, sisäänrakennetuilla Minecraft-työkaluilla.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Rinnakkain",
+      "columns": ["", "Minecraft Server Manager", "PufferPanel"],
+      "rows": [
+        {
+          "label": "Hinta ja lisenssi",
+          "values": ["Ilmainen, MIT.", "Ilmainen, Apache-2.0."]
+        },
+        {
+          "label": "Kirjoitettu",
+          "values": ["Node.js 24.", "Go."]
+        },
+        {
+          "label": "Mitä asennat",
+          "values": [
+            "Yksi prosessi tai yksi Docker-kontti.",
+            "Yksi palvelu sen apt- tai yum-arkistosta tai sen Docker-image. Toisella koneella oleva solmu pyörittää samaa pakettia."
+          ]
+        },
+        {
+          "label": "Tietokanta",
+          "values": [
+            "Sisäänrakennettu SQLite-tiedosto data-kansion sisällä.",
+            "Ei asetettavaa perusasennukseen. Opas kattaa ulkoisen tietokannan käytön."
+          ]
+        },
+        {
+          "label": "Pelipalvelimet pyörivät",
+          "values": [
+            "Resurssirajoitetut Docker-kontit, aina.",
+            "Prosessit isännällä (sen dokumentaatio sanoo, että tällä ympäristöllä ei ole turvallisuusominaisuuksia) tai Docker-kontit."
+          ]
+        },
+        {
+          "label": "Isäntäjärjestelmät",
+          "values": [
+            "Linux, Windows ja macOS. Image on rakennettu amd64- ja arm64-arkkitehtuureille.",
+            "Linux: paketit Ubuntu 22.04 ja 24.04 sekä Debian 10 ja 11 arkkitehtuureille amd64 ja arm64, Raspbian arm64:lle ja yum-arkisto. 32-bittistä ei tueta."
+          ]
+        },
+        {
+          "label": "Hallitut koneet",
+          "values": [
+            "Yksi. Paneeli ja Docker pyörivät samalla isännällä.",
+            "Useita. Muilla koneilla olevat solmut pyörittävät palvelimia yhdelle paneelille."
+          ]
+        },
+        {
+          "label": "Minecraft",
+          "values": [
+            "Java Edition, kaikki itzg-imagen palvelintyypit ja CurseForge, Modrinth, FTB ja GT New Horizons -paketit. Bedrock-pelaajat liittyvät Geyserin kautta.",
+            "Mallit Java- ja Bedrock-palvelimille, CurseForge- ja FTB-paketit sekä BungeeCord-, Velocity- ja Waterfall-välityspalvelimet."
+          ]
+        }
+      ],
+      "note": "Tiedot tarkistettu marraskuussa 2026 PufferPanelin dokumentaatiota, sen arkistoa ja sen malliarkistoa vastaan."
+    },
+    "sections": [
+      {
+        "title": "Eristys ilman muistettavaa asetusta",
+        "body": "PufferPanel antaa sinun valita ympäristön palvelinkohtaisesti. Vakioympäristö pyörittää palvelinta prosessina isännällä, samalla käyttäjällä kuin paneeli, ja sen oma dokumentaatio sanoo, ettei sillä ole turvallisuusominaisuuksia; Docker-ympäristö eristää sen. Minecraft Server Managerissa on vain jälkimmäinen tyyppi. Jokainen palvelin on oma konttinsa, jolla on muisti- ja CPU-rajoitus, paneelin valvoma levytila ja mitään ei jaeta muiden kanssa paitsi modikirjastoa.",
+        "points": [
+          "Yksi kontti per palvelin, nimetty ja rajoitettu.",
+          "Paneelin valvomat levytilarajoitukset.",
+          "Palvelin, joka kaatuu tai loppuu muistiin, havaitaan ja tallennetaan."
+        ],
+        "pills": ["docker"]
+      },
+      {
+        "title": "Missä Minecraft Server Manager menee syvemmälle Minecraftiin",
+        "body": "Mallipohja käynnistää palvelimen; työ tulee sen jälkeen. Modien etsiminen ja päivittäminen, paketit, jotka kehittyvät, kaatumiset, joiden lukeminen, maailmat, joiden varmuuskopiointi. Ne on rakennettu tähän paneeliin.",
+        "points": [
+          "Modipaketit on kiinnitetty tarkkaan versioon. Päivitykset ja alennukset tekevät ensin varmuuskopion ja palauttavat yhdellä napsautuksella.",
+          "Yksi haku viidestä rekisteristä, suodatettuna palvelimen lataajalle ja Minecraft-versiolle.",
+          "Jokainen lataus tarkistetaan tarkistussummalla ennen kuin se saavuttaa palvelimen.",
+          "Versiotarkistus näyttää, mitkä tulevat Minecraft-versiot jokainen asennettu modi jo tukee.",
+          "Kaatumisraportit havaitaan, jäsennetään ja jaetaan mclo.gs:ään yhdellä napsautuksella.",
+          "Yhden napsautuksen BlueMap-livekartta, paneelin oman kirjautumisen takana."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Milloin PufferPanel on parempi valinta",
+        "body": "PufferPanel on kevyt, ilmainen ja ollut olemassa vuosia. Jos jokin näistä kuvaa sinua, valitse se.",
+        "points": [
+          "Isännöit muita pelejä kuin Minecraftia.",
+          "Pyörität palvelimia useilla koneilla ja haluat yhden paneelin kaikille niille.",
+          "Haluat natiivin Bedrock-palvelimen tai BungeeCord-, Velocity- tai Waterfall-välityspalvelinverkon.",
+          "Et halua pyörittää Docker-ohjelmaa ollenkaan.",
+          "Haluat SFTP-yhteyden palvelintiedostoihin."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "PufferPanel-kysymyksiä",
+      "items": [
+        {
+          "q": "Voinko siirtää Minecraft-palvelimen PufferPanelista Minecraft Server Manageriin?",
+          "a": "Kyllä. Lataa palvelimen maailma-kansio, luo saman tyyppinen ja Minecraft-versioinen palvelin, lataa sitten maailma Maailmat-sivulle ja asenna se kyseiseen palvelimeen. Modatulle palvelimelle, tuo paketti tai zip-tiedosto sen mod-jar-tiedostoista luodessasi sitä."
+        },
+        {
+          "q": "Tarvitseeko Minecraft Server Manager Docker-ohjelmaa?",
+          "a": "Kyllä. Jokainen Minecraft-palvelin pyörii Docker-konttina, mikä on tapa rajoittaa muistia, CPU:ta ja levyä palvelinkohtaisesti. Itse paneeli voi pyöriä Dockerissa tai suoraan Node.js:stä."
+        },
+        {
+          "q": "Voiko se pyörittää palvelimia toisella koneella?",
+          "a": "Ei. Se hallitsee Docker-daemonia koneella, jolla se pyörii. Kahdelle koneelle, pyöritä paneeli kummallakin tai valitse paneeli, jossa on solmuja, kuten PufferPanel."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareCrafty", "compareMcsm"],
+    "cta": {
+      "title": "Jokainen palvelin omassa kontissaan",
+      "body": "Asenna paneeli kolmessa vaiheessa ja luo ensimmäinen palvelimesi ohjatussa toiminnossa."
+    }
   }
 }
