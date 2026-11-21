@@ -92,7 +92,7 @@ test('an untouched value keeps its stored spelling (INIT_MEMORY 512M shown as 51
   assert.equal(env.INIT_MEMORY, '512M');
 });
 
-test("changing only the CPU slider names only the CPU (the save sends nothing else)", () => {
+test('changing only the CPU slider names only the CPU (the save sends nothing else)', () => {
   const before = { heapMb: '4096', containerMemoryMb: '6144', cpus: '2', diskQuotaGb: '0', name: 'Fabric' };
   assert.deepEqual(lib.changedKeys(before, { ...before, cpus: '4' }), ['cpus']);
   assert.deepEqual(lib.changedKeys(before, { ...before }), []);

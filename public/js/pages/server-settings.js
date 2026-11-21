@@ -736,7 +736,9 @@ function resetToRendered(scope) {
           let moved = false;
           el.addEventListener('input', () => (moved = true), { once: true });
           const show = () => {
-            if (!moved) out.textContent = Number(raw) === 0 && el.dataset.zero ? el.dataset.zero : `${raw}${el.dataset.unit || ''}`;
+            if (!moved)
+              out.textContent =
+                Number(raw) === 0 && el.dataset.zero ? el.dataset.zero : `${raw}${el.dataset.unit || ''}`;
           };
           if (document.readyState === 'complete') show();
           else document.addEventListener('DOMContentLoaded', show, { once: true });

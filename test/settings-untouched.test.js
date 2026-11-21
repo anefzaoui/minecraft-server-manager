@@ -96,7 +96,10 @@ async function loadSettingsPage() {
   const fields = {};
   for (const [tag] of page.text.matchAll(/<(?:input|select|textarea)\b[^>]*data-catalog-key="[^"]*"[^>]*>/g)) {
     if (attr(tag, 'data-catalog-scope') !== 'env') continue;
-    fields[attr(tag, 'data-catalog-key')] = { type: attr(tag, 'data-catalog-type'), default: attr(tag, 'data-catalog-default') };
+    fields[attr(tag, 'data-catalog-key')] = {
+      type: attr(tag, 'data-catalog-type'),
+      default: attr(tag, 'data-catalog-default'),
+    };
   }
   const own = {};
   for (const id of ['st-heap', 'st-cmem', 'st-cpu', 'st-quota']) {
@@ -162,7 +165,10 @@ test('a save with nothing changed sends no env, so a default the page shows is n
   const { env, fields } = await loadSettingsPage();
   const before = shown(fields, env);
   // Enum fields with a default render showing it (Game mode: Survival and so on).
-  assert.ok(Object.values(before).some((f) => f.type === 'enum' && f.value), 'an enum shows its default');
+  assert.ok(
+    Object.values(before).some((f) => f.type === 'enum' && f.value),
+    'an enum shows its default'
+  );
   const { changed } = lib.mergeEnvChanges(env, before, structuredClone(before));
   assert.deepEqual(changed, []);
 });
@@ -176,7 +182,7 @@ test('changing only the CPU limit saves the CPU only: memory, env and server.pro
 
   const r = await app.req('PATCH', `/api/servers/${ID}`, { cookie, body: { cpus: 4 } });
   assert.equal(r.status, 200, r.text);
-  assert.deepEqual(row(), { ...start, cpus: 4 });
+  assert.deepEqual({ ...row() }, { ...start, cpus: 4 });
   assert.equal(properties(), PROPERTIES);
 });
 
