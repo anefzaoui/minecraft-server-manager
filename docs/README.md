@@ -7,6 +7,7 @@ A complete, self-hosted control panel for [itzg/docker-minecraft-server](https:/
 ## Start here
 
 - **[Getting started](getting-started.md)** - first-run setup, signing in, and finding your way around.
+- **[Podman deployment](podman.md)**: rootless Podman on Fedora/Aurora, quadlet and podman-compose, SELinux notes.
 - **[The dashboard](dashboard.md)** - the at-a-glance view of every server, players, and activity.
 
 ## Running servers

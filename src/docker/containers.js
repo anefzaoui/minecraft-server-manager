@@ -5,7 +5,7 @@
 // labeled msm.id=<serverId> and named msm-<serverId>.
 
 const path = require('node:path');
-const { getDocker } = require('./connect');
+const connect = require('./connect');
 const { toHostPath } = require('./hostPath');
 const db = require('../db');
 
@@ -16,6 +16,34 @@ const BEDROCK_PORT = '19132';
 
 function containerName(serverId) {
   return `msm-${serverId}`;
+}
+
+/**
+ * One bind-mount string. Volume options are comma-joined (`ro,z`): Podman
+ * splits a bind on colons into path components first, so `host:ctr:ro:Z`
+ * parses as a malformed four-part bind, not "read-only plus relabel".
+ */
+function bindString(hostPath, containerPath, { ro = false, label = '' } = {}) {
+  const opts = [];
+  if (ro) opts.push('ro');
+  if (label) opts.push(label);
+  return `${hostPath}:${containerPath}${opts.length ? `:${opts.join(',')}` : ''}`;
+}
+
+/**
+ * Binds for a server container. Under Podman + SELinux enforcing the /data
+ * bind carries the SHARED `:z` label or the server process cannot write to the
+ * host data dir. Shared, not private `:Z`: the throwaway cleanup/chown
+ * containers mount the same tree, and a private label would relabel it for one
+ * container and lock the others out. Extra binds are admin-chosen host paths
+ * that may back anything else on the host - never relabel them; the admin
+ * applies their own labels when needed (see docs/podman.md).
+ */
+function serverBinds(hostDataDir, extraBinds, podman) {
+  return [
+    bindString(hostDataDir, '/data', { label: podman ? 'z' : '' }),
+    ...(extraBinds || []).map((b) => bindString(b.hostPath, b.containerPath, { ro: b.mode === 'ro' })),
+  ];
 }
 
 /**
@@ -32,7 +60,8 @@ function containerName(serverId) {
  * @param {Array}  [spec.extraBinds]     [{hostPath, containerPath, mode: 'rw'|'ro'}] - RAW host paths, not re-rooted
  */
 async function createContainer(spec) {
-  const docker = getDocker();
+  const docker = connect.getDocker();
+  const podman = await connect.isPodmanDaemon();
   const exposed = {
     [`${GAME_PORT}/tcp`]: {},
     [`${GAME_PORT}/udp`]: {}, // query protocol shares the game port
@@ -60,12 +89,8 @@ async function createContainer(spec) {
   // location), unlike dataDir which is panel-local and must be re-rooted -
   // running them through toHostPath would reject anything outside DATA_DIR,
   // which is the entire point of this escape hatch.
-  const extraBindStrings = (spec.extraBinds || []).map(
-    (b) => `${b.hostPath}:${b.containerPath}${b.mode === 'ro' ? ':ro' : ''}`
-  );
-
   const hostConfig = {
-    Binds: [`${toHostPath(spec.dataDir)}:/data`, ...extraBindStrings],
+    Binds: serverBinds(toHostPath(spec.dataDir), spec.extraBinds, podman),
     PortBindings: bindings,
     Memory: memoryBytes,
     MemorySwap: swapBytes,
@@ -136,7 +161,7 @@ function containerRef(serverId) {
 }
 
 function getContainer(serverId) {
-  return getDocker().getContainer(containerRef(serverId));
+  return connect.getDocker().getContainer(containerRef(serverId));
 }
 
 /**
@@ -151,7 +176,7 @@ function getContainer(serverId) {
  * container that happens to occupy the same name.
  */
 async function removeStaleNameConflict(name, serverId) {
-  const docker = getDocker();
+  const docker = connect.getDocker();
   try {
     const info = await docker.getContainer(name).inspect();
     const labels = (info.Config && info.Config.Labels) || {};
@@ -170,7 +195,7 @@ async function removeStaleNameConflict(name, serverId) {
  */
 async function nameTakenByOther(name, serverId) {
   try {
-    const info = await getDocker().getContainer(name).inspect();
+    const info = await connect.getDocker().getContainer(name).inspect();
     const labels = (info.Config && info.Config.Labels) || {};
     return labels[LABEL] !== serverId;
   } catch (err) {
@@ -320,7 +345,7 @@ async function execRaw(serverId, cmd, { timeoutMs = 15000, wantExitCode = false 
     const chunks = [];
     // Demux the Docker stream framing (8-byte headers).
     const out = { write: (b) => chunks.push(b) };
-    getDocker().modem.demuxStream(stream, out, out);
+    connect.getDocker().modem.demuxStream(stream, out, out);
     let settled = false;
     const finish = (fn, arg) => {
       if (settled) return;
@@ -392,7 +417,8 @@ async function execCaptureChecked(serverId, cmd, opts = {}) {
  * the image's default CMD isn't appended as extra arguments to our entrypoint.
  */
 async function removeDataDir(dir, image) {
-  const docker = getDocker();
+  const docker = connect.getDocker();
+  const podman = await connect.isPodmanDaemon();
   const parent = path.dirname(dir);
   const base = path.basename(dir);
   const container = await docker.createContainer({
@@ -401,7 +427,16 @@ async function removeDataDir(dir, image) {
     Cmd: [],
     User: '0:0',
     Labels: { 'msm.managed': 'true', 'msm.role': 'cleanup' },
-    HostConfig: { Binds: [`${toHostPath(parent)}:/work`], AutoRemove: false, NetworkMode: 'none' },
+    // The PARENT is mounted (not the dir itself) because rm must remove the
+    // directory entry too; a bind of the dir alone would leave a busy mount
+    // point behind. Shared `:z`, never private `:Z`: the parent holds EVERY
+    // server's data dir, and a private relabel would cut running servers off
+    // from their own worlds. The shared label is what server containers use.
+    HostConfig: {
+      Binds: [bindString(toHostPath(parent), '/work', { label: podman ? 'z' : '' })],
+      AutoRemove: false,
+      NetworkMode: 'none',
+    },
   });
   try {
     await container.start();
@@ -417,26 +452,31 @@ async function removeDataDir(dir, image) {
 /**
  * Chown a server's data directory to uid:gid using a throwaway root container.
  * Migrates servers whose files the container wrote under its old default uid so
- * the panel (running as uid:gid) can manage them. Mounts the PARENT and chowns
- * the target by name; `Cmd: []` clears the image's default CMD (see removeDataDir).
+ * the panel (running as uid:gid) can manage them. Binds only THIS server's dir
+ * (chown needs no parent access), so the shared :z label touches one world
+ * instead of the whole servers/ tree; `Cmd: []` clears the image's default CMD
+ * (see removeDataDir).
  */
 async function chownDataDir(dir, image, uid, gid) {
-  const docker = getDocker();
-  const parent = path.dirname(dir);
-  const base = path.basename(dir);
+  const docker = connect.getDocker();
+  const podman = await connect.isPodmanDaemon();
   const container = await docker.createContainer({
     Image: image,
-    Entrypoint: ['chown', '-R', `${uid}:${gid}`, `/work/${base}`],
+    Entrypoint: ['chown', '-R', `${uid}:${gid}`, '/work'],
     Cmd: [],
     User: '0:0',
     Labels: { 'msm.managed': 'true', 'msm.role': 'chown' },
-    HostConfig: { Binds: [`${toHostPath(parent)}:/work`], AutoRemove: false, NetworkMode: 'none' },
+    HostConfig: {
+      Binds: [bindString(toHostPath(dir), '/work', { label: podman ? 'z' : '' })],
+      AutoRemove: false,
+      NetworkMode: 'none',
+    },
   });
   try {
     await container.start();
     const res = await container.wait();
     if (res && res.StatusCode !== 0) {
-      throw new Error(`chown container exited ${res.StatusCode} for ${base}`);
+      throw new Error(`chown container exited ${res.StatusCode} for ${path.basename(dir)}`);
     }
   } finally {
     await container.remove({ force: true }).catch(() => {});
@@ -482,7 +522,7 @@ function hostPortsOf(binding) {
  * @returns {Promise<Set<number>>}
  */
 async function publishedHostPorts({ exceptServerId, deadlineMs = 2500 } = {}) {
-  const docker = getDocker();
+  const docker = connect.getDocker();
   const deadline = Date.now() + deadlineMs;
   // At the deadline, cancel whatever is still in flight rather than leave
   // requests hanging on a wedged daemon; within() stops the waiting.
@@ -528,6 +568,8 @@ async function collectPublishedPorts(docker, { exceptServerId, deadline, abortSi
 
 module.exports = {
   LABEL,
+  bindString,
+  serverBinds,
   publishedHostPorts,
   containerName,
   containerRef,
