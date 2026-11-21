@@ -51,6 +51,8 @@ Opening a server gives you a tabbed workspace:
 
 The start, stop, and restart controls sit in the header above every tab. What you can do on each tab depends on your [permissions on that server](users-and-roles.md#per-server-permissions): for example, the **Files** sub-tab needs the Files permission, and sending console commands needs Console.
 
+The **Configs** tab groups discovered text configuration files by their detected mod when the match is unambiguous. Structured forms currently extract per-option descriptions from Lithium's bundled documentation; other mods' settings remain editable without those descriptions. Use Raw mode when the panel cannot safely render a format as fields.
+
 ![Server overview](images/server-overview.png)
 
 The **World Controls** rail rides along on every tab: the in-game clock, weather, the common gamerules as toggle chips, and "Show all world rules" for the rest.

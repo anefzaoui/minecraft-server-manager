@@ -270,14 +270,16 @@ function createApp() {
     })
   );
   // Explicit body-size cap. 256 kb comfortably covers every JSON/form payload
-  // the panel sends; upload paths use multer, not these. The one exception is
-  // the 2 MB text-file editor - skip the global JSON parser for it so its own
-  // 3 MB parser (routes/files.js) reads the body instead of this one rejecting
-  // it first.
+  // the panel sends; upload paths use multer, not these. Text-file editor routes
+  // use their own parser so the global parser does not reject their larger body.
   app.use(express.urlencoded({ extended: true, limit: '256kb' }));
   const jsonParser = express.json({ limit: '256kb' });
   app.use((req, res, next) => {
-    if (req.method === 'POST' && /\/files\/write$/.test(req.path)) return next();
+    if (
+      (req.method === 'POST' && /\/files\/write$/.test(req.path)) ||
+      (req.method === 'PUT' && /\/configs\/file$/.test(req.path))
+    )
+      return next();
     jsonParser(req, res, next);
   });
 
