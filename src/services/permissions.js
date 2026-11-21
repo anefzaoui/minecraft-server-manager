@@ -100,6 +100,7 @@ const CAPABILITY_INFO = {
     excludes:
       'Kicking, banning, and whitelisting through the Players tab (Players), even though the same could be typed as commands.',
     reach: [
+      'GET /api/servers/:id/console-suggestions',
       'WS /ws/console/:id (send commands)',
       'POST /api/servers/:id/chat',
       'POST /api/servers/:id/world/quick',
