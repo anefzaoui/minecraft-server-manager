@@ -24,7 +24,7 @@ const settings = require('./settings');
 const { withSaveLock } = require('./serverLocks');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
-const { propEnvMap } = require('../config/field-catalog');
+const { propEnvMap, envPropMap } = require('../config/field-catalog');
 
 function rowToServer(row, { parseOverrides = true } = {}) {
   if (!row) return null;
@@ -799,12 +799,28 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
   if (!sets.length) return { server: before, needsRecreate: false };
   if (needsRecreate) sets.push('pending_recreate = 1');
   db.run(`UPDATE servers SET ${sets.join(', ')} WHERE id = ?`, ...params, id);
+  // A setting cleared back to its default: the image writes a property while
+  // its env var is set and never takes one out, so without this the last value
+  // stayed in server.properties for good (#113).
+  let propertiesRemoved = [];
+  if (changes.env) {
+    const cleared = Object.keys(before.env || {}).filter(
+      (key) => !Object.prototype.hasOwnProperty.call(changes.env, key) && envPropMap.has(key)
+    );
+    if (cleared.length) {
+      propertiesRemoved = removeServerProperties(
+        id,
+        cleared.map((key) => envPropMap.get(key)),
+        { actor }
+      );
+    }
+  }
   recordEvent({
     serverId: id,
     actor,
     type: 'config-changed',
     summary: `Configuration changed: ${Object.keys(diff).join(', ')}${needsRecreate ? ' (rebuild required)' : ''}.`,
-    details: { diff, needsRecreate },
+    details: { diff, needsRecreate, ...(propertiesRemoved.length ? { propertiesRemoved } : {}) },
   });
   return { server: getServer(id), needsRecreate };
 }
@@ -1376,6 +1392,36 @@ function writeServerProperties(serverId, content, { actor = 'system' } = {}) {
 }
 
 /**
+ * Take keys out of server.properties, so the server uses its own default for
+ * each (Minecraft writes the default back on its next start). Every other line
+ * is kept byte for byte. Through writeServerProperties like every writer.
+ * @param {string} serverId
+ * @param {string[]} keys
+ * @param {{ actor?: string }} [opts]
+ * @returns {string[]} the keys that were in the file and are gone now
+ */
+function removeServerProperties(serverId, keys, { actor = 'system' } = {}) {
+  let text;
+  try {
+    text = fs.readFileSync(dataPath('servers', serverId, 'server.properties'), 'utf8');
+  } catch {
+    return []; // no file yet: nothing to take out
+  }
+  const drop = new Set(keys);
+  const removed = new Set();
+  const kept = text.split(/(?<=\n)/).filter((line) => {
+    const eq = line.indexOf('=');
+    const key = eq > 0 ? line.slice(0, eq).trim() : '';
+    if (!drop.has(key)) return true;
+    removed.add(key);
+    return false;
+  });
+  if (!removed.size) return [];
+  writeServerProperties(serverId, kept.join(''), { actor });
+  return [...removed];
+}
+
+/**
  * Set ONE server.properties key (replace in place, or append when absent) via
  * writeServerProperties, so single-key writers (World Controls PvP, the
  * difficulty quick action, the whitelist toggle) share the choke point instead
@@ -1443,6 +1489,7 @@ module.exports = {
   parseProperties,
   writeServerProperties,
   setServerProperty,
+  removeServerProperties,
   unlockPropertyEnv,
   unsetEnvKeys,
 };

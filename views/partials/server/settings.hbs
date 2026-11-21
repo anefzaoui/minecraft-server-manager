@@ -4,12 +4,12 @@
     <div class="space-y-4">
       <div>
         <label class="label" for="st-name">Display name</label>
-        <input class="input" id="st-name" value="{{server.name}}">
+        <input class="input" id="st-name" value="{{server.name}}" autocomplete="off">
         <p class="help">Rename it freely. Folders, container names, and history all stay keyed to the internal ID.</p>
       </div>
       <div>
         <label class="label" for="st-desc">Description</label>
-        <textarea class="input" id="st-desc" rows="3">{{server.description}}</textarea>
+        <textarea class="input" id="st-desc" rows="3" autocomplete="off">{{server.description}}</textarea>
         <p class="help">Markdown supported; shown on the Overview tab.</p>
       </div>
       <div>
@@ -57,21 +57,21 @@
         <label class="label" for="st-tag-input">Tags</label>
         {{! Chips are rendered by server-settings.js from data-settings-tags - no server copy, or they double up. }}
         <div class="flex flex-wrap items-center gap-1.5" id="st-tags">
-          <input class="input w-28" id="st-tag-input" placeholder="add tag…">
+          <input class="input w-28" id="st-tag-input" placeholder="add tag…" autocomplete="off">
         </div>
       </div>
       <div>
         <label class="label" for="st-notes">Private notes <span class="badge ml-1">admin only</span></label>
-        <textarea class="input font-mono text-xs" id="st-notes" rows="2" placeholder="Scratchpad, never shown to viewers">{{server.notes}}</textarea>
+        <textarea class="input font-mono text-xs" id="st-notes" rows="2" autocomplete="off" placeholder="Scratchpad, never shown to viewers">{{server.notes}}</textarea>
       </div>
       <div class="space-y-2.5 border-t border-line pt-3">
         <label class="flex items-center justify-between gap-3 text-sm">
           <span>Start on panel boot</span>
-          <span class="msm-toggle"><input type="checkbox" id="st-autostart" {{#if server.autoStart}}checked{{/if}}><span></span></span>
+          <span class="msm-toggle"><input type="checkbox" id="st-autostart" autocomplete="off" {{#if server.autoStart}}checked{{/if}}><span></span></span>
         </label>
         <label class="flex items-center justify-between gap-3 text-sm">
           <span>Auto-restart on crash <span class="block text-xs text-ink-faint">Waits longer between each try, and gives up after 3 rapid crashes.</span></span>
-          <span class="msm-toggle"><input type="checkbox" id="st-autorestart" {{#if server.autoRestart}}checked{{/if}}><span></span></span>
+          <span class="msm-toggle"><input type="checkbox" id="st-autorestart" autocomplete="off" {{#if server.autoRestart}}checked{{/if}}><span></span></span>
         </label>
       </div>
     </div>
@@ -84,7 +84,7 @@
         <div>
           <label class="label" for="st-heap">Java heap</label>
           <div class="flex items-center gap-3">
-            <input type="range" min="1024" max="16384" step="512" value="{{server.resources.heapMb}}" id="st-heap" class="msm-range flex-1" data-out="out-heap" data-unit=" MB">
+            <input type="range" min="1024" max="16384" step="512" value="{{server.resources.heapMb}}" id="st-heap" autocomplete="off" class="msm-range flex-1" data-out="out-heap" data-unit=" MB">
             <span class="w-20 text-right font-mono text-sm" id="out-heap">{{server.resources.heapMb}} MB</span>
           </div>
           <p class="help">The amount of RAM Minecraft itself may use.</p>
@@ -92,7 +92,7 @@
         <div>
           <label class="label" for="st-initheap">Initial heap <span class="font-normal text-ink-faint">(optional)</span></label>
           <div class="flex items-center gap-3">
-            <input type="number" min="512" step="512" inputmode="numeric" class="input w-32 font-mono" id="st-initheap" value="{{server.resources.initHeapMb}}" placeholder="Whole heap">
+            <input type="number" min="512" step="512" inputmode="numeric" class="input w-32 font-mono" autocomplete="off" id="st-initheap" value="{{server.resources.initHeapMb}}" placeholder="Whole heap">
             <span class="text-sm text-ink-faint">MB</span>
           </div>
           <p class="help">How much of the heap Java takes when the server starts. Leave it empty and Java takes the whole heap up front, so memory use sits near the full heap even when nobody is playing. A smaller value, like 512 MB, lets it grow as the world needs it.</p>
@@ -100,7 +100,7 @@
         <div>
           <label class="label" for="st-cmem">Container memory limit</label>
           <div class="flex items-center gap-3">
-            <input type="range" min="1024" max="20480" step="512" value="{{server.resources.containerMemoryMb}}" id="st-cmem" class="msm-range msm-range-alt flex-1" data-out="out-cmem" data-unit=" MB">
+            <input type="range" min="1024" max="20480" step="512" value="{{server.resources.containerMemoryMb}}" id="st-cmem" autocomplete="off" class="msm-range msm-range-alt flex-1" data-out="out-cmem" data-unit=" MB">
             <span class="w-20 text-right font-mono text-sm" id="out-cmem">{{server.resources.containerMemoryMb}} MB</span>
           </div>
           <p class="help">The hard limit Docker enforces. Keep it 25% to 50% above the Java heap: Java needs extra room beyond the heap, and if the server reaches this limit it is stopped for running out of memory.</p>
@@ -109,7 +109,7 @@
         <div>
           <label class="label" for="st-cpu">CPU limit</label>
           <div class="flex items-center gap-3">
-            <input type="range" min="0" max="16" step="0.5" value="{{server.resources.cpus}}" id="st-cpu" class="msm-range msm-range-alt flex-1" data-out="out-cpu" data-unit=" cores" data-zero="∞">
+            <input type="range" min="0" max="16" step="0.5" value="{{server.resources.cpus}}" id="st-cpu" autocomplete="off" class="msm-range msm-range-alt flex-1" data-out="out-cpu" data-unit=" cores" data-zero="∞">
             <span class="w-20 text-right font-mono text-sm" id="out-cpu">{{#if server.resources.cpus}}{{server.resources.cpus}} cores{{else}}∞{{/if}}</span>
           </div>
           <p class="help">0 means unlimited. When capped, the server slows down instead of being stopped.</p>
@@ -117,7 +117,7 @@
         <div>
           <label class="label" for="st-quota">Disk quota <span class="badge ml-1">panel-enforced</span></label>
           <div class="flex items-center gap-3">
-            <input type="range" min="0" max="200" step="5" value="{{quotaGb}}" id="st-quota" class="msm-range flex-1" data-out="out-quota" data-unit=" GB" data-zero="off">
+            <input type="range" min="0" max="200" step="5" value="{{quotaGb}}" id="st-quota" autocomplete="off" class="msm-range flex-1" data-out="out-quota" data-unit=" GB" data-zero="off">
             <span class="w-20 text-right font-mono text-sm" id="out-quota">{{quotaGb}} GB</span>
           </div>
           <p class="help">The panel enforces this quota itself, since Docker can't limit disk use for this kind of storage. Over quota, actions that would grow the disk, like installing mods, adding worlds, or uploading files, are blocked. Backups don't count toward it.</p>
@@ -166,9 +166,9 @@
     <div class="card p-4">
       <h3 class="mb-3 font-semibold">Update Policy</h3>
       <div class="space-y-2 text-sm">
-        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="manual" class="msm-radio" {{#if (eq server.updatePolicy 'manual')}}checked{{/if}}> Manual Only <span class="text-xs text-ink-faint">(never checks or offers updates, and no update badges for this server; pick Notify Me to update by hand)</span></label>
-        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="notify" class="msm-radio" {{#if (eq server.updatePolicy 'notify')}}checked{{/if}}> Notify Me <span class="text-xs text-ink-faint">(show a badge when updates exist; you apply them)</span></label>
-        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="auto" class="msm-radio" {{#if (eq server.updatePolicy 'auto')}}checked{{/if}}> Auto-Update <span class="text-xs text-ink-faint">(applies pack updates after the daily check: pre-update backup, health check, automatic rollback on failure, but never across Minecraft versions)</span></label>
+        <label class="flex items-center gap-2.5"><input type="radio" name="up" autocomplete="off" value="manual" class="msm-radio" {{#if (eq server.updatePolicy 'manual')}}checked{{/if}}> Manual Only <span class="text-xs text-ink-faint">(never checks or offers updates, and no update badges for this server; pick Notify Me to update by hand)</span></label>
+        <label class="flex items-center gap-2.5"><input type="radio" name="up" autocomplete="off" value="notify" class="msm-radio" {{#if (eq server.updatePolicy 'notify')}}checked{{/if}}> Notify Me <span class="text-xs text-ink-faint">(show a badge when updates exist; you apply them)</span></label>
+        <label class="flex items-center gap-2.5"><input type="radio" name="up" autocomplete="off" value="auto" class="msm-radio" {{#if (eq server.updatePolicy 'auto')}}checked{{/if}}> Auto-Update <span class="text-xs text-ink-faint">(applies pack updates after the daily check: pre-update backup, health check, automatic rollback on failure, but never across Minecraft versions)</span></label>
       </div>
     </div>
 
@@ -181,11 +181,11 @@
         <div class="grid gap-4 sm:grid-cols-2">
           <div>
             <label class="label" for="st-docker-name">Container name</label>
-            <input class="input font-mono" id="st-docker-name" value="{{server.containerName}}" placeholder="msm-{{server.id}}" autocomplete="off">
+            <input class="input font-mono" id="st-docker-name" autocomplete="off" value="{{server.containerName}}" placeholder="msm-{{server.id}}" autocomplete="off">
           </div>
           <div>
             <label class="label" for="st-docker-network">Docker network</label>
-            <select class="input" id="st-docker-network" data-label="Docker network">
+            <select class="input" id="st-docker-network" autocomplete="off" data-label="Docker network">
               <option value="">Default (bridge)</option>
             </select>
           </div>

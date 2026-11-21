@@ -36,6 +36,8 @@ request for it is reviewed, verified on a real panel and merged.
 - ✅ Tests that don't depend on luck: busy-retry cases hold on a slow runner, no OS port luck, no real data folder, no
   live Docker daemon ([#99](https://github.com/anefzaoui/minecraft-server-manager/pull/99),
   [#101](https://github.com/anefzaoui/minecraft-server-manager/pull/101))
+- ✅ Saving a server's settings changes only what was changed, and an emptied setting goes back to the server's default
+  in `server.properties` ([#113](https://github.com/anefzaoui/minecraft-server-manager/issues/113))
 
 - ✅ Website: screenshots open in a lightbox, [Vitrine](https://github.com/anefzaoui/vitrine) (the home page, the screenshots page, landing pages and every docs picture):
   they fly from their place and back, go through their group by keys and swipes, zoom and pan, close by Back too, in

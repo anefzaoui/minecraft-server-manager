@@ -10,11 +10,21 @@ import { initDockerSettings } from '../lib/dockerSettings.js';
 import { wireCatalogConflicts } from '../lib/catalogConflicts.js';
 import { escapeHtml } from '../lib/format.js';
 import { changePackVersion } from '../lib/packVersion.js';
+import { renderedValue, mergeEnvChanges, changedKeys, fitRange } from '../lib/settingsChanges.js';
 
 const root = document.querySelector('[data-settings-server]');
 if (root) init(root.dataset.settingsServer);
 
 function init(serverId) {
+  // Browsers put form values back when a page reloads (Firefox even after the
+  // location.reload() every save here ends with), matching each control by its
+  // position on the page. The controls here move between loads (the header's
+  // Start, Stop and Apply Changes buttons come and go), so a value could land
+  // in another setting: a CPU count in a memory slider, the view distance in
+  // the world border (#113). So each control starts from what the server
+  // rendered (and the markup asks the browser not to keep them: autocomplete="off").
+  resetToRendered(root);
+
   let icon = root.dataset.settingsIcon;
   let accent = root.dataset.settingsAccent;
   const tags = new Set(JSON.parse(root.dataset.settingsTags || '[]'));
@@ -69,19 +79,26 @@ function init(serverId) {
   // back to the catalog default) - the wizard never needs this since it
   // starts blank, but here each field represents something really configured.
   const advPanel = document.getElementById('st-advanced');
-  if (advPanel) {
+  const catalogControls = advPanel
+    ? [...advPanel.querySelectorAll('[data-catalog-key][data-catalog-scope="env"]')]
+    : [];
+  {
     const currentEnv = parseSettingsEnv();
-    advPanel.querySelectorAll('[data-catalog-key][data-catalog-scope="env"]').forEach((el) => {
-      const key = el.dataset.catalogKey;
-      const has = Object.prototype.hasOwnProperty.call(currentEnv, key);
-      if (el.dataset.catalogType === 'boolean') {
-        el.checked = has ? currentEnv[key] === 'true' : el.dataset.catalogDefault === 'true';
-      } else if (has) {
-        el.value = currentEnv[key];
-      }
-    });
-    wireCatalogConflicts(advPanel, { toast });
+    for (const el of catalogControls) {
+      const value = renderedValue(
+        { type: el.dataset.catalogType, default: el.dataset.catalogDefault },
+        currentEnv,
+        el.dataset.catalogKey
+      );
+      if (el.dataset.catalogType === 'boolean') el.checked = value === 'true';
+      else if (el.dataset.catalogType !== 'enum' || value) el.value = value;
+    }
   }
+  // What every field read when the page loaded: Save sends only what differs
+  // from it. Taken before the conflict check below, so a pair it turns off on
+  // load (and says so) is saved like any other change.
+  const initialEnvFields = readEnvFields();
+  if (advPanel) wireCatalogConflicts(advPanel, { toast });
 
   function parseSettingsEnv() {
     try {
@@ -89,6 +106,26 @@ function init(serverId) {
     } catch {
       return {};
     }
+  }
+
+  // MOTD, the Initial heap and every advanced field, as the env values they
+  // stand for. An emptied field reads as '' (its key is removed on save).
+  function readEnvFields() {
+    const out = {};
+    if (motdInput) out.MOTD = { type: 'text', value: toSectionCodes(motdInput.value) };
+    for (const el of catalogControls) {
+      out[el.dataset.catalogKey] =
+        el.dataset.catalogType === 'boolean'
+          ? { type: 'boolean', value: el.checked ? 'true' : 'false' }
+          : { type: el.dataset.catalogType, value: el.value.trim() };
+    }
+    // The Resources card's Initial heap is INIT_MEMORY in MB.
+    const initHeap = document.getElementById('st-initheap');
+    if (initHeap) {
+      const v = initHeap.value.trim();
+      out.INIT_MEMORY = { type: 'number', value: v ? String(Number(v)) : '' };
+    }
+    return out;
   }
 
   // Icon + accent pickers - selection lives in aria-pressed; .swatch CSS
@@ -174,6 +211,30 @@ function init(serverId) {
     }
   });
   renderTags();
+
+  // The tab's own fields as the page loaded them; Save sends only the ones
+  // that differ (the env fields have initialEnvFields above).
+  const initialFields = readFields();
+  function readFields() {
+    const value = (id) => document.getElementById(id)?.value ?? '';
+    const checked = (id) => String(document.getElementById(id)?.checked ?? '');
+    return {
+      name: value('st-name').trim(),
+      description: value('st-desc'),
+      notes: value('st-notes'),
+      icon: icon || '',
+      accent: accent || '',
+      tags: JSON.stringify([...tags]),
+      heapMb: value('st-heap'),
+      containerMemoryMb: value('st-cmem'),
+      cpus: value('st-cpu').trim(),
+      diskQuotaGb: value('st-quota').trim(),
+      updatePolicy: root.querySelector('input[name="up"]:checked')?.value || '',
+      autoStart: checked('st-autostart'),
+      autoRestart: checked('st-autorestart'),
+      quotaStrict: checked('st-quota-strict'),
+    };
+  }
 
   // ------------------------------------------------- live headroom feedback
   const heapEl = document.getElementById('st-heap');
@@ -557,27 +618,31 @@ function init(serverId) {
 
   document.getElementById('st-save')?.addEventListener('click', async (e) => {
     const saveBtn = e.currentTarget; // capture before await - currentTarget is null afterwards
-    const heapMb = Number(document.getElementById('st-heap').value);
-    // Blank cpus/disk-quota = leave the current value untouched, not a hard 0
-    // (which for a quota means "off"). An explicit "0" still round-trips.
-    const cpuRaw = document.getElementById('st-cpu').value.trim();
-    const quotaRaw = document.getElementById('st-quota').value.trim();
-    const body = {
-      name: document.getElementById('st-name').value.trim(),
-      description: document.getElementById('st-desc').value,
-      notes: document.getElementById('st-notes').value,
-      icon,
-      accent,
-      tags: [...tags],
-      heapMb,
-      containerMemoryMb: Number(document.getElementById('st-cmem').value),
-      cpus: cpuRaw === '' ? undefined : Number(cpuRaw),
-      diskQuotaGb: quotaRaw === '' ? undefined : Number(quotaRaw),
-      updatePolicy: root.querySelector('input[name="up"]:checked')?.value || 'manual',
-      autoStart: document.getElementById('st-autostart')?.checked ?? false,
-      autoRestart: document.getElementById('st-autorestart')?.checked ?? true,
-      quotaStrict: document.getElementById('st-quota-strict')?.checked ?? false,
-    };
+    // Only what changed since the page loaded is sent: an untouched control
+    // never rewrites its setting, whatever it shows (#113).
+    const now = readFields();
+    const changed = new Set(changedKeys(initialFields, now));
+    /** @type {Record<string, unknown>} */
+    const body = {};
+    for (const key of ['name', 'description', 'notes', 'icon', 'accent', 'updatePolicy']) {
+      if (changed.has(key)) body[key] = now[key];
+    }
+    if (changed.has('tags')) body.tags = [...tags];
+    for (const key of ['autoStart', 'autoRestart', 'quotaStrict']) {
+      if (changed.has(key)) body[key] = now[key] === 'true';
+    }
+    // The heap and the container limit go together, since the API checks one
+    // against the other; the one left alone goes as the server has it, not as
+    // its slider rounded it to a step.
+    if (changed.has('heapMb') || changed.has('containerMemoryMb')) {
+      body.heapMb = Number(changed.has('heapMb') ? now.heapMb : renderedAttr('st-heap'));
+      body.containerMemoryMb = Number(
+        changed.has('containerMemoryMb') ? now.containerMemoryMb : renderedAttr('st-cmem')
+      );
+    }
+    // An explicit "0" is a real value (no CPU limit, quota off).
+    if (changed.has('cpus') && now.cpus !== '') body.cpus = Number(now.cpus);
+    if (changed.has('diskQuotaGb') && now.diskQuotaGb !== '') body.diskQuotaGb = Number(now.diskQuotaGb);
     // Docker settings: only send a field that actually changed from what the
     // server rendered. Sending all 4 unconditionally would run the (Docker-
     // socket-hitting) validateOverrides check on every unrelated save - e.g. a
@@ -596,60 +661,13 @@ function init(serverId) {
         body.extraBinds = nowDocker.extraBinds;
       }
     }
-    // MOTD + every advanced-settings field live in env: merge all changes over
-    // the server's current env (from the data island) in one pass so nothing
-    // else is lost, and only send env at all if something actually changed.
-    // Clearing a field back to empty removes the override (reverts to the
-    // image default) rather than sending an empty string.
+    // MOTD, the Initial heap and every advanced field live in env: the changed
+    // ones are merged over the server's current env (from the data island), and
+    // env is sent only when one of them changed. An emptied field removes its
+    // key, which puts that setting back to its default.
     {
-      const current = parseSettingsEnv();
-      const merged = { ...current };
-      let envChanged = false;
-
-      if (motdInput) {
-        const newMotd = toSectionCodes(motdInput.value);
-        if ((current.MOTD || '') !== newMotd) {
-          merged.MOTD = newMotd;
-          envChanged = true;
-        }
-      }
-
-      if (advPanel) {
-        advPanel.querySelectorAll('[data-catalog-key][data-catalog-scope="env"]').forEach((el) => {
-          const key = el.dataset.catalogKey;
-          const had = Object.prototype.hasOwnProperty.call(current, key);
-          if (el.dataset.catalogType === 'boolean') {
-            const value = el.checked ? 'true' : 'false';
-            const before = had ? current[key] : el.dataset.catalogDefault === 'true' ? 'true' : 'false';
-            if (value !== before) {
-              merged[key] = value;
-              envChanged = true;
-            }
-          } else {
-            const value = el.value.trim();
-            if (!value) {
-              if (had) {
-                delete merged[key];
-                envChanged = true;
-              }
-            } else if (value !== (had ? current[key] : '')) {
-              merged[key] = value;
-              envChanged = true;
-            }
-          }
-        });
-      }
-
-      // The Resources card's Initial heap is INIT_MEMORY in MB. Compared with
-      // what the page rendered, so an untouched field never rewrites the env.
-      const initHeap = document.getElementById('st-initheap');
-      if (initHeap && initHeap.value.trim() !== initHeap.defaultValue.trim()) {
-        if (initHeap.value.trim()) merged.INIT_MEMORY = String(Number(initHeap.value));
-        else delete merged.INIT_MEMORY;
-        envChanged = true;
-      }
-
-      if (envChanged) body.env = merged;
+      const { env, changed: envChanged } = mergeEnvChanges(parseSettingsEnv(), initialEnvFields, readEnvFields());
+      if (envChanged.length) body.env = env;
     }
     const restore = setBusy(saveBtn, 'Saving…');
     try {
@@ -676,6 +694,58 @@ function init(serverId) {
       restore();
     }
   });
+}
+
+/** The value attribute a control was rendered with (a slider's own value is rounded to its step). */
+function renderedAttr(id) {
+  return document.getElementById(id)?.getAttribute('value') ?? '';
+}
+
+/**
+ * Every control in `scope` back to what the server rendered, whatever the
+ * browser restored into it (see init). A slider whose setting lies outside
+ * its usual range gets a range that holds it, and its readout shows the exact
+ * setting until it is moved.
+ * @param {Element} scope
+ */
+function resetToRendered(scope) {
+  for (const el of scope.querySelectorAll('input, select, textarea')) {
+    if (el instanceof HTMLSelectElement) {
+      const i = [...el.options].findIndex((o) => o.defaultSelected);
+      el.selectedIndex = i >= 0 ? i : 0;
+    } else if (el instanceof HTMLTextAreaElement) {
+      el.value = el.defaultValue;
+    } else if (el instanceof HTMLInputElement) {
+      if (el.type === 'file') continue;
+      if (el.type === 'checkbox' || el.type === 'radio') {
+        el.checked = el.defaultChecked;
+      } else if (el.type === 'range') {
+        const raw = (el.getAttribute('value') ?? '').trim();
+        if (raw === '') {
+          el.value = el.defaultValue;
+          continue;
+        }
+        const { min, max } = fitRange({ min: Number(el.min), max: Number(el.max) }, Number(raw));
+        el.min = String(min);
+        el.max = String(max);
+        el.value = raw;
+        // app.js writes every readout from its slider once it runs (after this
+        // page's script), so this one is written once the page has loaded.
+        const out = el.dataset.out ? document.getElementById(el.dataset.out) : null;
+        if (out) {
+          let moved = false;
+          el.addEventListener('input', () => (moved = true), { once: true });
+          const show = () => {
+            if (!moved) out.textContent = Number(raw) === 0 && el.dataset.zero ? el.dataset.zero : `${raw}${el.dataset.unit || ''}`;
+          };
+          if (document.readyState === 'complete') show();
+          else document.addEventListener('DOMContentLoaded', show, { once: true });
+        }
+      } else {
+        el.value = el.defaultValue;
+      }
+    }
+  }
 }
 
 // Unpinned-pack warning: Pick a Version… pins the pack through the shared picker.
