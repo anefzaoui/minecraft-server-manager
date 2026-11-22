@@ -89,6 +89,9 @@ const SETTINGS_EXCLUDED_ENV_KEYS = new Set(['DIFFICULTY', 'PVP', 'MOTD']);
 // map anywhere.
 const propEnvMap = new Map(fields.filter((f) => f.prop).map((f) => [f.prop, f.key]));
 
+// The other way round: env var name → the server.properties key it sets.
+const envPropMap = new Map(fields.filter((f) => f.prop && f.scope === 'env').map((f) => [f.key, f.prop]));
+
 module.exports = {
   SECTIONS,
   fields,
@@ -96,4 +99,5 @@ module.exports = {
   getField,
   SETTINGS_EXCLUDED_ENV_KEYS,
   propEnvMap,
+  envPropMap,
 };

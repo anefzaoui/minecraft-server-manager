@@ -5,6 +5,24 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [Unreleased]
+
+### Fixed
+
+- **Saving a server's settings changes only what you changed** (#113). The Configuration tab
+  reloads after every save, and the browser put the values it remembered back into the fields by
+  their place on the page. That place moves whenever the header's buttons change (Start becomes
+  Stop and Restart, Apply Changes appears), so a value could land in another setting: the CPU
+  count in a memory slider, the CPU slider at its maximum, or the view distance in **World border
+  radius**, which then went into `server.properties` as `max-world-size` and put the world border
+  right at spawn. Every field now starts from what the server has, and a save sends only the
+  fields you edited: a slider you didn't move, a list showing its default, or a value above a
+  slider's usual range is no longer written back. Thanks @Emperor-Koala for the report.
+- **Emptying a setting puts it back to the server's default** (#113). The server image writes a
+  property while its setting is set but never takes one out, so a field emptied back to "Default"
+  left its last value in `server.properties`. Saving now removes that line, and the server uses its
+  default from its next start.
+
 ## [0.14.1] - 2026-09-21
 
 Minecraft version updates now have to be earned: a newer version is only offered when every mod on
