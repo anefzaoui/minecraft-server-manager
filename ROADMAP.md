@@ -12,41 +12,17 @@ request for it is reviewed, verified on a real panel and merged.
 
 ✅ done · 🔄 being worked on · 📋 asked for · 🔍 looking into it
 
-## Done since 0.14.1 (not released yet)
-
-- ✅ Change the mod loader version (Forge, NeoForge, Fabric, Quilt) on an existing server, from Mods → Versions
-  ([#59](https://github.com/anefzaoui/minecraft-server-manager/pull/59))
-- ✅ Change a server's game port after it was created, or let the panel pick the next free one
-  ([#67](https://github.com/anefzaoui/minecraft-server-manager/pull/67))
-- ✅ Backup retention in the panel: how many backups of each kind a server keeps, with age and size limits, for every
-  server or one ([#64](https://github.com/anefzaoui/minecraft-server-manager/issues/64),
-  [#68](https://github.com/anefzaoui/minecraft-server-manager/pull/68))
-- ✅ Pick or downgrade the modpack version of an existing server
-  ([#69](https://github.com/anefzaoui/minecraft-server-manager/issues/69),
-  [#70](https://github.com/anefzaoui/minecraft-server-manager/pull/70))
-- ✅ Outbound requests connect to the address they checked
-  ([#71](https://github.com/anefzaoui/minecraft-server-manager/pull/71))
-- ✅ Restoring a backup and installing a world are safe and atomic: a failure part way leaves the old world, not a
-  half-written one ([#72](https://github.com/anefzaoui/minecraft-server-manager/pull/72))
-- ✅ History summaries punctuated and checked by lint; the upgrade tests no longer create containers
-  ([#60](https://github.com/anefzaoui/minecraft-server-manager/pull/60))
-- ✅ Verification written down: the verify skill and the [REVIEW.md](REVIEW.md) checklist
-  ([#98](https://github.com/anefzaoui/minecraft-server-manager/pull/98)), and an
-  [AI declaration](AI-DECLARATION.md) ([#96](https://github.com/anefzaoui/minecraft-server-manager/pull/96))
-- ✅ Tests that don't depend on luck: busy-retry cases hold on a slow runner, no OS port luck, no real data folder, no
-  live Docker daemon ([#99](https://github.com/anefzaoui/minecraft-server-manager/pull/99),
-  [#101](https://github.com/anefzaoui/minecraft-server-manager/pull/101))
-- ✅ Saving a server's settings changes only what was changed, and an emptied setting goes back to the server's default
-  in `server.properties` ([#113](https://github.com/anefzaoui/minecraft-server-manager/issues/113))
-
-- ✅ Website: screenshots open in a lightbox, [Vitrine](https://github.com/anefzaoui/vitrine) (the home page, the screenshots page, landing pages and every docs picture):
-  they fly from their place and back, go through their group by keys and swipes, zoom and pan, close by Back too, in
-  every language, right to left, day and night
-
 ## Released
 
 The full notes for each release are in [CHANGELOG.md](CHANGELOG.md).
 
+- ✅ **0.15.0**: change a server's game port, mod loader build and modpack version after it was created; backup
+  retention in the panel; mod config editing; console autocomplete; a settings save changes only what was changed; the
+  one-line installer works ([#64](https://github.com/anefzaoui/minecraft-server-manager/issues/64),
+  [#69](https://github.com/anefzaoui/minecraft-server-manager/issues/69),
+  [#92](https://github.com/anefzaoui/minecraft-server-manager/issues/92),
+  [#93](https://github.com/anefzaoui/minecraft-server-manager/issues/93),
+  [#113](https://github.com/anefzaoui/minecraft-server-manager/issues/113))
 - ✅ **0.14.1**: a newer Minecraft version is offered only when every mod has a build for it; the Versions tab; undo a
   mod update ([#52](https://github.com/anefzaoui/minecraft-server-manager/issues/52))
 - ✅ **0.14.0**: per-server permissions for operators and viewers, down to hiding a server entirely
@@ -95,10 +71,6 @@ The full notes for each release are in [CHANGELOG.md](CHANGELOG.md).
 Contributions waiting for review. Each is reviewed line by line and run on a real panel before it can merge.
 
 - 🔄 Rootless Podman support ([#97](https://github.com/anefzaoui/minecraft-server-manager/pull/97))
-- 🔄 Mod config editing ([#95](https://github.com/anefzaoui/minecraft-server-manager/pull/95), for
-  [#92](https://github.com/anefzaoui/minecraft-server-manager/issues/92))
-- 🔄 Console command autocomplete and help ([#94](https://github.com/anefzaoui/minecraft-server-manager/pull/94), for
-  [#93](https://github.com/anefzaoui/minecraft-server-manager/issues/93))
 - 🔄 Interface translations ([#66](https://github.com/anefzaoui/minecraft-server-manager/pull/66))
 - 🔄 Native Bedrock runtime ([#65](https://github.com/anefzaoui/minecraft-server-manager/pull/65), see
   [#19](https://github.com/anefzaoui/minecraft-server-manager/issues/19))
@@ -115,8 +87,6 @@ Contributions waiting for review. Each is reviewed line by line and run on a rea
   ([#90](https://github.com/anefzaoui/minecraft-server-manager/issues/90)); per-kind retention landed in #68
 - 📋 A crash report list that stays short: a table, old reports out of the way
   ([#91](https://github.com/anefzaoui/minecraft-server-manager/issues/91))
-- 📋 Mod config support ([#92](https://github.com/anefzaoui/minecraft-server-manager/issues/92))
-- 📋 Console autocomplete ([#93](https://github.com/anefzaoui/minecraft-server-manager/issues/93))
 
 ## Looking into it
 
