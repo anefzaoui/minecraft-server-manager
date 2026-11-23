@@ -32,6 +32,7 @@ test('a Modrinth version change keeps disabled pack mods and the other tuning', 
     MODRINTH_EXCLUDE_FILES: 'sodium\nlithium',
     MODRINTH_FORCE_INCLUDE_FILES: 'iris',
     MODRINTH_FORCE_SYNCHRONIZE: 'true',
+    MODRINTH_OVERRIDES_EXCLUSIONS: 'config/example.toml',
     MODRINTH_PROJECTS: 'chunky',
     VIEW_DISTANCE: '10',
   });
@@ -42,6 +43,7 @@ test('a Modrinth version change keeps disabled pack mods and the other tuning', 
   assert.equal(env.MODRINTH_EXCLUDE_FILES, 'sodium\nlithium');
   assert.equal(env.MODRINTH_FORCE_INCLUDE_FILES, 'iris');
   assert.equal(env.MODRINTH_FORCE_SYNCHRONIZE, 'true');
+  assert.equal(env.MODRINTH_OVERRIDES_EXCLUSIONS, 'config/example.toml');
   assert.equal(env.MODRINTH_PROJECTS, 'chunky');
   assert.equal(env.VIEW_DISTANCE, '10');
 });
@@ -49,12 +51,18 @@ test('a Modrinth version change keeps disabled pack mods and the other tuning', 
 test('switching to a different Modrinth pack drops the old pack tuning', async () => {
   const id = app.seedServer('srv_tunemr2');
   await packs.applyPack(id, modrinth('adrenaserver', 'v1'), { actor: 'test', force: true });
-  setEnv(id, { ...envOf(id), MODRINTH_EXCLUDE_FILES: 'sodium', VIEW_DISTANCE: '10' });
+  setEnv(id, {
+    ...envOf(id),
+    MODRINTH_EXCLUDE_FILES: 'sodium',
+    MODRINTH_OVERRIDES_EXCLUSIONS: 'config/example.toml',
+    VIEW_DISTANCE: '10',
+  });
 
   await packs.applyPack(id, modrinth('fabulously-optimized', 'f1'), { actor: 'test', force: true });
   const env = envOf(id);
   assert.equal(env.MODRINTH_MODPACK, 'fabulously-optimized');
   assert.equal(env.MODRINTH_EXCLUDE_FILES, undefined);
+  assert.equal(env.MODRINTH_OVERRIDES_EXCLUSIONS, undefined);
   assert.equal(env.VIEW_DISTANCE, '10');
 });
 

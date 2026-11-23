@@ -8,8 +8,10 @@ const fsp = require('node:fs/promises');
 const path = require('node:path');
 const app = require('./helpers/app');
 const config = require('../src/config');
+const db = require('../src/db');
 const mods = require('../src/services/mods');
 const modConfigs = require('../src/services/modConfigs');
+const servers = require('../src/services/servers');
 const { jarBuffer } = require('./helpers/zipfix');
 
 const SID = 'srv_mod_configs';
@@ -161,6 +163,28 @@ test('config API reads and writes only discovered text configs', async () => {
   } finally {
     mods.listContent = fixtureListContent;
   }
+});
+
+test('saving a config on a Modrinth pack excludes it from future pack overrides', async () => {
+  db.run(
+    'UPDATE servers SET type = ?, env_json = ? WHERE id = ?',
+    'MODRINTH',
+    JSON.stringify({ MODRINTH_MODPACK: 'example-pack', MODRINTH_VERSION: 'v1' }),
+    SID
+  );
+  await modConfigs.list(SID);
+
+  const first = await modConfigs.write(SID, configFile, '[general]\nenabled = false\n', { actor: 'admin' });
+  assert.equal(first.protectedFromPackOverrides, true);
+  assert.equal(first.rebuildNeeded, true);
+  assert.equal(fs.readFileSync(absoluteFile, 'utf8'), '[general]\nenabled = false\n');
+
+  const server = servers.getServer(SID);
+  assert.deepEqual(server.env.MODRINTH_OVERRIDES_EXCLUSIONS.split('\n'), [configFile]);
+  assert.equal(server.pending_recreate, 1);
+
+  await modConfigs.write(SID, configFile, '[general]\nenabled = true\n', { actor: 'admin' });
+  assert.deepEqual(servers.getServer(SID).env.MODRINTH_OVERRIDES_EXCLUSIONS.split('\n'), [configFile]);
 });
 
 test('a symlinked config root is refused', async () => {

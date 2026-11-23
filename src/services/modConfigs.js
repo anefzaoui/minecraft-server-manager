@@ -266,11 +266,36 @@ async function read(serverId, relPath) {
   };
 }
 
+function protectModrinthConfig(serverId, relPath, actor) {
+  const servers = require('./servers');
+  const server = servers.getServer(serverId);
+  if (server?.type !== 'MODRINTH' || !server.env?.MODRINTH_MODPACK) {
+    return { protectedFromPackOverrides: false, rebuildNeeded: false };
+  }
+
+  const exclusions = String(server.env.MODRINTH_OVERRIDES_EXCLUSIONS || '')
+    .split(/[\r\n,]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+  if (exclusions.includes(relPath)) {
+    return { protectedFromPackOverrides: true, rebuildNeeded: Boolean(server.pending_recreate) };
+  }
+
+  const result = servers.updateServer(
+    serverId,
+    { env: { ...server.env, MODRINTH_OVERRIDES_EXCLUSIONS: [...exclusions, relPath].join('\n') } },
+    { actor }
+  );
+  return { protectedFromPackOverrides: true, rebuildNeeded: result.needsRecreate };
+}
+
 /** @param {string} serverId @param {string} relPath @param {string} content @param {{actor?: string}} [options] */
 async function write(serverId, relPath, content, { actor } = {}) {
   await existingConfig(serverId, relPath);
   const files = require('./files');
-  return files.writeText(serverId, String(relPath).replace(/\\/g, '/'), content, { actor });
+  const normalized = String(relPath).replace(/\\/g, '/');
+  const result = await files.writeText(serverId, normalized, content, { actor });
+  return { ...result, ...protectModrinthConfig(serverId, normalized, actor) };
 }
 
 module.exports = { list, read, write, CONFIG_EXTENSIONS };

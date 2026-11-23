@@ -226,6 +226,16 @@ module.exports = [
     requiresRestart: true,
   },
   {
+    key: 'MODRINTH_OVERRIDES_EXCLUSIONS',
+    scope: 'env',
+    label: 'Exclude override files',
+    help: 'Ant-style paths excluded from Modrinth pack overrides. The panel adds configs you edit here so startup does not replace your changes with the pack defaults.',
+    type: 'list',
+    mode: 'advanced',
+    section: 'packs',
+    requiresRestart: true,
+  },
+  {
     key: 'MODRINTH_IGNORE_MISSING_FILES',
     scope: 'env',
     label: 'Ignore missing pack files',
