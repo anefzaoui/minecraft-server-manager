@@ -159,12 +159,16 @@ function showEditor(filePath, original, descriptions) {
         onClick: async () => {
           try {
             const content = mode === 'raw' ? raw.value : serialize(parsed, dialog);
-            await request(`/api/servers/${root.dataset.serverId}/configs/file`, {
+            const saved = await request(`/api/servers/${root.dataset.serverId}/configs/file`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ path: filePath, content }),
             });
-            toast('Config saved.');
+            toast(
+              saved.protectedFromPackOverrides
+                ? 'Config saved. The panel will protect it from Modrinth pack overrides on restart.'
+                : 'Config saved.'
+            );
           } catch (error) {
             toast(error.message || friendlyError(error, { action: 'save this config' }), { kind: 'error' });
             return false;
