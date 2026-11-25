@@ -619,6 +619,7 @@ router.get(
           const listing = await require('../../services/modConfigs').list(row.id);
           context.configGroups = listing.groups;
           context.unassignedConfigs = listing.unassigned;
+          if (listing.truncated) context.configsTruncated = { limit: listing.limit, total: listing.total };
         } catch (err) {
           pageDegraded('server-mod-configs-tab', err);
           context.configGroups = [];

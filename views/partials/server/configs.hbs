@@ -5,6 +5,12 @@
 
 {{#if configsAccess}}
   <div data-mod-configs data-server-id="{{server.id}}">
+    {{#if configsTruncated}}
+      <div class="notice notice-info mb-4 max-w-prose" data-configs-truncated>
+        {{{icon 'info' 'size-4 mt-0.5 shrink-0'}}}
+        <p>Showing the first {{configsTruncated.limit}} of {{configsTruncated.total}} config files. Open the rest from the <a class="text-link hover:underline" href="/servers/{{server.id}}/files">Files tab</a>, or raise the limit by setting MAX_CONFIG_FILES and restarting the panel.</p>
+      </div>
+    {{/if}}
     {{#if configGroups.length}}
       <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {{#each configGroups}}

@@ -301,6 +301,10 @@ const config = {
     bedrockStart: numFromEnv('PORT_BEDROCK_START', 19132, { min: 1, max: 65535 }),
   },
 
+  // Most config files the Configs tab lists per server. Big modpacks can write
+  // thousands; the tab says when the list was cut short.
+  maxConfigFiles: numFromEnv('MAX_CONFIG_FILES', 1500, { min: 1, max: 1_000_000 }),
+
   // Default per-instance resources (host-aware unless overridden via env).
   defaults: resolveDefaults(),
 

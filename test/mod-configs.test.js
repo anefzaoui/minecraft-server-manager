@@ -196,3 +196,41 @@ test('a symlink inside config is skipped without hiding the other configs', asyn
     fs.rmSync(linkedRoot, { recursive: true, force: true });
   }
 });
+
+test('a scan past the config file limit keeps server configs and reports how many were left out', async () => {
+  const serverRoot = path.join(config.dataDir, 'servers', SID);
+  const bulkDir = path.join(serverRoot, 'config', 'zz-bulk');
+  const serverConfig = 'world/serverconfig/example-mod-server.toml';
+  fs.mkdirSync(bulkDir, { recursive: true });
+  fs.mkdirSync(path.join(serverRoot, 'world', 'serverconfig'), { recursive: true });
+  fs.writeFileSync(path.join(serverRoot, serverConfig), 'enabled = true\n');
+  for (let i = 0; i < 1501; i += 1) fs.writeFileSync(path.join(bulkDir, `file-${i}.toml`), 'x = 1\n');
+  const paths = (listing) => [
+    ...listing.groups.flatMap((group) => group.files.map((file) => file.path)),
+    ...listing.unassigned.map((file) => file.path),
+  ];
+  try {
+    const capped = await modConfigs.list(SID);
+    const total = paths(await modConfigs.list(SID, { limit: 5000 })).length;
+    assert.equal(total, 1501 + 4);
+    assert.equal(capped.truncated, true);
+    assert.equal(capped.total, total);
+    assert.equal(capped.limit, 1500);
+    assert.equal(paths(capped).length, 1500);
+    assert.ok(paths(capped).includes(serverConfig), 'Expected the per-world server config to survive the cap.');
+
+    const page = await app.req('GET', `/servers/${SID}/configs`, {
+      cookie: adminCookie,
+      headers: { Accept: 'text/html' },
+    });
+    assert.match(page.text, new RegExp(`Showing the first 1500 of ${total} config files\\.`));
+
+    const full = await modConfigs.list(SID, { limit: 5000 });
+    assert.equal(full.truncated, false);
+    assert.equal(full.total, total);
+    assert.ok(paths(full).includes('config/zz-bulk/file-1500.toml'));
+  } finally {
+    fs.rmSync(bulkDir, { recursive: true, force: true });
+    fs.rmSync(path.join(serverRoot, 'world'), { recursive: true, force: true });
+  }
+});
