@@ -3,6 +3,8 @@
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 const yauzl = require('yauzl');
+const config = require('../config');
+const logger = require('../logger')(path.basename(__filename));
 const { dataPath, safeJoin } = require('../storage/pathGuard');
 const httpError = require('../utils/httpError');
 const { parseJarMeta } = require('./modIdentify');
@@ -23,7 +25,6 @@ const CONFIG_EXTENSIONS = new Set([
   '.snbt',
 ]);
 const MAX_CONFIG_BYTES = 2 * 1024 * 1024;
-const MAX_CONFIG_FILES = 1500;
 const MAX_SCAN_DEPTH = 12;
 const MAX_JAR_BYTES = 64 * 1024 * 1024;
 const MAX_CONCURRENT_JAR_READS = 4;
@@ -96,7 +97,9 @@ function configRoots(serverId) {
   if (!server) throw httpError(404, 'Server not found');
   const level = String(server.env?.LEVEL || 'world');
   const safeLevel = /^[A-Za-z0-9 _.-]{1,64}$/.test(level) ? level : 'world';
-  return ['config', 'defaultconfigs', `${safeLevel}/serverconfig`];
+  // Smallest, most server-relevant roots first, so a scan that hits the file
+  // cap drops files from config/ rather than the per-world server configs.
+  return [`${safeLevel}/serverconfig`, 'defaultconfigs', 'config'];
 }
 
 function modTokens(mod, metadata) {
@@ -167,11 +170,12 @@ async function metadataForMod(serverId, entry) {
   };
 }
 
-async function scanConfigs(serverId) {
+async function scanConfigs(serverId, limit) {
   const roots = configRoots(serverId);
   const found = [];
+  let total = 0;
   async function walk(rel, depth) {
-    if (depth > MAX_SCAN_DEPTH || found.length >= MAX_CONFIG_FILES) return;
+    if (depth > MAX_SCAN_DEPTH) return;
     const abs = dataPath('servers', serverId, rel);
     let entries;
     try {
@@ -187,13 +191,17 @@ async function scanConfigs(serverId) {
       if (entry.isDirectory()) await walk(child, depth + 1);
       else if (entry.isFile() && CONFIG_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
         const stat = await fsp.stat(childAbs).catch(() => null);
-        if (stat && stat.size <= MAX_CONFIG_BYTES) found.push({ path: child, size: stat.size });
-        if (found.length >= MAX_CONFIG_FILES) break;
+        if (!stat || stat.size > MAX_CONFIG_BYTES) continue;
+        // Past the cap, keep counting so the page can say how many were left out.
+        total += 1;
+        if (found.length < limit) found.push({ path: child, size: stat.size });
       }
     }
   }
   for (const root of roots) await walk(root, 0);
-  return found.sort((a, b) => a.path.localeCompare(b.path));
+  const truncated = total > found.length;
+  if (truncated) logger.info('The config scan reached the file limit.', { serverId, limit, total });
+  return { files: found.sort((a, b) => a.path.localeCompare(b.path)), truncated, total, limit };
 }
 
 function matchesConfig(file, mod) {
@@ -209,8 +217,10 @@ function matchesConfig(file, mod) {
   });
 }
 
-async function list(serverId) {
-  const [detected, files] = await Promise.all([metadataForMods(serverId), scanConfigs(serverId)]);
+/** @param {string} serverId @param {{limit?: number}} [options] */
+async function list(serverId, { limit = config.maxConfigFiles } = {}) {
+  const [detected, scan] = await Promise.all([metadataForMods(serverId), scanConfigs(serverId, limit)]);
+  const { files, truncated, total } = scan;
   const discovered = new Map();
   const groups = detected.map((mod) => ({
     id: mod.id,
@@ -231,7 +241,7 @@ async function list(serverId) {
     } else unassigned.push(file);
   }
   discoveredFiles.set(serverId, discovered);
-  return { groups, unassigned };
+  return { groups, unassigned, truncated, total, limit };
 }
 
 function configFilePath(serverId, relPath) {
